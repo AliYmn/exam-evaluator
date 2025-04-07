@@ -61,7 +61,7 @@ class AuthService:
 
         # Return a generic error without specifying which credential exists
         if username_exists or email_exists:
-            raise ExceptionBase(ErrorCode.CREDENTIAL_ALREADY_EXISTS)
+            raise ExceptionBase(ErrorCode.USER_ALREADY_EXISTS)
 
         # Create user
         user_dict = user_data.model_dump(exclude={"password"})
@@ -145,16 +145,21 @@ class AuthService:
 
         # Try to get user from cache
         cache_key = f"user:{user.id}"
-        cached_user = await self.cache.get_cache(cache_key)
+        cached_user = None
+        try:
+            cached_user = await self.cache.get_cache(cache_key)
+        except Exception:
+            pass
+
         if cached_user:
-            try:
-                return UserResponse.model_validate_json(cached_user)
-            except Exception:
-                pass
+            return UserResponse.model_validate_json(cached_user)
 
         # Cache and return
         user_response = UserResponse.model_validate(user)
-        await self.cache.set_cache(cache_key, user_response.model_dump_json(), 3600)
+        try:
+            await self.cache.set_cache(cache_key, user_response.model_dump_json(), 3600)
+        except Exception:
+            pass
         return user_response
 
     async def update_user_profile(self, user_id: str, update_data: Dict[str, Any]) -> UserResponse:
@@ -188,7 +193,11 @@ class AuthService:
         await self.db.refresh(user)
 
         # Clear cache and return updated user
-        await self.cache.delete_cache(f"user:{user_id}")
+        try:
+            await self.cache.delete_cache(f"user:{user_id}")
+        except Exception:
+            # Continue without cache if Redis is unavailable
+            pass
         return UserResponse.model_validate(user)
 
     async def request_password_reset(self, email_data: PasswordReset) -> None:

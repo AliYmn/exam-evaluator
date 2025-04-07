@@ -45,7 +45,7 @@ class ErrorCode(IntEnum):
     INACTIVE_USER = (3012, "User account is inactive", 403)
     USER_NOT_FOUND = (3013, "User not found", 404)
     INVALID_RESET_TOKEN = (3014, "Invalid or expired password reset token", 400)
-    CREDENTIAL_ALREADY_EXISTS = (3015, "Registration failed - credential already exists", 409)
+    USER_ALREADY_EXISTS = (3015, "User already exists", 409)
 
     def __str__(self) -> str:
         return f"Error Code: {self.code}, Message: {self.message}, Status Code: {self.status_code}"
