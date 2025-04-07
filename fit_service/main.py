@@ -12,6 +12,7 @@ from fit_service.api.v1.food.food_router import router as food_router
 from fit_service.api.v1.workout.workout_router import router as workout_router
 from fit_service.api.v1.daily_tracker.daily_tracker_router import router as daily_tracker_router
 from fit_service.api.v1.body_tracker.body_tracker_router import router as body_tracker_router
+from fit_service.api.v1.workout_tracker.workout_tracker_router import router as workout_tracker_router
 from libs import ExceptionBase, settings
 
 
@@ -56,3 +57,4 @@ app.include_router(body_tracker_router, prefix=settings.API_STR)
 app.include_router(food_router, prefix=settings.API_STR)
 app.include_router(workout_router, prefix=settings.API_STR)
 app.include_router(daily_tracker_router, prefix=settings.API_STR)
+app.include_router(workout_tracker_router, prefix=settings.API_STR)

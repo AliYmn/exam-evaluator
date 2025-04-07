@@ -6,6 +6,7 @@ from libs.models.diet_tracker import DietTracker
 from libs.models.food import Food
 from libs.models.workout import Workout
 from libs.models.daily_tracker import DailyTracker
+from libs.models.workout_tracker import WorkoutTracker
 
 __all__ = [
     "BaseModel",
@@ -16,4 +17,5 @@ __all__ = [
     "Food",
     "Workout",
     "DailyTracker",
+    "WorkoutTracker",
 ]

@@ -21,5 +21,12 @@ class DailyTracker(BaseModel):
     sleep_hours = Column(Float, nullable=True)
     mood = Column(String(50), nullable=True)
 
+    # Yeni eklenen alanlar
+    bowel_movement = Column(String(50), nullable=True)
+    urine_color = Column(String(50), nullable=True)
+
+    menstrual_phase = Column(String(50), nullable=True)
+    training_quality = Column(Integer, nullable=True)
+
     def __repr__(self):
         return f"<DailyTracker(user_id={self.user_id})>"
