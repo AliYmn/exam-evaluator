@@ -8,7 +8,7 @@ broker_url = (
 backend_url = f"db+postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}/{settings.POSTGRES_DB}"
 
 celery_app = Celery(
-    settings.AUTH_WORKER_NAME,
+    settings.AI_WORKER_NAME,
     broker=broker_url,
     backend=backend_url,
 )
@@ -22,12 +22,12 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     task_routes={
-        "send_email": {"queue": settings.AUTH_QUEUE_NAME},
-        "send_template_email": {"queue": settings.AUTH_QUEUE_NAME},
-        "send_welcome_email": {"queue": settings.AUTH_QUEUE_NAME},
-        "send_password_reset_email": {"queue": settings.AUTH_QUEUE_NAME},
-        "send_password_changed_email": {"queue": settings.AUTH_QUEUE_NAME},
-        "send_bulk_emails": {"queue": settings.AUTH_QUEUE_NAME},
+        "send_email": {"queue": settings.AI_QUEUE_NAME},
+        "send_template_email": {"queue": settings.AI_QUEUE_NAME},
+        "send_welcome_email": {"queue": settings.AI_QUEUE_NAME},
+        "send_password_reset_email": {"queue": settings.AI_QUEUE_NAME},
+        "send_password_changed_email": {"queue": settings.AI_QUEUE_NAME},
+        "send_bulk_emails": {"queue": settings.AI_QUEUE_NAME},
     },
     timezone="UTC",
 )
