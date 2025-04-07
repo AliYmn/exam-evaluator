@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status, Header
+from fastapi import APIRouter, Depends, Query, status, Header, HTTPException
 from typing import Annotated
 
 from fit_service.api.v1.daily_tracker.daily_tracker_schemas import (
@@ -10,7 +10,6 @@ from fit_service.core.services.daily_tracker_service import DailyTrackerService
 from sqlalchemy.ext.asyncio import AsyncSession
 from libs.db import get_async_db
 from libs.service.auth import AuthService
-from libs import ErrorCode, ExceptionBase
 
 router = APIRouter(tags=["Daily Tracker"], prefix="/daily-tracker")
 
@@ -30,11 +29,8 @@ async def create_daily_tracker(
     tracker_service: DailyTrackerService = Depends(get_daily_tracker_service),
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await tracker_service.create_daily_tracker(user.id, tracker_data)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await tracker_service.create_daily_tracker(user.id, tracker_data)
 
 
 @router.get("")
@@ -63,7 +59,7 @@ async def get_latest_daily_tracker(
     user = await auth_service.get_user_from_token(authorization)
     tracker = await tracker_service.get_latest_daily_tracker(user.id)
     if not tracker:
-        raise ExceptionBase(ErrorCode.NOT_FOUND)
+        raise HTTPException(status_code=404, detail="Daily tracker not found")
     return tracker
 
 
@@ -86,11 +82,8 @@ async def update_daily_tracker(
     tracker_service: DailyTrackerService = Depends(get_daily_tracker_service),
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await tracker_service.update_daily_tracker(tracker_id, user.id, tracker_data)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await tracker_service.update_daily_tracker(tracker_id, user.id, tracker_data)
 
 
 @router.delete("/{tracker_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -100,8 +93,5 @@ async def delete_daily_tracker(
     tracker_service: DailyTrackerService = Depends(get_daily_tracker_service),
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await tracker_service.delete_daily_tracker(tracker_id, user.id)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await tracker_service.delete_daily_tracker(tracker_id, user.id)

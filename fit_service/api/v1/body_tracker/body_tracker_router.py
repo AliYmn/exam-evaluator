@@ -10,7 +10,6 @@ from fit_service.core.services.body_tracker_service import BodyTrackerService
 from sqlalchemy.ext.asyncio import AsyncSession
 from libs.db import get_async_db
 from libs.service.auth import AuthService
-from libs import ErrorCode, ExceptionBase
 
 router = APIRouter(tags=["Body Tracker"], prefix="/tracker")
 
@@ -31,11 +30,8 @@ async def create_tracker(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new tracker record for the authenticated user"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await body_tracker_service.create_tracker(user.id, tracker_data)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await body_tracker_service.create_tracker(user.id, tracker_data)
 
 
 @router.get("/{tracker_id}")
@@ -76,11 +72,8 @@ async def update_tracker(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific tracker record"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await body_tracker_service.update_tracker(tracker_id, user.id, tracker_data)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await body_tracker_service.update_tracker(tracker_id, user.id, tracker_data)
 
 
 @router.delete("/{tracker_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -91,8 +84,5 @@ async def delete_tracker(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific tracker record"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await body_tracker_service.delete_tracker(tracker_id, user.id)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await body_tracker_service.delete_tracker(tracker_id, user.id)

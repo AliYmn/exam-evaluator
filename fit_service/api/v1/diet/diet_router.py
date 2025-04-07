@@ -53,15 +53,10 @@ async def create_food_category(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new food category (admin only)"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        if user.role != "admin":
-            raise ExceptionBase(ErrorCode.FORBIDDEN)
-        return await diet_service.create_food_category(category_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    if user.role != "admin":
+        raise ExceptionBase(ErrorCode.FORBIDDEN)
+    return await diet_service.create_food_category(category_data)
 
 
 @router.get("/food-categories/{category_id}", response_model=FoodCategoryResponse)
@@ -102,15 +97,10 @@ async def update_food_category(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific food category (admin only)"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        if user.role != "admin":
-            raise ExceptionBase(ErrorCode.FORBIDDEN)
-        return await diet_service.update_food_category(category_id, category_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    if user.role != "admin":
+        raise ExceptionBase(ErrorCode.FORBIDDEN)
+    return await diet_service.update_food_category(category_id, category_data)
 
 
 @router.delete("/food-categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -121,15 +111,10 @@ async def delete_food_category(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific food category (admin only)"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        if user.role != "admin":
-            raise ExceptionBase(ErrorCode.FORBIDDEN)
-        await diet_service.delete_food_category(category_id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    if user.role != "admin":
+        raise ExceptionBase(ErrorCode.FORBIDDEN)
+    await diet_service.delete_food_category(category_id)
 
 
 # ===== Food Routes =====
@@ -141,11 +126,8 @@ async def create_food(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new food"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await diet_service.create_food(user.id, food_data)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await diet_service.create_food(user.id, food_data)
 
 
 @router.get("/foods/{food_id}", response_model=FoodResponse)
@@ -187,13 +169,8 @@ async def update_food(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific food"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await diet_service.update_food(food_id, user.id, food_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await diet_service.update_food(food_id, user.id, food_data)
 
 
 @router.delete("/foods/{food_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -204,13 +181,8 @@ async def delete_food(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific food"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await diet_service.delete_food(food_id, user.id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await diet_service.delete_food(food_id, user.id)
 
 
 # ===== Supplement Category Routes =====
@@ -222,15 +194,10 @@ async def create_supplement_category(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new supplement category (admin only)"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        if user.role != "admin":
-            raise ExceptionBase(ErrorCode.FORBIDDEN)
-        return await diet_service.create_supplement_category(category_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    if user.role != "admin":
+        raise ExceptionBase(ErrorCode.FORBIDDEN)
+    return await diet_service.create_supplement_category(category_data)
 
 
 @router.get("/supplement-categories/{category_id}", response_model=SupplementCategoryResponse)
@@ -271,15 +238,10 @@ async def update_supplement_category(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific supplement category (admin only)"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        if user.role != "admin":
-            raise ExceptionBase(ErrorCode.FORBIDDEN)
-        return await diet_service.update_supplement_category(category_id, category_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    if user.role != "admin":
+        raise ExceptionBase(ErrorCode.FORBIDDEN)
+    return await diet_service.update_supplement_category(category_id, category_data)
 
 
 @router.delete("/supplement-categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -290,15 +252,10 @@ async def delete_supplement_category(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific supplement category (admin only)"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        if user.role != "admin":
-            raise ExceptionBase(ErrorCode.FORBIDDEN)
-        await diet_service.delete_supplement_category(category_id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    if user.role != "admin":
+        raise ExceptionBase(ErrorCode.FORBIDDEN)
+    await diet_service.delete_supplement_category(category_id)
 
 
 # ===== Supplement Routes =====
@@ -310,11 +267,8 @@ async def create_supplement(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new supplement"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await diet_service.create_supplement(user.id, supplement_data)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await diet_service.create_supplement(user.id, supplement_data)
 
 
 @router.get("/supplements/{supplement_id}", response_model=SupplementResponse)
@@ -358,13 +312,8 @@ async def update_supplement(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific supplement"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await diet_service.update_supplement(supplement_id, user.id, supplement_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await diet_service.update_supplement(supplement_id, user.id, supplement_data)
 
 
 @router.delete("/supplements/{supplement_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -375,13 +324,8 @@ async def delete_supplement(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific supplement"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await diet_service.delete_supplement(supplement_id, user.id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await diet_service.delete_supplement(supplement_id, user.id)
 
 
 # ===== Diet Plan Routes =====
@@ -393,13 +337,8 @@ async def create_diet_plan(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new diet plan with optional foods and supplements"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await diet_service.create_diet_plan(user.id, plan_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await diet_service.create_diet_plan(user.id, plan_data)
 
 
 @router.get("/plans/{plan_id}", response_model=DietPlanResponse)
@@ -441,13 +380,8 @@ async def update_diet_plan(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific diet plan"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await diet_service.update_diet_plan(plan_id, user.id, plan_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await diet_service.update_diet_plan(plan_id, user.id, plan_data)
 
 
 @router.delete("/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -458,13 +392,8 @@ async def delete_diet_plan(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific diet plan"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await diet_service.delete_diet_plan(plan_id, user.id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await diet_service.delete_diet_plan(plan_id, user.id)
 
 
 # ===== Meal Template Routes =====
@@ -476,13 +405,8 @@ async def create_meal_template(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new meal template with foods"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await diet_service.create_meal_template(user.id, template_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await diet_service.create_meal_template(user.id, template_data)
 
 
 @router.get("/meal-templates/{template_id}", response_model=MealTemplateResponse)
@@ -526,13 +450,8 @@ async def update_meal_template(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific meal template"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await diet_service.update_meal_template(template_id, user.id, template_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await diet_service.update_meal_template(template_id, user.id, template_data)
 
 
 @router.delete("/meal-templates/{template_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -543,10 +462,5 @@ async def delete_meal_template(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific meal template"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await diet_service.delete_meal_template(template_id, user.id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await diet_service.delete_meal_template(template_id, user.id)

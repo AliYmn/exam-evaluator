@@ -47,15 +47,10 @@ async def create_workout_category(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new workout category (admin only)"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        if user.role != "admin":
-            raise ExceptionBase(ErrorCode.FORBIDDEN)
-        return await workout_service.create_workout_category(category_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    if user.role != "admin":
+        raise ExceptionBase(ErrorCode.FORBIDDEN)
+    return await workout_service.create_workout_category(category_data)
 
 
 @router.get("/categories/{category_id}", response_model=WorkoutCategoryResponse)
@@ -96,15 +91,10 @@ async def update_workout_category(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific workout category (admin only)"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        if user.role != "admin":
-            raise ExceptionBase(ErrorCode.FORBIDDEN)
-        return await workout_service.update_workout_category(category_id, category_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    if user.role != "admin":
+        raise ExceptionBase(ErrorCode.FORBIDDEN)
+    return await workout_service.update_workout_category(category_id, category_data)
 
 
 @router.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -115,15 +105,10 @@ async def delete_workout_category(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific workout category (admin only)"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        if user.role != "admin":
-            raise ExceptionBase(ErrorCode.FORBIDDEN)
-        await workout_service.delete_workout_category(category_id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    if user.role != "admin":
+        raise ExceptionBase(ErrorCode.FORBIDDEN)
+    await workout_service.delete_workout_category(category_id)
 
 
 # ===== Workout Program Routes =====
@@ -135,11 +120,8 @@ async def create_workout_program(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new workout program with optional days and workouts"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await workout_service.create_workout_program(user.id, program_data)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await workout_service.create_workout_program(user.id, program_data)
 
 
 @router.get("/programs/{program_id}", response_model=WorkoutProgramResponse)
@@ -184,13 +166,8 @@ async def update_workout_program(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific workout program"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await workout_service.update_workout_program(program_id, user.id, program_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await workout_service.update_workout_program(program_id, user.id, program_data)
 
 
 @router.delete("/programs/{program_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -201,13 +178,8 @@ async def delete_workout_program(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific workout program"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await workout_service.delete_workout_program(program_id, user.id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await workout_service.delete_workout_program(program_id, user.id)
 
 
 # ===== Workout Program Day Routes =====
@@ -222,13 +194,8 @@ async def create_workout_program_day(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new day for a specific workout program"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await workout_service.create_workout_program_day(program_id, user.id, day_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await workout_service.create_workout_program_day(program_id, user.id, day_data)
 
 
 @router.put("/programs/days/{day_id}", response_model=WorkoutProgramDayResponse)
@@ -240,13 +207,8 @@ async def update_workout_program_day(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific workout program day"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await workout_service.update_workout_program_day(day_id, user.id, day_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await workout_service.update_workout_program_day(day_id, user.id, day_data)
 
 
 @router.delete("/programs/days/{day_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -257,13 +219,8 @@ async def delete_workout_program_day(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific workout program day"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await workout_service.delete_workout_program_day(day_id, user.id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await workout_service.delete_workout_program_day(day_id, user.id)
 
 
 # ===== Workout Routes =====
@@ -275,11 +232,8 @@ async def create_workout(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new workout with optional sets"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await workout_service.create_workout(user.id, workout_data)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await workout_service.create_workout(user.id, workout_data)
 
 
 @router.get("/{workout_id}", response_model=WorkoutResponse)
@@ -341,13 +295,8 @@ async def delete_workout(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific workout"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await workout_service.delete_workout(workout_id, user.id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await workout_service.delete_workout(workout_id, user.id)
 
 
 # ===== Workout Set Routes =====
@@ -360,11 +309,8 @@ async def create_workout_set(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new set for a specific workout"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await workout_service.create_workout_set(workout_id, user.id, set_data)
-    except Exception:
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await workout_service.create_workout_set(workout_id, user.id, set_data)
 
 
 @router.put("/sets/{set_id}", response_model=WorkoutSetResponse)
@@ -376,13 +322,8 @@ async def update_workout_set(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update a specific workout set"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        return await workout_service.update_workout_set(set_id, user.id, set_data)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    return await workout_service.update_workout_set(set_id, user.id, set_data)
 
 
 @router.delete("/sets/{set_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -393,10 +334,5 @@ async def delete_workout_set(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a specific workout set"""
-    try:
-        user = await auth_service.get_user_from_token(authorization)
-        await workout_service.delete_workout_set(set_id, user.id)
-    except Exception as e:
-        if isinstance(e, ExceptionBase):
-            raise e
-        raise ExceptionBase(ErrorCode.UNAUTHORIZED)
+    user = await auth_service.get_user_from_token(authorization)
+    await workout_service.delete_workout_set(set_id, user.id)

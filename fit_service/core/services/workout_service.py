@@ -27,6 +27,7 @@ from libs.models.workout import (
     WorkoutSet,
     WorkoutProgram,
     WorkoutProgramDay,
+    workout_program_day_workout,
 )
 
 
@@ -338,60 +339,82 @@ class WorkoutService:
     # ===== Workout Program Methods =====
     async def create_workout_program(self, user_id: int, program_data: WorkoutProgramCreate) -> WorkoutProgramResponse:
         """Create a new workout program with optional days and workouts"""
-        new_program = WorkoutProgram(
-            name=program_data.name,
-            description=program_data.description,
-            user_id=user_id,
-            group_name=program_data.group_name,
-            difficulty_level=program_data.difficulty_level,
-            duration_weeks=program_data.duration_weeks,
-            goal=program_data.goal,
-            is_public=program_data.is_public,
-        )
-        self.db.add(new_program)
-        await self.db.commit()
-        await self.db.refresh(new_program)
-
-        # Create program days if provided
-        if program_data.days:
-            for day_data in program_data.days:
-                new_day = WorkoutProgramDay(
-                    program_id=new_program.id,
-                    day_number=day_data.day_number,
-                    name=day_data.name,
-                    description=day_data.description,
-                )
-                self.db.add(new_day)
-                await self.db.commit()
-                await self.db.refresh(new_day)
-
-                # Associate workouts with the day
-                if day_data.workout_ids:
-                    for workout_id in day_data.workout_ids:
-                        # Verify workout exists
-                        workout_result = await self.db.execute(
-                            select(Workout).where(Workout.id == workout_id, Workout.deleted_date.is_(None))
-                        )
-                        workout = workout_result.scalars().first()
-                        if workout:
-                            # Add association
-                            new_day.workouts.append(workout)
-
-                    await self.db.commit()
-
-        # Load the program with relationships for response
-        result = await self.db.execute(
-            select(WorkoutProgram)
-            .options(
-                joinedload(WorkoutProgram.days)
-                .joinedload(WorkoutProgramDay.workouts)
-                .options(joinedload(Workout.sets), joinedload(Workout.category))
+        try:
+            # Create the program
+            new_program = WorkoutProgram(
+                user_id=user_id,
+                name=program_data.name,
+                description=program_data.description,
+                group_name=program_data.group_name,
+                is_public=program_data.is_public,
             )
-            .where(WorkoutProgram.id == new_program.id)
-        )
-        program_with_relations = result.unique().scalars().first()
+            self.db.add(new_program)
+            await self.db.flush()
+            program_id = new_program.id
 
-        return WorkoutProgramResponse.model_validate(program_with_relations)
+            # Create days if provided
+            if program_data.days:
+                for day_data in program_data.days:
+                    # Create the day
+                    new_day = WorkoutProgramDay(
+                        program_id=program_id,
+                        day_number=day_data.day_number,
+                        name=day_data.name,
+                        description=day_data.description,
+                    )
+                    self.db.add(new_day)
+
+                # Commit to get IDs for days
+                await self.db.flush()
+
+                # Now associate workouts with days in a separate step
+                for day_data in program_data.days:
+                    if day_data.workout_ids:
+                        # Find the day we just created
+                        day_result = await self.db.execute(
+                            select(WorkoutProgramDay).where(
+                                WorkoutProgramDay.program_id == program_id,
+                                WorkoutProgramDay.day_number == day_data.day_number,
+                            )
+                        )
+                        day = day_result.scalars().first()
+
+                        if day:
+                            for workout_id in day_data.workout_ids:
+                                # Find the workout
+                                workout_result = await self.db.execute(
+                                    select(Workout).where(Workout.id == workout_id, Workout.deleted_date.is_(None))
+                                )
+                                workout = workout_result.scalars().first()
+
+                                if workout:
+                                    # Create the association
+                                    stmt = workout_program_day_workout.insert().values(
+                                        workout_program_day_id=day.id, workout_id=workout.id
+                                    )
+                                    await self.db.execute(stmt)
+
+            # Final commit
+            await self.db.commit()
+
+            # Load the complete program with relationships
+            result = await self.db.execute(
+                select(WorkoutProgram)
+                .options(
+                    joinedload(WorkoutProgram.days)
+                    .joinedload(WorkoutProgramDay.workouts)
+                    .options(joinedload(Workout.sets), joinedload(Workout.category))
+                )
+                .where(WorkoutProgram.id == program_id)
+            )
+            program_with_relations = result.unique().scalars().first()
+
+            return WorkoutProgramResponse.model_validate(program_with_relations)
+
+        except Exception as e:
+            # Rollback in case of error
+            await self.db.rollback()
+            raise e
 
     async def get_workout_program(self, program_id: int, user_id: Optional[int] = None) -> WorkoutProgramResponse:
         """Get a specific workout program by ID with its days and workouts"""
@@ -556,8 +579,9 @@ class WorkoutService:
                     # Add association
                     new_day.workouts.append(workout)
 
-            await self.db.commit()
-            await self.db.refresh(new_day)
+        # Commit all changes at once
+        await self.db.commit()
+        await self.db.refresh(new_day)
 
         # Load the day with relationships for response
         result = await self.db.execute(

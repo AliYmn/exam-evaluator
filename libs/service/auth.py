@@ -106,6 +106,7 @@ class AuthService:
         self, token: str, check_user: bool = True
     ) -> Union[Dict[str, Any], Tuple[Dict[str, Any], UserModel]]:
         if not token:
+            print("Token yok")
             raise ExceptionBase(ErrorCode.UNAUTHORIZED)
 
         try:
