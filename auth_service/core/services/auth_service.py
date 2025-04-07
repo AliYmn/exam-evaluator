@@ -38,8 +38,6 @@ class AuthService:
         self.ALGORITHM = settings.JWT_ALGORITHM
         self.cache = CacheService()
 
-    # ----- Database Query Methods -----
-
     async def _get_user_by_username(self, username: str) -> Optional[User]:
         result = await self.db.execute(select(User).where(User.username == username))
         return result.scalars().first()
@@ -69,15 +67,11 @@ class AuthService:
         association = result.first()
         return user if association else None
 
-    # ----- Password Handling Methods -----
-
     def _verify_password(self, plain_password: str, hashed_password: str) -> bool:
         return self.pwd_context.verify(plain_password, hashed_password)
 
     def _hash_password(self, password: str) -> str:
         return self.pwd_context.hash(password)
-
-    # ----- Token Methods -----
 
     def _create_token(self, subject: str, expires_delta: timedelta, custom_claims: Dict[str, Any] = None) -> str:
         if custom_claims is None:
@@ -125,8 +119,6 @@ class AuthService:
 
         return access_token, refresh_token, self.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 
-    # ----- Validation Methods -----
-
     async def _validate_availability(self, username: str = None, email: str = None, app_id: int = None) -> None:
         """Validate username and email availability"""
         if username:
@@ -157,8 +149,6 @@ class AuthService:
             raise ExceptionBase(ErrorCode.INACTIVE_USER)
         return user
 
-    # ----- Cache Methods -----
-
     async def _get_cached_user(self, user_id: str) -> Optional[UserResponse]:
         cache_key = f"user:{user_id}"
         cached_user = await self.cache.get_cache(cache_key)
@@ -177,8 +167,6 @@ class AuthService:
     async def _clear_user_cache(self, user_id: str) -> None:
         cache_key = f"user:{user_id}"
         await self.cache.delete_cache(cache_key)
-
-    # ----- Public API Methods -----
 
     async def create_user(self, user_data: UserCreate) -> None:
         """Create a global user account and associate it with an app"""

@@ -40,7 +40,7 @@ app.add_middleware(
 @app.exception_handler(ExceptionBase)
 async def http_exception_handler(_request, exc: ExceptionBase) -> ORJSONResponse:
     return ORJSONResponse(
-        status_code=400,
+        status_code=exc.status_code,
         content=exc.to_dict(),
     )
 

@@ -23,7 +23,7 @@ class CacheService:
                     port=settings.REDIS_PORT,
                     password=settings.REDIS_PASSWORD,
                     db=0,
-                    max_connections=20,
+                    max_connections=100,
                     decode_responses=True,
                 )
             self.client = Redis(connection_pool=self._pool)
