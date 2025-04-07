@@ -1,0 +1,328 @@
+{
+    "info": {
+        "name": "Workout API",
+        "description": "Collection for testing the workout endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "{{baseUrl}}",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Create Workout Record",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "if (jsonData.id) {",
+                            "    pm.environment.set('workoutId', jsonData.id);",
+                            "    console.log('Workout ID saved to environment: ' + jsonData.id);",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/workout",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "workout"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Upper Body Strength\",\n    \"description\": \"Comprehensive upper body workout focusing on chest, shoulders, and arms\",\n    \"workout_type\": \"Strength\",\n    \"target_muscles\": [\"Chest\", \"Shoulders\", \"Biceps\", \"Triceps\"],\n    \"duration_minutes\": 45,\n    \"calories_burned\": 350,\n    \"equipment\": \"Dumbbells, Bench\",\n    \"difficulty\": \"Intermediate\",\n    \"instructions\": {\n        \"warmup\": \"5 minutes of light cardio and dynamic stretching\",\n        \"exercises\": [\n            {\n                \"name\": \"Bench Press\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"60 seconds\"\n            },\n            {\n                \"name\": \"Shoulder Press\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"60 seconds\"\n            },\n            {\n                \"name\": \"Bicep Curls\",\n                \"sets\": 3,\n                \"reps\": 15,\n                \"rest\": \"45 seconds\"\n            },\n            {\n                \"name\": \"Tricep Extensions\",\n                \"sets\": 3,\n                \"reps\": 15,\n                \"rest\": \"45 seconds\"\n            }\n        ],\n        \"cooldown\": \"5 minutes of static stretching\"\n    }\n}"
+                },
+                "description": "Create a new workout record"
+            },
+            "response": []
+        },
+        {
+            "name": "Get Workout Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/workout/{{workoutId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "workout",
+                        "{{workoutId}}"
+                    ]
+                },
+                "description": "Get a specific workout record by ID"
+            },
+            "response": []
+        },
+        {
+            "name": "List Workout Records",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/workout?skip=0&limit=10",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "workout"
+                    ],
+                    "query": [
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                },
+                "description": "List all workout records with pagination"
+            },
+            "response": []
+        },
+        {
+            "name": "Search Workout by Name",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/workout?name=Upper&skip=0&limit=10",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "workout"
+                    ],
+                    "query": [
+                        {
+                            "key": "name",
+                            "value": "Upper"
+                        },
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                },
+                "description": "Search workout records by name"
+            },
+            "response": []
+        },
+        {
+            "name": "Search Workout by Type",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/workout?workout_type=Strength&skip=0&limit=10",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "workout"
+                    ],
+                    "query": [
+                        {
+                            "key": "workout_type",
+                            "value": "Strength"
+                        },
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                },
+                "description": "Search workout records by type"
+            },
+            "response": []
+        },
+        {
+            "name": "Search Workout by Difficulty",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/workout?difficulty=Intermediate&skip=0&limit=10",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "workout"
+                    ],
+                    "query": [
+                        {
+                            "key": "difficulty",
+                            "value": "Intermediate"
+                        },
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                },
+                "description": "Search workout records by difficulty"
+            },
+            "response": []
+        },
+        {
+            "name": "Update Workout Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/workout/{{workoutId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "workout",
+                        "{{workoutId}}"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Upper Body Strength\",\n    \"description\": \"Comprehensive upper body workout focusing on chest, shoulders, and arms with progressive overload\",\n    \"workout_type\": \"Strength\",\n    \"target_muscles\": [\"Chest\", \"Shoulders\", \"Biceps\", \"Triceps\", \"Upper Back\"],\n    \"duration_minutes\": 50,\n    \"calories_burned\": 380,\n    \"equipment\": \"Dumbbells, Bench, Resistance Bands\",\n    \"difficulty\": \"Intermediate\",\n    \"instructions\": {\n        \"warmup\": \"5 minutes of light cardio and dynamic stretching\",\n        \"exercises\": [\n            {\n                \"name\": \"Bench Press\",\n                \"sets\": 4,\n                \"reps\": 10,\n                \"rest\": \"60 seconds\"\n            },\n            {\n                \"name\": \"Shoulder Press\",\n                \"sets\": 4,\n                \"reps\": 10,\n                \"rest\": \"60 seconds\"\n            },\n            {\n                \"name\": \"Bicep Curls\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"45 seconds\"\n            },\n            {\n                \"name\": \"Tricep Extensions\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"45 seconds\"\n            },\n            {\n                \"name\": \"Bent Over Rows\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"60 seconds\"\n            }\n        ],\n        \"cooldown\": \"5 minutes of static stretching\"\n    }\n}"
+                },
+                "description": "Update a workout record"
+            },
+            "response": []
+        },
+        {
+            "name": "Delete Workout Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/workout/{{workoutId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "workout",
+                        "{{workoutId}}"
+                    ]
+                },
+                "description": "Delete a workout record"
+            },
+            "response": []
+        }
+    ]
+}

@@ -1,0 +1,231 @@
+{
+    "info": {
+        "name": "Daily Tracker API",
+        "description": "Collection for testing the daily tracker endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "{{baseUrl}}",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Create Daily Tracker Record",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "if (jsonData.id) {",
+                            "    pm.environment.set('dailyTrackerId', jsonData.id);",
+                            "    console.log('Daily Tracker ID saved to environment: ' + jsonData.id);",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/daily-tracker",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "daily-tracker"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"energy\": 8,\n    \"sleep\": 7,\n    \"stress\": 4,\n    \"muscle_soreness\": 5,\n    \"fatigue\": 3,\n    \"hunger\": 6,\n    \"water_intake_liters\": 2.5,\n    \"sleep_hours\": 7.5,\n    \"mood\": \"Energetic\"\n}"
+                },
+                "description": "Create a new daily tracker record for the authenticated user"
+            },
+            "response": []
+        },
+        {
+            "name": "Get Daily Tracker Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/daily-tracker/{{dailyTrackerId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "daily-tracker",
+                        "{{dailyTrackerId}}"
+                    ]
+                },
+                "description": "Get a specific daily tracker record by ID"
+            },
+            "response": []
+        },
+        {
+            "name": "List Daily Tracker Records",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/daily-tracker?skip=0&limit=10",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "daily-tracker"
+                    ],
+                    "query": [
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                },
+                "description": "List all daily tracker records for the authenticated user with pagination"
+            },
+            "response": []
+        },
+        {
+            "name": "Get Latest Daily Tracker Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/daily-tracker/latest",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "daily-tracker",
+                        "latest"
+                    ]
+                },
+                "description": "Get the latest daily tracker record for the authenticated user"
+            },
+            "response": []
+        },
+        {
+            "name": "Update Daily Tracker Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/daily-tracker/{{dailyTrackerId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "daily-tracker",
+                        "{{dailyTrackerId}}"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"energy\": 9,\n    \"sleep\": 8,\n    \"stress\": 3,\n    \"muscle_soreness\": 4,\n    \"fatigue\": 2,\n    \"hunger\": 5,\n    \"water_intake_liters\": 3.0,\n    \"sleep_hours\": 8.0,\n    \"mood\": \"Excellent\"\n}"
+                },
+                "description": "Update a daily tracker record"
+            },
+            "response": []
+        },
+        {
+            "name": "Delete Daily Tracker Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/daily-tracker/{{dailyTrackerId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "daily-tracker",
+                        "{{dailyTrackerId}}"
+                    ]
+                },
+                "description": "Delete a daily tracker record"
+            },
+            "response": []
+        }
+    ]
+}

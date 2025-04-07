@@ -1,0 +1,286 @@
+{
+    "info": {
+        "name": "Food API",
+        "description": "Collection for testing the food endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "{{baseUrl}}",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Create Food Record",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "if (jsonData.id) {",
+                            "    pm.environment.set('foodId', jsonData.id);",
+                            "    console.log('Food ID saved to environment: ' + jsonData.id);",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/food",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "food"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Grilled Chicken Breast\",\n    \"description\": \"Lean protein source, grilled with minimal oil\",\n    \"category\": \"Protein\",\n    \"calories\": 165,\n    \"protein\": 31,\n    \"carbs\": 0,\n    \"fat\": 3.6,\n    \"fiber\": 0,\n    \"sugar\": 0,\n    \"extra\": {\n        \"serving_size\": \"100g\",\n        \"preparation_time\": \"15 minutes\",\n        \"cooking_method\": \"Grilled\"\n    }\n}"
+                },
+                "description": "Create a new food record"
+            },
+            "response": []
+        },
+        {
+            "name": "Get Food Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/food/{{foodId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "food",
+                        "{{foodId}}"
+                    ]
+                },
+                "description": "Get a specific food record by ID"
+            },
+            "response": []
+        },
+        {
+            "name": "List Food Records",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/food?skip=0&limit=10",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "food"
+                    ],
+                    "query": [
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                },
+                "description": "List all food records with pagination"
+            },
+            "response": []
+        },
+        {
+            "name": "Search Food by Name",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/food?name=chicken&skip=0&limit=10",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "food"
+                    ],
+                    "query": [
+                        {
+                            "key": "name",
+                            "value": "chicken"
+                        },
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                },
+                "description": "Search food records by name"
+            },
+            "response": []
+        },
+        {
+            "name": "Search Food by Category",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/food?category=Protein&skip=0&limit=10",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "food"
+                    ],
+                    "query": [
+                        {
+                            "key": "category",
+                            "value": "Protein"
+                        },
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                },
+                "description": "Search food records by category"
+            },
+            "response": []
+        },
+        {
+            "name": "Update Food Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/food/{{foodId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "food",
+                        "{{foodId}}"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Grilled Chicken Breast\",\n    \"description\": \"Lean protein source, grilled with herbs and minimal oil\",\n    \"category\": \"Protein\",\n    \"calories\": 160,\n    \"protein\": 32,\n    \"carbs\": 0,\n    \"fat\": 3.0,\n    \"fiber\": 0,\n    \"sugar\": 0,\n    \"extra\": {\n        \"serving_size\": \"100g\",\n        \"preparation_time\": \"15 minutes\",\n        \"cooking_method\": \"Grilled\",\n        \"allergens\": [\"None\"]\n    }\n}"
+                },
+                "description": "Update a food record"
+            },
+            "response": []
+        },
+        {
+            "name": "Delete Food Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/food/{{foodId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "food",
+                        "{{foodId}}"
+                    ]
+                },
+                "description": "Delete a food record"
+            },
+            "response": []
+        }
+    ]
+}
