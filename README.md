@@ -1,2 +1,2 @@
-# fit-api
-fit-api
+# ai-api-gateway
+ai-api-gateway

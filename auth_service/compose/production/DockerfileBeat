@@ -1,0 +1,31 @@
+# Base image for production
+FROM python:3.13.2-slim-bullseye
+
+# Set working directory
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Create a non-root user and give appropriate permissions
+RUN groupadd -r celerygroup && useradd -r -g celerygroup celeryuser
+RUN mkdir -p /app/.ipython && chown -R celeryuser:celerygroup /app
+
+# Copy application files
+COPY ./auth_service ./auth_service
+COPY ./libs ./libs
+COPY ./requirements.txt ./requirements.txt
+
+# Install uv package manager
+RUN pip install uv
+
+# Create cache directory
+RUN mkdir -p /root/.cache/uv
+
+# Install dependencies with caching
+RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt
+
+# Switch to non-root user
+USER celeryuser
+
+# Set default command for beat service
+CMD ["celery", "-A", "auth_service.core.worker.tasks.celery_app", "beat", "--loglevel=ERROR"]

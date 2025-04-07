@@ -1,0 +1,62 @@
+from pydantic_settings import BaseSettings
+
+
+class Config(BaseSettings):
+    # API Settings
+    DEBUG: bool
+    API_STR: str = "/api/v1"
+    PROJECT_NAME: str = "{project_name} Service API"
+    PROJECT_VERSION: str = "v1"
+
+    # JWT Settings
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int
+
+    # POSTGRES
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str
+    POSTGRES_DB: str
+    POSTGRES_USER: str
+    POSTGRES_PORT: int
+
+    # RabbitMQ
+    RABBITMQ_PASS: str
+    RABBITMQ_USER: str
+    RABBITMQ_HOST: str
+    RABBITMQ_PORT: int
+
+    # REDIS
+    REDIS_PORT: int
+    REDIS_HOST: str
+    REDIS_PASSWORD: str
+    REDIS_TTL: int
+    REDIS_PREFIX: str
+    FERNET_KEY: str
+
+    # Celery Worker
+    AUTH_QUEUE_NAME: str
+    AUTH_WORKER_NAME: str
+
+    # Email Settings
+    MAIL_HOST: str = "smtp.gmail.com"
+    MAIL_PORT: int = 587
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+
+    # GROQ
+    GROQ_API_KEY: str
+    GROQ_BASE_URL: str
+
+    # OPENAI
+    OPENAI_API_KEY: str
+    OPENAI_BASE_URL: str
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+
+
+settings = Config()

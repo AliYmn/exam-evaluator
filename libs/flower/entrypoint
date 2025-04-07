@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+export CELERY_BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}//
+export FLOWER_BASIC_AUTH=${FLOWER_USER}:${FLOWER_PASSWORD}
+
+celery flower --broker=$CELERY_BROKER_URL --basic_auth=$FLOWER_BASIC_AUTH

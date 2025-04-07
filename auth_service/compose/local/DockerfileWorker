@@ -1,0 +1,36 @@
+# Base image for local development
+FROM python:3.13.2-slim-bullseye
+
+# Set working directory
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+ENV IPYTHONDIR=/app/.ipython
+
+# Create a non-root user and give appropriate permissions
+RUN groupadd -r celerygroup && useradd -r -g celerygroup celeryuser
+RUN mkdir -p /app/.ipython && chown -R celeryuser:celerygroup /app
+
+# Copy application files
+COPY ./auth_service ./auth_service
+COPY ./libs ./libs
+COPY ./requirements.txt ./requirements.txt
+
+# Install uv package manager
+RUN pip install uv
+
+# Create cache directory
+RUN mkdir -p /root/.cache/uv
+
+# Install dependencies with caching
+RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt
+
+# Copy entrypoint script
+COPY ./auth_service/compose/local/entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r//' /entrypoint.sh && chmod +x /entrypoint.sh
+
+# Switch to non-root user
+USER celeryuser
+
+# Set entrypoint
+ENTRYPOINT ["/entrypoint.sh"]

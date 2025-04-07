@@ -1,0 +1,5 @@
+# Default docker-compose file that imports the local configuration
+# For production, use: docker-compose -f docker-compose.production.yml up -d
+
+include:
+  - docker-compose.local.yml

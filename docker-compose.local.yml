@@ -1,0 +1,146 @@
+services:
+  postgres:
+    image: postgres:16.2-alpine
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT}:${POSTGRES_PORT}"
+    networks:
+      - ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2.4-alpine
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - ./data/cache:/var/lib/redis/data
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:${REDIS_PORT}"
+    networks:
+      - ai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13.0-management-alpine
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    ports:
+      - "127.0.0.1:${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - ./data/rabbitmq:/var/lib/rabbitmq/mnesia
+    networks:
+      - ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:8.5
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}
+    ports:
+      - "${PGADMIN_LISTEN_PORT}:${PGADMIN_LISTEN_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ai-network
+
+  flower:
+    build:
+      context: ./libs/flower/
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:5555:5555"
+    volumes:
+      - ./libs/compose/flower:/app
+    depends_on:
+      - rabbitmq
+    env_file:
+      - .env
+    networks:
+      - ai-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth_service/compose/local/Dockerfile
+    volumes:
+      - ./auth_service:/app/auth_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    ports:
+      - "127.0.0.1:8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - ai-network
+
+  auth-worker:
+    build:
+      context: .
+      dockerfile: auth_service/compose/local/DockerfileWorker
+    volumes:
+      - ./auth_service:/app/auth_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ai-network
+
+  auth-beat:
+    build:
+      context: .
+      dockerfile: auth_service/compose/local/DockerfileBeat
+    volumes:
+      - ./auth_service:/app/auth_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ai-network
+
+networks:
+  ai-network:
+
+volumes:
+  pip-cache:
