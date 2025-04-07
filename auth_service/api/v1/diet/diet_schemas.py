@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -31,3 +31,35 @@ class DietListResponse(BaseModel):
 
     items: List[DietResponse]
     total: int
+    count: int
+
+
+# Diet Tracker schemas
+class DietTrackerBase(BaseModel):
+    """Base model for Diet Tracker data"""
+
+    name: str
+    diet_id: int
+    is_compliant: Optional[bool] = None
+
+
+class DietTrackerCreate(DietTrackerBase):
+    """Request model for creating a Diet Tracker record"""
+
+
+class DietTrackerResponse(DietTrackerBase):
+    """Response model for Diet Tracker data"""
+
+    id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class DietTrackerListResponse(BaseModel):
+    """Response model for a list of Diet Tracker records"""
+
+    items: List[DietTrackerResponse]
+    total: int
+    count: int

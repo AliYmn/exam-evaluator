@@ -40,11 +40,17 @@ class AuthService:
 
     async def get_user(self, value: str, field: Literal["username", "email", "id"] = "username") -> Optional[User]:
         if field == "username":
-            result = await self.db.execute(select(User).where(User.username == value))
+            result = await self.db.execute(
+                select(User).where(User.username == value, User.is_active == True, User.deleted_date.is_(None))
+            )
         elif field == "email":
-            result = await self.db.execute(select(User).where(User.email == value))
+            result = await self.db.execute(
+                select(User).where(User.email == value, User.is_active == True, User.deleted_date.is_(None))
+            )
         elif field == "id":
-            result = await self.db.execute(select(User).where(User.id == int(value)))
+            result = await self.db.execute(
+                select(User).where(User.id == int(value), User.is_active == True, User.deleted_date.is_(None))
+            )
 
         return result.scalars().first()
 
@@ -73,16 +79,17 @@ class AuthService:
         user = await self.get_user(login_data.username, "username")
         if not user or not self.pwd_context.verify(login_data.password, user.password_hash):
             raise ExceptionBase(ErrorCode.INVALID_CREDENTIALS)
-        if not user.is_active:
-            raise ExceptionBase(ErrorCode.INACTIVE_USER)
 
         # Update last login time
         user.last_login = datetime.now(UTC).replace(tzinfo=None)
         await self.db.commit()
 
-        # Generate tokens
-        access_token, refresh_token, expires_in = self.auth_service.create_token_pair(
-            user_id=str(user.id), username=user.username, email=user.email
+        # Generate tokens - we already validated the user so skip validation in shared service
+        access_token, refresh_token, expires_in = await self.auth_service.create_token_pair(
+            user_id=str(user.id),
+            username=user.username,
+            email=user.email,
+            check_user=False,  # Skip redundant user check
         )
 
         # Return token
@@ -95,8 +102,8 @@ class AuthService:
         )
 
     async def refresh_token(self, refresh_token_data: RefreshToken) -> Token:
-        # Validate refresh token - don't check user in database since we just need token validation
-        payload, _ = await self.auth_service.validate_token(refresh_token_data.refresh_token, check_user=False)
+        # Validate refresh token - don't check user in database since we'll do it ourselves
+        payload = await self.auth_service.validate_token(refresh_token_data.refresh_token)
 
         # Check token type
         if "token_type" not in payload or payload["token_type"] != "refresh":
@@ -111,12 +118,13 @@ class AuthService:
         user = await self.get_user(user_id, "id")
         if not user:
             raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
-        if not user.is_active:
-            raise ExceptionBase(ErrorCode.INACTIVE_USER)
 
-        # Generate new tokens
-        access_token, refresh_token, expires_in = self.auth_service.create_token_pair(
-            user_id=str(user.id), username=user.username, email=user.email
+        # Generate new tokens - we already validated the user so skip validation in shared service
+        access_token, refresh_token, expires_in = await self.auth_service.create_token_pair(
+            user_id=str(user.id),
+            username=user.username,
+            email=user.email,
+            check_user=False,  # Skip redundant user check
         )
 
         # Return token
@@ -130,7 +138,8 @@ class AuthService:
 
     async def get_current_user(self, token: str) -> UserResponse:
         # Validate token and get user
-        _, user = await self.auth_service.validate_token(token)
+        payload, user = await self.auth_service.validate_token_with_user(token)
+
         if not user:
             raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
 
@@ -201,7 +210,12 @@ class AuthService:
         # Validate reset token
         now = to_naive_datetime(datetime.now(UTC))
         result = await self.db.execute(
-            select(User).where(User.reset_token == reset_token, User.reset_token_expiry > now)
+            select(User).where(
+                User.reset_token == reset_token,
+                User.reset_token_expiry > now,
+                User.is_active == True,
+                User.deleted_date.is_(None),
+            )
         )
         user = result.scalars().first()
         if not user:

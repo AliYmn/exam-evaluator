@@ -4,12 +4,12 @@ from sqlalchemy.orm import relationship
 from libs.models.base import BaseModel
 
 
-class Tracker(BaseModel):
-    __tablename__ = "trackers"
+class BodyTracker(BaseModel):
+    __tablename__ = "body_trackers"
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     data = Column(JSON, default=dict, nullable=False)
     user = relationship("User", backref="trackers")
 
     def __repr__(self):
-        return f"<Tracker(user_id={self.user_id})>"
+        return f"<BodyTracker(user_id={self.user_id})>"

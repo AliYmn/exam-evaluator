@@ -27,6 +27,7 @@ class ErrorCode(IntEnum):
     SERVICE_UNAVAILABLE = (2001, "Service temporarily unavailable", 503)
     TIMEOUT = (2002, "Request timeout", 504)
     BAD_GATEWAY = (2003, "Bad gateway", 502)
+    BAD_REQUEST = (2004, "Bad request", 400)
 
     # Authentication errors
     DUPLICATE_ENTRY = (3000, "Duplicate entry", 400)
