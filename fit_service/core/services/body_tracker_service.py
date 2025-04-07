@@ -13,7 +13,17 @@ class BodyTrackerService:
 
     async def create_tracker(self, user_id: int, tracker_data: TrackerCreate) -> TrackerResponse:
         """Create a new tracker record for a user"""
-        new_tracker = BodyTracker(user_id=user_id, data=tracker_data.data)
+        new_tracker = BodyTracker(
+            user_id=user_id,
+            weight=tracker_data.weight,
+            neck=tracker_data.neck,
+            waist=tracker_data.waist,
+            shoulder=tracker_data.shoulder,
+            chest=tracker_data.chest,
+            hip=tracker_data.hip,
+            thigh=tracker_data.thigh,
+            arm=tracker_data.arm,
+        )
         self.db.add(new_tracker)
         await self.db.commit()
         await self.db.refresh(new_tracker)
@@ -64,8 +74,23 @@ class BodyTrackerService:
         if not tracker:
             raise ExceptionBase(ErrorCode.NOT_FOUND)
 
-        # Update data
-        tracker.data = tracker_data.data
+        # Update fields if provided
+        if tracker_data.weight is not None:
+            tracker.weight = tracker_data.weight
+        if tracker_data.neck is not None:
+            tracker.neck = tracker_data.neck
+        if tracker_data.waist is not None:
+            tracker.waist = tracker_data.waist
+        if tracker_data.shoulder is not None:
+            tracker.shoulder = tracker_data.shoulder
+        if tracker_data.chest is not None:
+            tracker.chest = tracker_data.chest
+        if tracker_data.hip is not None:
+            tracker.hip = tracker_data.hip
+        if tracker_data.thigh is not None:
+            tracker.thigh = tracker_data.thigh
+        if tracker_data.arm is not None:
+            tracker.arm = tracker_data.arm
 
         # Save changes
         await self.db.commit()

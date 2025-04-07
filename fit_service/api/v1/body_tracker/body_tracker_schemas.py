@@ -1,11 +1,19 @@
-from typing import Any, Dict, List
-from pydantic import BaseModel, Field
+from typing import List, Optional
+from datetime import date
+from pydantic import BaseModel
 
 
 class TrackerBase(BaseModel):
     """Base model for Tracker data"""
 
-    data: Dict[str, Any] = Field(default_factory=dict)
+    weight: Optional[float] = None
+    neck: Optional[float] = None
+    waist: Optional[float] = None
+    shoulder: Optional[float] = None
+    chest: Optional[float] = None
+    hip: Optional[float] = None
+    thigh: Optional[float] = None
+    arm: Optional[float] = None
 
 
 class TrackerCreate(TrackerBase):
@@ -14,6 +22,8 @@ class TrackerCreate(TrackerBase):
 
 class TrackerUpdate(TrackerBase):
     """Request model for updating a Tracker record"""
+
+    date: Optional[date] = None
 
 
 class TrackerResponse(TrackerBase):

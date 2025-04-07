@@ -1,7 +1,7 @@
 {
     "info": {
         "name": "Workout API",
-        "description": "Collection for testing the workout endpoints",
+        "description": "Collection for testing the workout API endpoints",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -13,316 +13,676 @@
     ],
     "item": [
         {
-            "name": "Create Workout Record",
-            "event": [
+            "name": "Categories",
+            "item": [
                 {
-                    "listen": "test",
-                    "script": {
-                        "exec": [
-                            "var jsonData = pm.response.json();",
-                            "if (jsonData.id) {",
-                            "    pm.environment.set('workoutId', jsonData.id);",
-                            "    console.log('Workout ID saved to environment: ' + jsonData.id);",
-                            "}"
+                    "name": "Create Workout Category",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
                         ],
-                        "type": "text/javascript"
-                    }
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "categories"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Strength\",\n    \"description\": \"Strength training exercises\"\n}"
+                        },
+                        "description": "Create a new workout category (admin only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Workout Category",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/categories/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "categories",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific workout category by ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Workout Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/categories?skip=0&limit=100",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "categories"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                }
+                            ]
+                        },
+                        "description": "List all workout categories with pagination"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Workout Category",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/categories/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "categories",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Strength Training\",\n    \"description\": \"Updated description for strength training\"\n}"
+                        },
+                        "description": "Update a specific workout category (admin only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Workout Category",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/categories/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "categories",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific workout category (admin only)"
+                    },
+                    "response": []
                 }
-            ],
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "url": {
-                    "raw": "{{baseUrl}}/workout",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "workout"
-                    ]
-                },
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n    \"name\": \"Upper Body Strength\",\n    \"description\": \"Comprehensive upper body workout focusing on chest, shoulders, and arms\",\n    \"workout_type\": \"Strength\",\n    \"target_muscles\": [\"Chest\", \"Shoulders\", \"Biceps\", \"Triceps\"],\n    \"duration_minutes\": 45,\n    \"calories_burned\": 350,\n    \"equipment\": \"Dumbbells, Bench\",\n    \"difficulty\": \"Intermediate\",\n    \"instructions\": {\n        \"warmup\": \"5 minutes of light cardio and dynamic stretching\",\n        \"exercises\": [\n            {\n                \"name\": \"Bench Press\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"60 seconds\"\n            },\n            {\n                \"name\": \"Shoulder Press\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"60 seconds\"\n            },\n            {\n                \"name\": \"Bicep Curls\",\n                \"sets\": 3,\n                \"reps\": 15,\n                \"rest\": \"45 seconds\"\n            },\n            {\n                \"name\": \"Tricep Extensions\",\n                \"sets\": 3,\n                \"reps\": 15,\n                \"rest\": \"45 seconds\"\n            }\n        ],\n        \"cooldown\": \"5 minutes of static stretching\"\n    }\n}"
-                },
-                "description": "Create a new workout record"
-            },
-            "response": []
+            ]
         },
         {
-            "name": "Get Workout Record",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
+            "name": "Workouts",
+            "item": [
+                {
+                    "name": "Create Workout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Barbell Bench Press\",\n    \"description\": \"Classic chest exercise\",\n    \"category_id\": 1,\n    \"difficulty_level\": \"intermediate\",\n    \"equipment_needed\": \"Barbell, Bench\",\n    \"muscle_groups\": \"Chest, Triceps, Shoulders\",\n    \"instructions\": \"Lie on bench, grip barbell, lower to chest, press up\",\n    \"sets\": [\n        {\n            \"set_number\": 1,\n            \"reps\": 12,\n            \"weight\": 60,\n            \"rest_seconds\": 60,\n            \"notes\": \"Warm-up set\"\n        },\n        {\n            \"set_number\": 2,\n            \"reps\": 10,\n            \"weight\": 80,\n            \"rest_seconds\": 90,\n            \"notes\": \"Working set\"\n        },\n        {\n            \"set_number\": 3,\n            \"reps\": 8,\n            \"weight\": 90,\n            \"rest_seconds\": 120,\n            \"notes\": \"Working set\"\n        }\n    ]\n}"
+                        },
+                        "description": "Create a new workout with optional sets"
+                    },
+                    "response": []
                 },
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{baseUrl}}/workout/{{workoutId}}",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "workout",
-                        "{{workoutId}}"
-                    ]
+                {
+                    "name": "Get Workout",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific workout by ID with its sets and category"
+                    },
+                    "response": []
                 },
-                "description": "Get a specific workout record by ID"
-            },
-            "response": []
+                {
+                    "name": "List Workouts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout?skip=0&limit=100&category_id=1&difficulty_level=intermediate",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "category_id",
+                                    "value": "1",
+                                    "description": "Optional"
+                                },
+                                {
+                                    "key": "difficulty_level",
+                                    "value": "intermediate",
+                                    "description": "Optional"
+                                }
+                            ]
+                        },
+                        "description": "List workouts with optional filtering"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Workout",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Barbell Bench Press\",\n    \"description\": \"Updated description for bench press\",\n    \"difficulty_level\": \"intermediate\"\n}"
+                        },
+                        "description": "Update a specific workout"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Workout",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific workout"
+                    },
+                    "response": []
+                }
+            ]
         },
         {
-            "name": "List Workout Records",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{baseUrl}}/workout?skip=0&limit=10",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "workout"
-                    ],
-                    "query": [
-                        {
-                            "key": "skip",
-                            "value": "0"
+            "name": "Workout Sets",
+            "item": [
+                {
+                    "name": "Create Workout Set",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/1/sets",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "1",
+                                "sets"
+                            ]
                         },
-                        {
-                            "key": "limit",
-                            "value": "10"
-                        }
-                    ]
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"set_number\": 4,\n    \"reps\": 6,\n    \"weight\": 100,\n    \"rest_seconds\": 120,\n    \"notes\": \"Final set\"\n}"
+                        },
+                        "description": "Create a new set for a specific workout"
+                    },
+                    "response": []
                 },
-                "description": "List all workout records with pagination"
-            },
-            "response": []
+                {
+                    "name": "Update Workout Set",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/sets/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "sets",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reps\": 10,\n    \"weight\": 85,\n    \"notes\": \"Updated notes for this set\"\n}"
+                        },
+                        "description": "Update a specific workout set"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Workout Set",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/sets/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "sets",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific workout set"
+                    },
+                    "response": []
+                }
+            ]
         },
         {
-            "name": "Search Workout by Name",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{baseUrl}}/workout?name=Upper&skip=0&limit=10",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "workout"
-                    ],
-                    "query": [
-                        {
-                            "key": "name",
-                            "value": "Upper"
+            "name": "Workout Programs",
+            "item": [
+                {
+                    "name": "Create Workout Program",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/programs",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "programs"
+                            ]
                         },
-                        {
-                            "key": "skip",
-                            "value": "0"
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"PPL Split\",\n    \"description\": \"Push, Pull, Legs training split\",\n    \"group_name\": \"Bodybuilding\",\n    \"difficulty_level\": \"intermediate\",\n    \"duration_weeks\": 12,\n    \"goal\": \"Muscle hypertrophy and strength\",\n    \"is_public\": 1,\n    \"days\": [\n        {\n            \"day_number\": 1,\n            \"name\": \"Push Day\",\n            \"description\": \"Chest, shoulders, and triceps\",\n            \"workout_ids\": [1]\n        },\n        {\n            \"day_number\": 2,\n            \"name\": \"Pull Day\",\n            \"description\": \"Back and biceps\",\n            \"workout_ids\": [2]\n        },\n        {\n            \"day_number\": 3,\n            \"name\": \"Leg Day\",\n            \"description\": \"Quadriceps, hamstrings, and calves\",\n            \"workout_ids\": [3]\n        }\n    ]\n}"
                         },
-                        {
-                            "key": "limit",
-                            "value": "10"
-                        }
-                    ]
+                        "description": "Create a new workout program with optional days and workouts"
+                    },
+                    "response": []
                 },
-                "description": "Search workout records by name"
-            },
-            "response": []
+                {
+                    "name": "Get Workout Program",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/programs/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "programs",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific workout program by ID with its days and workouts"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Workout Programs",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/programs?skip=0&limit=100&group_name=Bodybuilding&include_public=true",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "programs"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "group_name",
+                                    "value": "Bodybuilding",
+                                    "description": "Optional"
+                                },
+                                {
+                                    "key": "include_public",
+                                    "value": "true",
+                                    "description": "Optional"
+                                }
+                            ]
+                        },
+                        "description": "List workout programs with optional filtering"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Workout Program",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/programs/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "programs",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated PPL Split\",\n    \"description\": \"Updated description for PPL split\",\n    \"duration_weeks\": 8\n}"
+                        },
+                        "description": "Update a specific workout program"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Workout Program",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/programs/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "programs",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific workout program"
+                    },
+                    "response": []
+                }
+            ]
         },
         {
-            "name": "Search Workout by Type",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{baseUrl}}/workout?workout_type=Strength&skip=0&limit=10",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "workout"
-                    ],
-                    "query": [
-                        {
-                            "key": "workout_type",
-                            "value": "Strength"
+            "name": "Program Days",
+            "item": [
+                {
+                    "name": "Create Program Day",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/programs/1/days",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "programs",
+                                "1",
+                                "days"
+                            ]
                         },
-                        {
-                            "key": "skip",
-                            "value": "0"
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"day_number\": 4,\n    \"name\": \"Rest Day\",\n    \"description\": \"Active recovery day\",\n    \"workout_ids\": [4]\n}"
                         },
-                        {
-                            "key": "limit",
-                            "value": "10"
-                        }
-                    ]
+                        "description": "Create a new day for a specific workout program"
+                    },
+                    "response": []
                 },
-                "description": "Search workout records by type"
-            },
-            "response": []
-        },
-        {
-            "name": "Search Workout by Difficulty",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{baseUrl}}/workout?difficulty=Intermediate&skip=0&limit=10",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "workout"
-                    ],
-                    "query": [
-                        {
-                            "key": "difficulty",
-                            "value": "Intermediate"
+                {
+                    "name": "Update Program Day",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/programs/days/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "programs",
+                                "days",
+                                "1"
+                            ]
                         },
-                        {
-                            "key": "skip",
-                            "value": "0"
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Updated Push Day\",\n    \"description\": \"Updated description for push day\",\n    \"workout_ids\": [1, 5]\n}"
                         },
-                        {
-                            "key": "limit",
-                            "value": "10"
-                        }
-                    ]
+                        "description": "Update a specific workout program day"
+                    },
+                    "response": []
                 },
-                "description": "Search workout records by difficulty"
-            },
-            "response": []
-        },
-        {
-            "name": "Update Workout Record",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "PUT",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "url": {
-                    "raw": "{{baseUrl}}/workout/{{workoutId}}",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "workout",
-                        "{{workoutId}}"
-                    ]
-                },
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n    \"name\": \"Upper Body Strength\",\n    \"description\": \"Comprehensive upper body workout focusing on chest, shoulders, and arms with progressive overload\",\n    \"workout_type\": \"Strength\",\n    \"target_muscles\": [\"Chest\", \"Shoulders\", \"Biceps\", \"Triceps\", \"Upper Back\"],\n    \"duration_minutes\": 50,\n    \"calories_burned\": 380,\n    \"equipment\": \"Dumbbells, Bench, Resistance Bands\",\n    \"difficulty\": \"Intermediate\",\n    \"instructions\": {\n        \"warmup\": \"5 minutes of light cardio and dynamic stretching\",\n        \"exercises\": [\n            {\n                \"name\": \"Bench Press\",\n                \"sets\": 4,\n                \"reps\": 10,\n                \"rest\": \"60 seconds\"\n            },\n            {\n                \"name\": \"Shoulder Press\",\n                \"sets\": 4,\n                \"reps\": 10,\n                \"rest\": \"60 seconds\"\n            },\n            {\n                \"name\": \"Bicep Curls\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"45 seconds\"\n            },\n            {\n                \"name\": \"Tricep Extensions\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"45 seconds\"\n            },\n            {\n                \"name\": \"Bent Over Rows\",\n                \"sets\": 3,\n                \"reps\": 12,\n                \"rest\": \"60 seconds\"\n            }\n        ],\n        \"cooldown\": \"5 minutes of static stretching\"\n    }\n}"
-                },
-                "description": "Update a workout record"
-            },
-            "response": []
-        },
-        {
-            "name": "Delete Workout Record",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "DELETE",
-                "header": [],
-                "url": {
-                    "raw": "{{baseUrl}}/workout/{{workoutId}}",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "workout",
-                        "{{workoutId}}"
-                    ]
-                },
-                "description": "Delete a workout record"
-            },
-            "response": []
+                {
+                    "name": "Delete Program Day",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/workout/programs/days/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "workout",
+                                "programs",
+                                "days",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific workout program day"
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }

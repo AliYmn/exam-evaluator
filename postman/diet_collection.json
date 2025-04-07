@@ -1,7 +1,7 @@
 {
     "info": {
         "name": "Diet API",
-        "description": "Collection for testing the diet endpoints",
+        "description": "Collection for testing the diet API endpoints",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -13,190 +13,978 @@
     ],
     "item": [
         {
-            "name": "Create Diet Record",
-            "event": [
+            "name": "Food Categories",
+            "item": [
                 {
-                    "listen": "test",
-                    "script": {
-                        "exec": [
-                            "var jsonData = pm.response.json();",
-                            "if (jsonData.id) {",
-                            "    pm.environment.set('dietId', jsonData.id);",
-                            "    console.log('Diet ID saved to environment: ' + jsonData.id);",
-                            "}"
+                    "name": "Create Food Category",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
                         ],
-                        "type": "text/javascript"
-                    }
-                }
-            ],
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "url": {
-                    "raw": "{{baseUrl}}/diet",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "diet"
-                    ]
-                },
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n    \"data\": {\n        \"meals\": [\n            {\n                \"name\": \"Breakfast\",\n                \"foods\": [\n                    {\n                        \"name\": \"Oatmeal\",\n                        \"calories\": 150,\n                        \"protein\": 5,\n                        \"carbs\": 27,\n                        \"fat\": 3\n                    },\n                    {\n                        \"name\": \"Banana\",\n                        \"calories\": 105,\n                        \"protein\": 1,\n                        \"carbs\": 27,\n                        \"fat\": 0\n                    }\n                ]\n            },\n            {\n                \"name\": \"Lunch\",\n                \"foods\": [\n                    {\n                        \"name\": \"Chicken Salad\",\n                        \"calories\": 350,\n                        \"protein\": 30,\n                        \"carbs\": 15,\n                        \"fat\": 20\n                    }\n                ]\n            }\n        ],\n        \"totalCalories\": 605,\n        \"totalProtein\": 36,\n        \"totalCarbs\": 69,\n        \"totalFat\": 23,\n        \"date\": \"2023-06-15\"\n    }\n}"
-                },
-                "description": "Create a new diet record"
-            },
-            "response": []
-        },
-        {
-            "name": "Get Diet Record",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{baseUrl}}/diet/{{dietId}}",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "diet",
-                        "{{dietId}}"
-                    ]
-                },
-                "description": "Get a specific diet record by ID"
-            },
-            "response": []
-        },
-        {
-            "name": "List Diet Records",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
-                },
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "{{baseUrl}}/diet?skip=0&limit=10",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "diet"
-                    ],
-                    "query": [
-                        {
-                            "key": "skip",
-                            "value": "0"
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/food-categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "food-categories"
+                            ]
                         },
-                        {
-                            "key": "limit",
-                            "value": "10"
-                        }
-                    ]
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Protein\",\n    \"description\": \"High protein foods\"\n}"
+                        },
+                        "description": "Create a new food category (admin only)"
+                    },
+                    "response": []
                 },
-                "description": "List all diet records with pagination"
-            },
-            "response": []
+                {
+                    "name": "Get Food Category",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/food-categories/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "food-categories",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific food category by ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Food Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/food-categories?skip=0&limit=100",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "food-categories"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                }
+                            ]
+                        },
+                        "description": "List all food categories with pagination"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Food Category",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/food-categories/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "food-categories",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Protein Sources\",\n    \"description\": \"Updated description for protein foods\"\n}"
+                        },
+                        "description": "Update a specific food category (admin only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Food Category",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/food-categories/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "food-categories",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific food category (admin only)"
+                    },
+                    "response": []
+                }
+            ]
         },
         {
-            "name": "Update Diet Record",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
+            "name": "Foods",
+            "item": [
+                {
+                    "name": "Create Food",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/foods",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "foods"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Chicken Breast\",\n    \"description\": \"Lean protein source\",\n    \"category_id\": 1,\n    \"serving_size\": 100,\n    \"serving_unit\": \"g\",\n    \"calories\": 165,\n    \"protein\": 31,\n    \"carbs\": 0,\n    \"fat\": 3.6,\n    \"fiber\": 0,\n    \"sugar\": 0,\n    \"is_public\": 1\n}"
+                        },
+                        "description": "Create a new food item"
+                    },
+                    "response": []
                 },
-                "method": "PUT",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "url": {
-                    "raw": "{{baseUrl}}/diet/{{dietId}}",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "diet",
-                        "{{dietId}}"
-                    ]
+                {
+                    "name": "Get Food",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/foods/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "foods",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific food by ID with its category"
+                    },
+                    "response": []
                 },
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n    \"data\": {\n        \"meals\": [\n            {\n                \"name\": \"Breakfast\",\n                \"foods\": [\n                    {\n                        \"name\": \"Oatmeal with honey\",\n                        \"calories\": 200,\n                        \"protein\": 5,\n                        \"carbs\": 35,\n                        \"fat\": 3\n                    },\n                    {\n                        \"name\": \"Banana\",\n                        \"calories\": 105,\n                        \"protein\": 1,\n                        \"carbs\": 27,\n                        \"fat\": 0\n                    }\n                ]\n            },\n            {\n                \"name\": \"Lunch\",\n                \"foods\": [\n                    {\n                        \"name\": \"Chicken Salad\",\n                        \"calories\": 350,\n                        \"protein\": 30,\n                        \"carbs\": 15,\n                        \"fat\": 20\n                    }\n                ]\n            },\n            {\n                \"name\": \"Dinner\",\n                \"foods\": [\n                    {\n                        \"name\": \"Salmon\",\n                        \"calories\": 300,\n                        \"protein\": 25,\n                        \"carbs\": 0,\n                        \"fat\": 18\n                    },\n                    {\n                        \"name\": \"Broccoli\",\n                        \"calories\": 55,\n                        \"protein\": 4,\n                        \"carbs\": 11,\n                        \"fat\": 0\n                    }\n                ]\n            }\n        ],\n        \"totalCalories\": 1010,\n        \"totalProtein\": 65,\n        \"totalCarbs\": 88,\n        \"totalFat\": 41,\n        \"date\": \"2023-06-15\"\n    }\n}"
+                {
+                    "name": "List Foods",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/foods?skip=0&limit=100&category_id=1&name=chicken&include_public=true",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "foods"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "category_id",
+                                    "value": "1",
+                                    "description": "Optional"
+                                },
+                                {
+                                    "key": "name",
+                                    "value": "chicken",
+                                    "description": "Optional"
+                                },
+                                {
+                                    "key": "include_public",
+                                    "value": "true",
+                                    "description": "Optional"
+                                }
+                            ]
+                        },
+                        "description": "List foods with optional filtering"
+                    },
+                    "response": []
                 },
-                "description": "Update a diet record"
-            },
-            "response": []
+                {
+                    "name": "Update Food",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/foods/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "foods",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Grilled Chicken Breast\",\n    \"description\": \"Updated description for chicken breast\",\n    \"calories\": 160,\n    \"protein\": 32\n}"
+                        },
+                        "description": "Update a specific food"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Food",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/foods/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "foods",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific food"
+                    },
+                    "response": []
+                }
+            ]
         },
         {
-            "name": "Delete Diet Record",
-            "request": {
-                "auth": {
-                    "type": "bearer",
-                    "bearer": [
-                        {
-                            "key": "token",
-                            "value": "{{accessToken}}",
-                            "type": "string"
-                        }
-                    ]
+            "name": "Supplement Categories",
+            "item": [
+                {
+                    "name": "Create Supplement Category",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplement-categories",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplement-categories"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Protein Supplements\",\n    \"description\": \"Protein powders and supplements\"\n}"
+                        },
+                        "description": "Create a new supplement category (admin only)"
+                    },
+                    "response": []
                 },
-                "method": "DELETE",
-                "header": [],
-                "url": {
-                    "raw": "{{baseUrl}}/diet/{{dietId}}",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "diet",
-                        "{{dietId}}"
-                    ]
+                {
+                    "name": "Get Supplement Category",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplement-categories/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplement-categories",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific supplement category by ID"
+                    },
+                    "response": []
                 },
-                "description": "Delete a diet record"
-            },
-            "response": []
+                {
+                    "name": "List Supplement Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplement-categories?skip=0&limit=100",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplement-categories"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                }
+                            ]
+                        },
+                        "description": "List all supplement categories with pagination"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Supplement Category",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplement-categories/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplement-categories",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Protein & Amino Supplements\",\n    \"description\": \"Updated description for protein supplements\"\n}"
+                        },
+                        "description": "Update a specific supplement category (admin only)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Supplement Category",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplement-categories/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplement-categories",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific supplement category (admin only)"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Supplements",
+            "item": [
+                {
+                    "name": "Create Supplement",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplements",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplements"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Whey Protein Isolate\",\n    \"description\": \"Fast-absorbing protein supplement\",\n    \"category_id\": 1,\n    \"serving_size\": 30,\n    \"serving_unit\": \"g\",\n    \"calories\": 120,\n    \"protein\": 25,\n    \"carbs\": 2,\n    \"fat\": 1,\n    \"recommended_dosage\": \"1-2 scoops post-workout\",\n    \"timing\": \"Post-workout or between meals\",\n    \"is_public\": 1\n}"
+                        },
+                        "description": "Create a new supplement"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Supplement",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplements/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplements",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific supplement by ID with its category"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Supplements",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplements?skip=0&limit=100&category_id=1&name=protein&include_public=true",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplements"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "category_id",
+                                    "value": "1",
+                                    "description": "Optional"
+                                },
+                                {
+                                    "key": "name",
+                                    "value": "protein",
+                                    "description": "Optional"
+                                },
+                                {
+                                    "key": "include_public",
+                                    "value": "true",
+                                    "description": "Optional"
+                                }
+                            ]
+                        },
+                        "description": "List supplements with optional filtering"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Supplement",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplements/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplements",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Premium Whey Protein Isolate\",\n    \"description\": \"Updated description for whey protein\",\n    \"protein\": 27,\n    \"recommended_dosage\": \"1 scoop post-workout\"\n}"
+                        },
+                        "description": "Update a specific supplement"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Supplement",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/supplements/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "supplements",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific supplement"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Diet Plans",
+            "item": [
+                {
+                    "name": "Create Diet Plan",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/plans",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "plans"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Muscle Building Plan\",\n    \"description\": \"High protein diet for muscle growth\",\n    \"goal\": \"muscle_gain\",\n    \"daily_calories\": 3000,\n    \"protein_target\": 200,\n    \"carbs_target\": 350,\n    \"fat_target\": 80,\n    \"fiber_target\": 35,\n    \"water_target\": 4000,\n    \"notes\": \"Focus on high-quality protein sources and complex carbs\",\n    \"is_public\": 1\n}"
+                        },
+                        "description": "Create a new diet plan"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Diet Plan",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/plans/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "plans",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific diet plan by ID"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Diet Plans",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/plans?skip=0&limit=100&goal=muscle_gain&include_public=true",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "plans"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "goal",
+                                    "value": "muscle_gain",
+                                    "description": "Optional"
+                                },
+                                {
+                                    "key": "include_public",
+                                    "value": "true",
+                                    "description": "Optional"
+                                }
+                            ]
+                        },
+                        "description": "List diet plans with optional filtering"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Diet Plan",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/plans/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "plans",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Advanced Muscle Building Plan\",\n    \"description\": \"Updated description for muscle building diet\",\n    \"daily_calories\": 3200,\n    \"protein_target\": 220\n}"
+                        },
+                        "description": "Update a specific diet plan"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Diet Plan",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/plans/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "plans",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific diet plan"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Meal Templates",
+            "item": [
+                {
+                    "name": "Create Meal Template",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/meal-templates",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "meal-templates"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"High Protein Breakfast\",\n    \"description\": \"Protein-rich breakfast template\",\n    \"meal_type\": \"breakfast\",\n    \"is_public\": 1,\n    \"foods\": [\n        {\n            \"food_id\": 1,\n            \"quantity\": 2,\n            \"notes\": \"Scrambled with spinach\"\n        },\n        {\n            \"food_id\": 2,\n            \"quantity\": 1,\n            \"notes\": \"Toasted\"\n        }\n    ]\n}"
+                        },
+                        "description": "Create a new meal template with foods"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Meal Template",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/meal-templates/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "meal-templates",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific meal template by ID with its foods"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Meal Templates",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/meal-templates?skip=0&limit=100&meal_type=breakfast&include_public=true",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "meal-templates"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "meal_type",
+                                    "value": "breakfast",
+                                    "description": "Optional"
+                                },
+                                {
+                                    "key": "include_public",
+                                    "value": "true",
+                                    "description": "Optional"
+                                }
+                            ]
+                        },
+                        "description": "List meal templates with optional filtering"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Meal Template",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/meal-templates/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "meal-templates",
+                                "1"
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Super High Protein Breakfast\",\n    \"description\": \"Updated description for breakfast template\"\n}"
+                        },
+                        "description": "Update a specific meal template"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Meal Template",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "{{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/diet/meal-templates/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "diet",
+                                "meal-templates",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete a specific meal template"
+                    },
+                    "response": []
+                }
+            ]
         }
     ]
 }

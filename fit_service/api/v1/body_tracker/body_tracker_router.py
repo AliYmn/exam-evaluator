@@ -63,7 +63,6 @@ async def list_trackers(
     trackers, total_count = await body_tracker_service.list_trackers(user.id, skip, limit)
     return TrackerListResponse(
         items=trackers,
-        count=len(trackers),
         total=total_count,
     )
 

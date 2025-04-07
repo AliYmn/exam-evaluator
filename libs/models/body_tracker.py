@@ -1,13 +1,18 @@
-from sqlalchemy import Column, Integer, ForeignKey, JSON
-
+from sqlalchemy import Column, Integer, Float, ForeignKey
 from libs.models.base import BaseModel
 
 
 class BodyTracker(BaseModel):
     __tablename__ = "body_trackers"
-
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    data = Column(JSON, default=dict, nullable=False)
+    weight = Column(Float, nullable=True)
+    neck = Column(Float, nullable=True)
+    waist = Column(Float, nullable=True)
+    shoulder = Column(Float, nullable=True)
+    chest = Column(Float, nullable=True)
+    hip = Column(Float, nullable=True)
+    thigh = Column(Float, nullable=True)
+    arm = Column(Float, nullable=True)
 
     def __repr__(self):
         return f"<BodyTracker(user_id={self.user_id})>"

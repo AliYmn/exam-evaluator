@@ -1,7 +1,7 @@
 {
     "info": {
-        "name": "Daily Tracker API",
-        "description": "Collection for testing the daily tracker API endpoints",
+        "name": "Body Tracker API",
+        "description": "Collection for testing the body tracker API endpoints",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -13,7 +13,7 @@
     ],
     "item": [
         {
-            "name": "Create Daily Tracker",
+            "name": "Create Body Tracker",
             "request": {
                 "method": "POST",
                 "header": [
@@ -27,24 +27,24 @@
                     }
                 ],
                 "url": {
-                    "raw": "{{baseUrl}}/daily-tracker",
+                    "raw": "{{baseUrl}}/tracker",
                     "host": [
                         "{{baseUrl}}"
                     ],
                     "path": [
-                        "daily-tracker"
+                        "tracker"
                     ]
                 },
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"energy\": 7,\n    \"sleep\": 8,\n    \"stress\": 3,\n    \"muscle_soreness\": 4,\n    \"fatigue\": 3,\n    \"hunger\": 6,\n    \"water_intake\": 2500,\n    \"mood\": \"good\",\n    \"notes\": \"Feeling good today, had a productive workout\"\n}"
+                    "raw": "{\n    \"weight\": 75.5,\n    \"neck\": 38.2,\n    \"waist\": 82.3,\n    \"shoulder\": 110.5,\n    \"chest\": 95.8,\n    \"hip\": 90.2,\n    \"thigh\": 58.6,\n    \"arm\": 35.4,\n    \"notes\": \"Monthly measurement\"\n}"
                 },
-                "description": "Create a new daily tracker record for the authenticated user"
+                "description": "Create a new body tracker record for the authenticated user"
             },
             "response": []
         },
         {
-            "name": "Get Daily Tracker",
+            "name": "Get Body Tracker",
             "request": {
                 "method": "GET",
                 "header": [
@@ -54,21 +54,21 @@
                     }
                 ],
                 "url": {
-                    "raw": "{{baseUrl}}/daily-tracker/1",
+                    "raw": "{{baseUrl}}/tracker/1",
                     "host": [
                         "{{baseUrl}}"
                     ],
                     "path": [
-                        "daily-tracker",
+                        "tracker",
                         "1"
                     ]
                 },
-                "description": "Get a specific daily tracker record by ID"
+                "description": "Get a specific body tracker record by ID"
             },
             "response": []
         },
         {
-            "name": "List Daily Trackers",
+            "name": "List Body Trackers",
             "request": {
                 "method": "GET",
                 "header": [
@@ -78,12 +78,12 @@
                     }
                 ],
                 "url": {
-                    "raw": "{{baseUrl}}/daily-tracker?skip=0&limit=100",
+                    "raw": "{{baseUrl}}/tracker?skip=0&limit=100",
                     "host": [
                         "{{baseUrl}}"
                     ],
                     "path": [
-                        "daily-tracker"
+                        "tracker"
                     ],
                     "query": [
                         {
@@ -96,36 +96,12 @@
                         }
                     ]
                 },
-                "description": "List all daily tracker records for the authenticated user with pagination"
+                "description": "List all body tracker records for the authenticated user with pagination"
             },
             "response": []
         },
         {
-            "name": "Get Latest Daily Tracker",
-            "request": {
-                "method": "GET",
-                "header": [
-                    {
-                        "key": "Authorization",
-                        "value": "{{accessToken}}"
-                    }
-                ],
-                "url": {
-                    "raw": "{{baseUrl}}/daily-tracker/latest",
-                    "host": [
-                        "{{baseUrl}}"
-                    ],
-                    "path": [
-                        "daily-tracker",
-                        "latest"
-                    ]
-                },
-                "description": "Get the latest daily tracker record for the authenticated user"
-            },
-            "response": []
-        },
-        {
-            "name": "Update Daily Tracker",
+            "name": "Update Body Tracker",
             "request": {
                 "method": "PUT",
                 "header": [
@@ -139,25 +115,25 @@
                     }
                 ],
                 "url": {
-                    "raw": "{{baseUrl}}/daily-tracker/1",
+                    "raw": "{{baseUrl}}/tracker/1",
                     "host": [
                         "{{baseUrl}}"
                     ],
                     "path": [
-                        "daily-tracker",
+                        "tracker",
                         "1"
                     ]
                 },
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"energy\": 8,\n    \"sleep\": 9,\n    \"stress\": 2,\n    \"muscle_soreness\": 3,\n    \"notes\": \"Updated notes for today\"\n}"
+                    "raw": "{\n    \"weight\": 74.8,\n    \"waist\": 81.5,\n    \"chest\": 96.2,\n    \"notes\": \"Updated measurements after 2 weeks\"\n}"
                 },
-                "description": "Update a specific daily tracker record"
+                "description": "Update a specific body tracker record"
             },
             "response": []
         },
         {
-            "name": "Delete Daily Tracker",
+            "name": "Delete Body Tracker",
             "request": {
                 "method": "DELETE",
                 "header": [
@@ -167,16 +143,16 @@
                     }
                 ],
                 "url": {
-                    "raw": "{{baseUrl}}/daily-tracker/1",
+                    "raw": "{{baseUrl}}/tracker/1",
                     "host": [
                         "{{baseUrl}}"
                     ],
                     "path": [
-                        "daily-tracker",
+                        "tracker",
                         "1"
                     ]
                 },
-                "description": "Delete a specific daily tracker record"
+                "description": "Delete a specific body tracker record"
             },
             "response": []
         }
