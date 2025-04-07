@@ -31,7 +31,7 @@ class TrackerService:
         tracker = result.scalars().first()
 
         if not tracker:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, "Tracker record not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         return TrackerResponse.model_validate(tracker)
 
@@ -76,7 +76,7 @@ class TrackerService:
         tracker = result.scalars().first()
 
         if not tracker:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, "Tracker record not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Update tracker data
         tracker.data = tracker_data.data
@@ -96,7 +96,7 @@ class TrackerService:
         tracker = result.scalars().first()
 
         if not tracker:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, "Tracker record not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Soft delete by setting deleted_date
         tracker.deleted_date = datetime.now()

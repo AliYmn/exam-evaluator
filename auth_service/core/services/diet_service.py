@@ -30,7 +30,7 @@ class DietService:
         diet = result.scalars().first()
 
         if not diet:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, "Diet record not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         return DietResponse.model_validate(diet)
 
@@ -68,7 +68,7 @@ class DietService:
         diet = result.scalars().first()
 
         if not diet:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, "Diet record not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Update diet data
         diet.data = diet_data.data
@@ -86,7 +86,7 @@ class DietService:
         diet = result.scalars().first()
 
         if not diet:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, "Diet record not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Soft delete by setting deleted_date
         diet.deleted_date = datetime.now()
@@ -103,7 +103,7 @@ class DietService:
         diet = diet_result.scalars().first()
 
         if not diet:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, "Diet record not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Get total count
         count_query = select(DietTracker).where(

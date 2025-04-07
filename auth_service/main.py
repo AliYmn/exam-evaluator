@@ -9,6 +9,8 @@ from fastapi.responses import ORJSONResponse
 from auth_service.api.v1.auth.auth_router import auth_router
 from auth_service.api.v1.diet.diet_router import router as diet_router
 from auth_service.api.v1.tracker.tracker_router import router as tracker_router
+from auth_service.api.v1.food.food_router import router as food_router
+from auth_service.api.v1.workout.workout_router import router as workout_router
 from libs import ExceptionBase, settings
 
 
@@ -50,3 +52,5 @@ async def http_exception_handler(_request, exc: ExceptionBase) -> ORJSONResponse
 app.include_router(auth_router, prefix=settings.API_STR)
 app.include_router(diet_router, prefix=settings.API_STR)
 app.include_router(tracker_router, prefix=settings.API_STR)
+app.include_router(food_router, prefix=settings.API_STR)
+app.include_router(workout_router, prefix=settings.API_STR)
