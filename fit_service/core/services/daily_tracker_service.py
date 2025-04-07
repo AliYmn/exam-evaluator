@@ -29,10 +29,8 @@ class DailyTrackerService:
             water_intake_liters=tracker_data.water_intake_liters,
             sleep_hours=tracker_data.sleep_hours,
             mood=tracker_data.mood,
-            bowel_movement=tracker_data.bowel_movement,
-            urine_color=tracker_data.urine_color,
-            menstrual_phase=tracker_data.menstrual_phase,
             training_quality=tracker_data.training_quality,
+            diet_compliance=tracker_data.diet_compliance,
         )
         self.db.add(new_tracker)
         await self.db.commit()
@@ -105,14 +103,10 @@ class DailyTrackerService:
             tracker.sleep_hours = tracker_data.sleep_hours
         if tracker_data.mood is not None:
             tracker.mood = tracker_data.mood
-        if tracker_data.bowel_movement is not None:
-            tracker.bowel_movement = tracker_data.bowel_movement
-        if tracker_data.urine_color is not None:
-            tracker.urine_color = tracker_data.urine_color
-        if tracker_data.menstrual_phase is not None:
-            tracker.menstrual_phase = tracker_data.menstrual_phase
         if tracker_data.training_quality is not None:
             tracker.training_quality = tracker_data.training_quality
+        if tracker_data.diet_compliance is not None:
+            tracker.diet_compliance = tracker_data.diet_compliance
 
         await self.db.commit()
         await self.db.refresh(tracker)

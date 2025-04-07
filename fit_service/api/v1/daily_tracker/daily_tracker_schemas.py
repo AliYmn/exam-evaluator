@@ -15,10 +15,8 @@ class DailyTrackerBase(BaseModel):
     water_intake_liters: Optional[float] = Field(None, description="Water intake in liters")
     sleep_hours: Optional[float] = Field(None, description="Sleep hours")
     mood: Optional[str] = Field(None, description="Mood", max_length=50)
-    bowel_movement: Optional[str] = Field(None, description="Bowel movement", max_length=50)
-    urine_color: Optional[str] = Field(None, description="Urine color", max_length=50)
-    menstrual_phase: Optional[str] = Field(None, description="Menstrual phase", max_length=50)
     training_quality: Optional[int] = Field(None, description="Training quality", ge=1, le=10)
+    diet_compliance: Optional[int] = Field(None, description="Diet compliance", ge=1, le=10)
 
 
 class DailyTrackerCreate(DailyTrackerBase):
