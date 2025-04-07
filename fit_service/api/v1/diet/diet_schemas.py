@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 
 class DietBase(BaseModel):
@@ -21,6 +22,7 @@ class DietResponse(DietBase):
 
     id: int
     user_id: int
+    created_date: datetime
 
     class Config:
         from_attributes = True

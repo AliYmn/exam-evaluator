@@ -16,7 +16,7 @@ class DailyTrackerService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_daily_tracker(self, user_id: int, tracker_data: DailyTrackerCreate) -> DailyTrackerResponse:
+    async def create_daily_tracker(self, user_id: int, tracker_data: DailyTrackerCreate) -> None:
         """Create a new daily tracker record for a user"""
         new_tracker = DailyTracker(
             user_id=user_id,
@@ -33,8 +33,6 @@ class DailyTrackerService:
         self.db.add(new_tracker)
         await self.db.commit()
         await self.db.refresh(new_tracker)
-
-        return DailyTrackerResponse.model_validate(new_tracker)
 
     async def get_daily_tracker(self, tracker_id: int, user_id: int) -> Optional[DailyTrackerResponse]:
         """Get a specific daily tracker record by ID, ensuring it belongs to the user"""
@@ -71,9 +69,7 @@ class DailyTrackerService:
 
         return [DailyTrackerResponse.model_validate(tracker) for tracker in trackers], total_count
 
-    async def update_daily_tracker(
-        self, tracker_id: int, user_id: int, tracker_data: DailyTrackerUpdate
-    ) -> DailyTrackerResponse:
+    async def update_daily_tracker(self, tracker_id: int, user_id: int, tracker_data: DailyTrackerUpdate) -> None:
         """Update a specific daily tracker record"""
         # Get the tracker record
         result = await self.db.execute(
@@ -108,8 +104,6 @@ class DailyTrackerService:
 
         await self.db.commit()
         await self.db.refresh(tracker)
-
-        return DailyTrackerResponse.model_validate(tracker)
 
     async def delete_daily_tracker(self, tracker_id: int, user_id: int) -> None:
         """Soft delete a specific daily tracker record by setting deleted_date"""

@@ -1,5 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 
 class DailyTrackerBase(BaseModel):
@@ -29,6 +30,7 @@ class DailyTrackerResponse(DailyTrackerBase):
 
     id: int
     user_id: int
+    created_date: Optional[datetime] = None
 
     class Config:
         from_attributes = True

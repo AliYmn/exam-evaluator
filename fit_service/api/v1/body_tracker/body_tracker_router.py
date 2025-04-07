@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, status, Header
 from typing import Annotated
 
-from fit_service.api.v1.tracker.tracker_schemas import (
+from fit_service.api.v1.body_tracker.body_tracker_schemas import (
     TrackerCreate,
     TrackerUpdate,
     TrackerListResponse,
