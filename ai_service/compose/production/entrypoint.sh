@@ -4,7 +4,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-export CELERY_AUTH_QUEUE_NAME=${AUTH_QUEUE_NAME}
-export CELERY_AUTH_WORKER_NAME=${AUTH_WORKER_NAME}
+export CELERY_AI_QUEUE_NAME=${AI_QUEUE_NAME}
+export CELERY_AI_WORKER_NAME=${AI_WORKER_NAME}
 
-celery -A ai_service.core.worker.tasks.celery_app worker --loglevel=ERROR -E --queues=${CELERY_AUTH_QUEUE_NAME} -n ${CELERY_AUTH_WORKER_NAME}@%n
+celery -A ai_service.core.worker.tasks.celery_app worker --loglevel=ERROR -E --queues=${CELERY_AI_QUEUE_NAME} -n ${CELERY_AI_WORKER_NAME}@%n

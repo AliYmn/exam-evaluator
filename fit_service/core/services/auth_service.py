@@ -138,7 +138,7 @@ class AuthService:
 
     async def get_current_user(self, token: str) -> UserResponse:
         # Validate token and get user
-        payload, user = await self.fit_service.validate_token_with_user(token)
+        _, user = await self.fit_service.validate_token_with_user(token)
 
         if not user:
             raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
