@@ -23,7 +23,7 @@ RUN mkdir -p /root/.cache/uv
 RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt
 
 # Expose the application port
-EXPOSE 8001
+EXPOSE 8000
 
 # Set default command with gunicorn for production
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "fit_service.main:app", "--bind", "0.0.0.0:8001", "--timeout", "90"]
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "fit_service.main:app", "--bind", "0.0.0.0:8000", "--timeout", "90"]

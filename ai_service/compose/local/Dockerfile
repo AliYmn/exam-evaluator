@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
 # Copy application files
-COPY ./fit_service ./fit_service
+COPY ./ai_service ./ai_service
 COPY ./libs ./libs
 COPY ./requirements.txt ./requirements.txt
 
@@ -27,4 +27,4 @@ RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt && \
 EXPOSE 8001
 
 # Set default command with FastAPI dev mode for local development
-CMD ["uvicorn", "fit_service.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "ai_service.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
