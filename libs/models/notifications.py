@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime
-from datetime import datetime
+from datetime import datetime, timezone
 
 from libs.models.base import BaseModel
 
@@ -12,7 +12,7 @@ class Notification(BaseModel):
     message = Column(Text, nullable=False)
     n_type = Column(String(50), default="info")
     is_read = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
     target_screen = Column(String(100), nullable=True)
 
     def __repr__(self):
