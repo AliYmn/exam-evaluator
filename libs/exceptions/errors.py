@@ -34,6 +34,17 @@ class ErrorCode(IntEnum):
     AUTHENTICATION_FAILED = (3002, "Authentication failed", 401)
     INVALID_TOKEN = (3003, "Invalid token", 401)
     EXPIRED_TOKEN = (3004, "Expired token", 401)
+    WEAK_PASSWORD = (3005, "Password does not meet security requirements", 400)
+    INVALID_EMAIL = (3006, "Invalid email format", 400)
+    INVALID_PHONE_NUMBER = (3007, "Invalid phone number format", 400)
+    INVALID_USERNAME = (3008, "Invalid username format", 400)
+    USERNAME_TAKEN = (3009, "Username is already taken", 409)
+    EMAIL_TAKEN = (3010, "Email is already registered", 409)
+    INVALID_CREDENTIALS = (3011, "Invalid username or password", 401)
+    INACTIVE_USER = (3012, "User account is inactive", 403)
+    USER_NOT_FOUND = (3013, "User not found", 404)
+    INVALID_RESET_TOKEN = (3014, "Invalid or expired password reset token", 400)
+    CREDENTIAL_ALREADY_EXISTS = (3015, "Registration failed - credential already exists", 409)
 
     def __str__(self) -> str:
         return f"Error Code: {self.code}, Message: {self.message}, Status Code: {self.status_code}"

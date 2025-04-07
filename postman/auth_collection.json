@@ -1,0 +1,332 @@
+{
+    "info": {
+        "name": "Auth Service API",
+        "description": "Collection for testing the authentication service API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "{{baseUrl}}",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Register User",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/register",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "register"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"username\": \"{{username}}\",\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\",\n    \"first_name\": \"{{firstName}}\",\n    \"last_name\": \"{{lastName}}\"\n}"
+                },
+                "description": "Register a new user"
+            },
+            "response": []
+        },
+        {
+            "name": "Login",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "if (jsonData.access_token) {",
+                            "    pm.environment.set('accessToken', jsonData.access_token);",
+                            "    pm.environment.set('refreshToken', jsonData.refresh_token);",
+                            "    pm.environment.set('tokenExpiry', (new Date()).getTime() + (jsonData.expires_in * 1000));",
+                            "    console.log('Tokens saved to environment');",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/login",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}"
+                },
+                "description": "Login and get access token"
+            },
+            "response": []
+        },
+        {
+            "name": "Get Current User",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Check if token is expired and refresh if needed",
+                            "const tokenExpiry = pm.environment.get('tokenExpiry');",
+                            "const currentTime = new Date().getTime();",
+                            "",
+                            "if (tokenExpiry && currentTime > tokenExpiry) {",
+                            "    console.log('Token expired, refreshing...');",
+                            "    pm.sendRequest({",
+                            "        url: pm.environment.get('baseUrl') + '/refresh-token',",
+                            "        method: 'POST',",
+                            "        header: {",
+                            "            'Content-Type': 'application/json'",
+                            "        },",
+                            "        body: {",
+                            "            mode: 'raw',",
+                            "            raw: JSON.stringify({",
+                            "                refresh_token: pm.environment.get('refreshToken')",
+                            "            })",
+                            "        }",
+                            "    }, function (err, res) {",
+                            "        if (!err && res.code === 200) {",
+                            "            const jsonData = res.json();",
+                            "            pm.environment.set('accessToken', jsonData.access_token);",
+                            "            pm.environment.set('refreshToken', jsonData.refresh_token);",
+                            "            pm.environment.set('tokenExpiry', (new Date()).getTime() + (jsonData.expires_in * 1000));",
+                            "            console.log('Token refreshed successfully');",
+                            "        } else {",
+                            "            console.log('Failed to refresh token');",
+                            "        }",
+                            "    });",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/me",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "me"
+                    ]
+                },
+                "description": "Get current user profile"
+            },
+            "response": []
+        },
+        {
+            "name": "Update User Profile",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "// Check if token is expired and refresh if needed",
+                            "const tokenExpiry = pm.environment.get('tokenExpiry');",
+                            "const currentTime = new Date().getTime();",
+                            "",
+                            "if (tokenExpiry && currentTime > tokenExpiry) {",
+                            "    console.log('Token expired, refreshing...');",
+                            "    pm.sendRequest({",
+                            "        url: pm.environment.get('baseUrl') + '/refresh-token',",
+                            "        method: 'POST',",
+                            "        header: {",
+                            "            'Content-Type': 'application/json'",
+                            "        },",
+                            "        body: {",
+                            "            mode: 'raw',",
+                            "            raw: JSON.stringify({",
+                            "                refresh_token: pm.environment.get('refreshToken')",
+                            "            })",
+                            "        }",
+                            "    }, function (err, res) {",
+                            "        if (!err && res.code === 200) {",
+                            "            const jsonData = res.json();",
+                            "            pm.environment.set('accessToken', jsonData.access_token);",
+                            "            pm.environment.set('refreshToken', jsonData.refresh_token);",
+                            "            pm.environment.set('tokenExpiry', (new Date()).getTime() + (jsonData.expires_in * 1000));",
+                            "            console.log('Token refreshed successfully');",
+                            "        } else {",
+                            "            console.log('Failed to refresh token');",
+                            "        }",
+                            "    });",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "PATCH",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/me",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "me"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"first_name\": \"Updated First Name\",\n    \"last_name\": \"Updated Last Name\",\n    \"phone_number\": \"{{updatedPhone}}\"\n}"
+                },
+                "description": "Update user profile information"
+            },
+            "response": []
+        },
+        {
+            "name": "Refresh Token",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "if (jsonData.access_token) {",
+                            "    pm.environment.set('accessToken', jsonData.access_token);",
+                            "    pm.environment.set('refreshToken', jsonData.refresh_token);",
+                            "    pm.environment.set('tokenExpiry', (new Date()).getTime() + (jsonData.expires_in * 1000));",
+                            "    console.log('Tokens refreshed and saved to environment');",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/refresh-token",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "refresh-token"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"refresh_token\": \"{{refreshToken}}\"\n}"
+                },
+                "description": "Refresh access token using refresh token"
+            },
+            "response": []
+        },
+        {
+            "name": "Request Password Reset",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/password-reset/request",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "password-reset",
+                        "request"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email\": \"{{email}}\"\n}"
+                },
+                "description": "Request a password reset (sends email with token)"
+            },
+            "response": []
+        },
+        {
+            "name": "Reset Password",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/password-reset/{{resetToken}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "password-reset",
+                        "{{resetToken}}"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"password\": \"{{newPassword}}\"\n}"
+                },
+                "description": "Reset password with token received via email"
+            },
+            "response": []
+        }
+    ]
+}

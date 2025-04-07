@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, EmailStr, field_validator
 
@@ -91,11 +91,10 @@ def validate_username(username: str) -> str:
 
 
 class LoginRequest(BaseModel):
-    """Login request model for JSON-based authentication"""
+    """Login request model for authentication"""
 
     username: str
     password: str
-    app_name: str
     grant_type: Optional[str] = "password"
     scope: Optional[str] = ""
     client_id: Optional[str] = None
@@ -125,18 +124,12 @@ class NewPassword(BaseModel):
 
 
 class Token(BaseModel):
-    """Base token response model"""
+    """Token response model"""
 
     access_token: str
     token_type: str = "bearer"
     expires_in: int
     refresh_token: Optional[str] = None
-
-
-class AppToken(Token):
-    """App-specific token response model"""
-
-    app_name: str
     username: str
 
 
@@ -153,7 +146,6 @@ class UserCreate(BaseModel):
     username: str  # Mandatory username field
     email: EmailStr
     password: str
-    app_name: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     date_of_birth: Optional[datetime] = None
@@ -261,49 +253,3 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-class AppUserLogin(BaseModel):
-    """Simple app user login model"""
-
-    app_name: str
-    username: str
-    password: str
-
-
-class AppUserCreate(BaseModel):
-    """App user creation model"""
-
-    app_name: str
-    user_data: UserCreate
-
-
-class AppUserResponse(BaseModel):
-    """App user response model"""
-
-    user: UserResponse
-    app_name: str
-    username: str
-
-
-class AppUserAssociation(BaseModel):
-    """App user association model"""
-
-    user_id: int
-    app_name: str
-    username: str
-
-
-class UserAppInfo(BaseModel):
-    """User app information model"""
-
-    app_id: int
-    app_name: str
-    username: str
-
-
-class UserAppsResponse(BaseModel):
-    """User apps response model"""
-
-    user_id: int
-    apps: List[UserAppInfo]

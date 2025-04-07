@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth_service.api.v1.schemas import LoginRequest, NewPassword, PasswordReset, RefreshToken, UserCreate, UserUpdate
 from auth_service.core.services.auth_service import AuthService
-from libs.db import get_db
+from libs.db import get_async_db
 
 # Create router with auth tag
 auth_router = APIRouter(tags=["Auth"])
@@ -14,7 +14,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 # Common dependency for auth service
-async def get_auth_service(db: AsyncSession = Depends(get_db)) -> AuthService:
+async def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthService:
     return AuthService(db)
 
 
@@ -27,7 +27,7 @@ async def register_user(user_data: UserCreate, auth_service: AuthService = Depen
 # Login endpoint
 @auth_router.post("/login")
 async def login(login_data: LoginRequest, auth_service: AuthService = Depends(get_auth_service)):
-    return await auth_service.authenticate_app_user(login_data)
+    return await auth_service.authenticate_user(login_data)
 
 
 # Token refresh endpoint
