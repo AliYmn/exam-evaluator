@@ -55,17 +55,17 @@ restart-prod:
 
 # 📝 View logs for a specific service
 log:
-	docker compose logs -f auth-service
+	docker compose logs -f fit-service
 
 # 🖥️ Open a bash shell in a container
 bash:
-	docker compose exec auth-service bash
+	docker compose exec fit-service bash
 
 # 🐞 Run a service in debug mode with ports exposed
 run-debug:
-	docker compose stop auth-service; \
-	docker compose rm -f auth-service; \
-	docker compose run --rm --service-ports auth-service
+	docker compose stop fit-service; \
+	docker compose rm -f fit-service; \
+	docker compose run --rm --service-ports fit-service
 
 #-----------------------------------------------
 # 🗄️ Database Migration Commands
@@ -75,28 +75,28 @@ run-debug:
 makemigrations:
 	@echo '✏️ Migration Name: '; \
 	read NAME; \
-	docker compose run --rm auth-service alembic -c /app/libs/alembic.ini revision --autogenerate -m "$$NAME"
+	docker compose run --rm fit-service alembic -c /app/libs/alembic.ini revision --autogenerate -m "$$NAME"
 
 # ⬆️ Apply all migrations
 migrate:
-	docker compose run --rm auth-service alembic -c /app/libs/alembic.ini upgrade heads
+	docker compose run --rm fit-service alembic -c /app/libs/alembic.ini upgrade heads
 
 # 📋 Show migration history
 showmigrations:
-	docker compose run --rm auth-service alembic -c /app/libs/alembic.ini history
+	docker compose run --rm fit-service alembic -c /app/libs/alembic.ini history
 
 # 🏁 Initialize migrations
 initmigrations:
-	docker compose run --rm auth-service alembic -c /app/libs/alembic.ini init migrations
+	docker compose run --rm fit-service alembic -c /app/libs/alembic.ini init migrations
 
 # ⬇️ Downgrade to a previous migration
 downgrade:
 	@echo '⏮️ Enter revision (or press enter for -1): '; \
 	read REVISION; \
 	if [ -z "$$REVISION" ]; then \
-		docker compose run --rm auth-service alembic -c /app/libs/alembic.ini downgrade -1; \
+		docker compose run --rm fit-service alembic -c /app/libs/alembic.ini downgrade -1; \
 	else \
-		docker compose run --rm auth-service alembic -c /app/libs/alembic.ini downgrade $$REVISION; \
+		docker compose run --rm fit-service alembic -c /app/libs/alembic.ini downgrade $$REVISION; \
 	fi
 
 #-----------------------------------------------
@@ -112,4 +112,4 @@ pre-check:
 
 # 🐚 Open a Python shell in a service
 service-shell:
-	docker compose run --rm auth-service python /app/libs/shell_plus.py
+	docker compose run --rm fit-service python /app/libs/shell_plus.py

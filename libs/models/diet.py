@@ -9,7 +9,6 @@ class Diet(BaseModel):
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     data = Column(JSON, default=dict, nullable=False)
-
     user = relationship("User", backref="diets")
 
     def __repr__(self):
