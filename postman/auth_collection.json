@@ -52,6 +52,11 @@
                             "    pm.environment.set('refreshToken', jsonData.refresh_token);",
                             "    pm.environment.set('tokenExpiry', (new Date()).getTime() + (jsonData.expires_in * 1000));",
                             "    console.log('Tokens saved to environment');",
+                            "    ",
+                            "    // Reset IDs for diet and tracker to ensure we're not using stale data",
+                            "    pm.environment.set('dietId', '');",
+                            "    pm.environment.set('trackerId', '');",
+                            "    console.log('Diet and Tracker IDs reset');",
                             "}"
                         ],
                         "type": "text/javascript"

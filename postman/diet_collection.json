@@ -1,0 +1,202 @@
+{
+    "info": {
+        "name": "Diet API",
+        "description": "Collection for testing the diet endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "{{baseUrl}}",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Create Diet Record",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            "if (jsonData.id) {",
+                            "    pm.environment.set('dietId', jsonData.id);",
+                            "    console.log('Diet ID saved to environment: ' + jsonData.id);",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/diet",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "diet"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"data\": {\n        \"meals\": [\n            {\n                \"name\": \"Breakfast\",\n                \"foods\": [\n                    {\n                        \"name\": \"Oatmeal\",\n                        \"calories\": 150,\n                        \"protein\": 5,\n                        \"carbs\": 27,\n                        \"fat\": 3\n                    },\n                    {\n                        \"name\": \"Banana\",\n                        \"calories\": 105,\n                        \"protein\": 1,\n                        \"carbs\": 27,\n                        \"fat\": 0\n                    }\n                ]\n            },\n            {\n                \"name\": \"Lunch\",\n                \"foods\": [\n                    {\n                        \"name\": \"Chicken Salad\",\n                        \"calories\": 350,\n                        \"protein\": 30,\n                        \"carbs\": 15,\n                        \"fat\": 20\n                    }\n                ]\n            }\n        ],\n        \"totalCalories\": 605,\n        \"totalProtein\": 36,\n        \"totalCarbs\": 69,\n        \"totalFat\": 23,\n        \"date\": \"2023-06-15\"\n    }\n}"
+                },
+                "description": "Create a new diet record"
+            },
+            "response": []
+        },
+        {
+            "name": "Get Diet Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/diet/{{dietId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "diet",
+                        "{{dietId}}"
+                    ]
+                },
+                "description": "Get a specific diet record by ID"
+            },
+            "response": []
+        },
+        {
+            "name": "List Diet Records",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/diet?skip=0&limit=10",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "diet"
+                    ],
+                    "query": [
+                        {
+                            "key": "skip",
+                            "value": "0"
+                        },
+                        {
+                            "key": "limit",
+                            "value": "10"
+                        }
+                    ]
+                },
+                "description": "List all diet records with pagination"
+            },
+            "response": []
+        },
+        {
+            "name": "Update Diet Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{baseUrl}}/diet/{{dietId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "diet",
+                        "{{dietId}}"
+                    ]
+                },
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"data\": {\n        \"meals\": [\n            {\n                \"name\": \"Breakfast\",\n                \"foods\": [\n                    {\n                        \"name\": \"Oatmeal with honey\",\n                        \"calories\": 200,\n                        \"protein\": 5,\n                        \"carbs\": 35,\n                        \"fat\": 3\n                    },\n                    {\n                        \"name\": \"Banana\",\n                        \"calories\": 105,\n                        \"protein\": 1,\n                        \"carbs\": 27,\n                        \"fat\": 0\n                    }\n                ]\n            },\n            {\n                \"name\": \"Lunch\",\n                \"foods\": [\n                    {\n                        \"name\": \"Chicken Salad\",\n                        \"calories\": 350,\n                        \"protein\": 30,\n                        \"carbs\": 15,\n                        \"fat\": 20\n                    }\n                ]\n            },\n            {\n                \"name\": \"Dinner\",\n                \"foods\": [\n                    {\n                        \"name\": \"Salmon\",\n                        \"calories\": 300,\n                        \"protein\": 25,\n                        \"carbs\": 0,\n                        \"fat\": 18\n                    },\n                    {\n                        \"name\": \"Broccoli\",\n                        \"calories\": 55,\n                        \"protein\": 4,\n                        \"carbs\": 11,\n                        \"fat\": 0\n                    }\n                ]\n            }\n        ],\n        \"totalCalories\": 1010,\n        \"totalProtein\": 65,\n        \"totalCarbs\": 88,\n        \"totalFat\": 41,\n        \"date\": \"2023-06-15\"\n    }\n}"
+                },
+                "description": "Update a diet record"
+            },
+            "response": []
+        },
+        {
+            "name": "Delete Diet Record",
+            "request": {
+                "auth": {
+                    "type": "bearer",
+                    "bearer": [
+                        {
+                            "key": "token",
+                            "value": "{{accessToken}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/diet/{{dietId}}",
+                    "host": [
+                        "{{baseUrl}}"
+                    ],
+                    "path": [
+                        "diet",
+                        "{{dietId}}"
+                    ]
+                },
+                "description": "Delete a diet record"
+            },
+            "response": []
+        }
+    ]
+}

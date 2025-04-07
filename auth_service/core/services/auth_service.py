@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth_service.api.v1.schemas import (
+from auth_service.api.v1.auth.auth_schemas import (
     LoginRequest,
     PasswordReset,
     RefreshToken,
@@ -29,9 +29,14 @@ from libs.service.auth import AuthService as SharedAuthService
 class AuthService:
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        self.pwd_context = CryptContext(
+            schemes=["argon2"],
+            argon2__time_cost=2,
+            argon2__memory_cost=102400,
+            argon2__parallelism=8,
+        )
         self.cache = CacheService()
-        self.auth_service = SharedAuthService()
+        self.auth_service = SharedAuthService(db)
 
     async def get_user(self, value: str, field: Literal["username", "email", "id"] = "username") -> Optional[User]:
         if field == "username":
@@ -90,8 +95,8 @@ class AuthService:
         )
 
     async def refresh_token(self, refresh_token_data: RefreshToken) -> Token:
-        # Validate refresh token
-        payload = self.auth_service.decode_token(refresh_token_data.refresh_token)
+        # Validate refresh token - don't check user in database since we just need token validation
+        payload, _ = await self.auth_service.validate_token(refresh_token_data.refresh_token, check_user=False)
 
         # Check token type
         if "token_type" not in payload or payload["token_type"] != "refresh":
@@ -124,27 +129,19 @@ class AuthService:
         )
 
     async def get_current_user(self, token: str) -> UserResponse:
-        # Decode token
-        payload = self.auth_service.decode_token(token)
-        user_id = payload.get("sub")
-        if not user_id:
-            raise ExceptionBase(ErrorCode.INVALID_TOKEN)
+        # Validate token and get user
+        _, user = await self.auth_service.validate_token(token)
+        if not user:
+            raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
 
         # Try to get user from cache
-        cache_key = f"user:{user_id}"
+        cache_key = f"user:{user.id}"
         cached_user = await self.cache.get_cache(cache_key)
         if cached_user:
             try:
                 return UserResponse.model_validate_json(cached_user)
             except Exception:
                 pass
-
-        # Get from database if not in cache
-        user = await self.get_user(user_id, "id")
-        if not user:
-            raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
-        if not user.is_active:
-            raise ExceptionBase(ErrorCode.INACTIVE_USER)
 
         # Cache and return
         user_response = UserResponse.model_validate(user)

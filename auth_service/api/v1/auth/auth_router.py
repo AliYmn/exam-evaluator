@@ -2,7 +2,14 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth_service.api.v1.schemas import LoginRequest, NewPassword, PasswordReset, RefreshToken, UserCreate, UserUpdate
+from auth_service.api.v1.auth.auth_schemas import (
+    LoginRequest,
+    NewPassword,
+    PasswordReset,
+    RefreshToken,
+    UserCreate,
+    UserUpdate,
+)
 from auth_service.core.services.auth_service import AuthService
 from libs.db import get_async_db
 
