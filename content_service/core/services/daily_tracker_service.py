@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
-from fit_service.api.v1.daily_tracker.daily_tracker_schemas import (
+from content_service.api.v1.daily_tracker.daily_tracker_schemas import (
     DailyTrackerCreate,
     DailyTrackerUpdate,
     DailyTrackerResponse,

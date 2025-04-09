@@ -90,7 +90,7 @@ services:
       - ./ai_service:/app/ai_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
@@ -111,7 +111,7 @@ services:
       - ./ai_service:/app/ai_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -130,7 +130,7 @@ services:
       - ./ai_service:/app/ai_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -147,7 +147,7 @@ services:
       - ./content_service:/app/content_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     ports:
       - "127.0.0.1:8001:8001"
     depends_on:
@@ -168,7 +168,7 @@ services:
       - ./content_service:/app/content_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -187,7 +187,7 @@ services:
       - ./content_service:/app/content_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -204,7 +204,7 @@ services:
       - ./fit_service:/app/fit_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     ports:
       - "127.0.0.1:8002:8002"
     depends_on:
@@ -225,7 +225,7 @@ services:
       - ./fit_service:/app/fit_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -244,7 +244,7 @@ services:
       - ./fit_service:/app/fit_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -261,7 +261,7 @@ services:
       - ./tracker_service:/app/tracker_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     ports:
       - "127.0.0.1:8003:8003"
     depends_on:
@@ -282,7 +282,7 @@ services:
       - ./tracker_service:/app/tracker_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -301,7 +301,7 @@ services:
       - ./tracker_service:/app/tracker_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -318,7 +318,7 @@ services:
       - ./auth_service:/app/auth_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     ports:
       - "127.0.0.1:8004:8004"
     depends_on:
@@ -339,7 +339,7 @@ services:
       - ./auth_service:/app/auth_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -358,7 +358,7 @@ services:
       - ./auth_service:/app/auth_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
+      - uv-cache:/root/.cache/uv
     env_file:
       - .env
     depends_on:
@@ -372,4 +372,6 @@ networks:
   fit-network:
 
 volumes:
-  pip-cache:
+  uv-cache:
+    # Shared volume for uv package manager cache to speed up builds
+    # This volume is mounted at /root/.cache/uv in all services

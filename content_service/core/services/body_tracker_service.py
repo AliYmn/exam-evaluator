@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fit_service.api.v1.body_tracker.body_tracker_schemas import TrackerCreate, TrackerUpdate, TrackerResponse
+from content_service.api.v1.body_tracker.body_tracker_schemas import TrackerCreate, TrackerUpdate, TrackerResponse
 from libs import ErrorCode, ExceptionBase
 from libs.models.body_tracker import BodyTracker
 

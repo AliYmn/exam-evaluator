@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
-from fit_service.api.v1.fasting.fasting_schemas import (
+from content_service.api.v1.fasting.fasting_schemas import (
     FastingPlanCreate,
     FastingPlanUpdate,
     FastingPlanResponse,

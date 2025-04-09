@@ -11,7 +11,7 @@ RUN groupadd -r celerygroup && useradd -r -g celerygroup celeryuser
 RUN mkdir -p /app/.ipython && chown -R celeryuser:celerygroup /app
 
 # Copy application files
-COPY ./fit_service ./fit_service
+COPY ./tracker_service ./tracker_service
 COPY ./libs ./libs
 COPY ./requirements.txt ./requirements.txt
 
@@ -28,4 +28,4 @@ RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt
 USER celeryuser
 
 # Set default command for beat service
-CMD ["celery", "-A", "fit_service.core.worker.tasks.celery_app", "beat", "--loglevel=ERROR"]
+CMD ["celery", "-A", "tracker_service.core.worker.tasks.celery_app", "beat", "--loglevel=ERROR"]

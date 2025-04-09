@@ -7,8 +7,9 @@ WORKDIR /app
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_NO_CACHE_DIR=0 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    UV_CACHE_DIR=/root/.cache/uv
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -22,11 +23,9 @@ RUN pip install uv
 # Copy only requirements first to leverage Docker cache
 COPY ./requirements.txt ./requirements.txt
 
-# Create cache directory
-RUN mkdir -p /root/.cache/uv
-
 # Install dependencies with caching
-RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt
+RUN mkdir -p ${UV_CACHE_DIR} && \
+    uv pip install --system -r requirements.txt
 
 # Final stage
 FROM python:3.13.2-slim
@@ -37,7 +36,7 @@ WORKDIR /app
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    PIP_NO_CACHE_DIR=1 \
+    PIP_NO_CACHE_DIR=0 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Copy installed packages from builder stage

@@ -36,7 +36,7 @@ class AuthService:
             argon2__parallelism=8,
         )
         self.cache = CacheService()
-        self.fit_service = SharedAuthService(db)
+        self.auth_service = SharedAuthService(db)
 
     async def get_user(self, value: str, field: Literal["email", "id"] = "email") -> Optional[User]:
         if field == "email":
@@ -80,7 +80,7 @@ class AuthService:
         await self.db.commit()
 
         # Generate tokens - we already validated the user so skip validation in shared service
-        access_token, refresh_token, expires_in = await self.fit_service.create_token_pair(
+        access_token, refresh_token, expires_in = await self.auth_service.create_token_pair(
             user_id=str(user.id),
             email=user.email,
             first_name=user.first_name,
@@ -99,7 +99,7 @@ class AuthService:
 
     async def refresh_token(self, refresh_token_data: RefreshToken) -> Token:
         # Validate refresh token - don't check user in database since we'll do it ourselves
-        payload = await self.fit_service.validate_token(refresh_token_data.refresh_token)
+        payload = await self.auth_service.validate_token(refresh_token_data.refresh_token)
 
         # Check token type
         if "token_type" not in payload or payload["token_type"] != "refresh":
@@ -116,7 +116,7 @@ class AuthService:
             raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
 
         # Generate new tokens - we already validated the user so skip validation in shared service
-        access_token, refresh_token, expires_in = await self.fit_service.create_token_pair(
+        access_token, refresh_token, expires_in = await self.auth_service.create_token_pair(
             user_id=str(user.id),
             email=user.email,
             first_name=user.first_name,
@@ -135,7 +135,7 @@ class AuthService:
 
     async def get_current_user(self, token: str) -> UserResponse:
         # Validate token and get user
-        _, user = await self.fit_service.validate_token_with_user(token)
+        _, user = await self.auth_service.validate_token_with_user(token)
 
         if not user:
             raise ExceptionBase(ErrorCode.USER_NOT_FOUND)

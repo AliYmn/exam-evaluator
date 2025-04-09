@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query, status, Header, HTTPException
 from typing import Annotated
 
-from fit_service.api.v1.daily_tracker.daily_tracker_schemas import (
+from tracker_service.api.v1.daily_tracker.daily_tracker_schemas import (
     DailyTrackerCreate,
     DailyTrackerUpdate,
     DailyTrackerListResponse,
 )
-from fit_service.core.services.daily_tracker_service import DailyTrackerService
+from tracker_service.core.services.daily_tracker_service import DailyTrackerService
 from sqlalchemy.ext.asyncio import AsyncSession
 from libs.db import get_async_db
 from libs.service.auth import AuthService

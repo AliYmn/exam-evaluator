@@ -1,7 +1,7 @@
 from typing import Optional, Annotated
 from fastapi import APIRouter, Depends, Query, status, Header
 
-from fit_service.api.v1.blog.blog_schemas import (
+from content_service.api.v1.blog.blog_schemas import (
     BlogCreate,
     BlogUpdate,
     BlogListResponse,
@@ -12,7 +12,7 @@ from fit_service.api.v1.blog.blog_schemas import (
     BlogTagUpdate,
     BlogTagListResponse,
 )
-from fit_service.core.services.blog_service import BlogService
+from content_service.core.services.blog_service import BlogService
 from libs.service.auth import AuthService
 from sqlalchemy.ext.asyncio import AsyncSession
 from libs.db import get_async_db

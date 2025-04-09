@@ -1,4 +1,4 @@
-from fit_service.core.worker.config import celery_app
+from tracker_service.core.worker.config import celery_app
 
 
 @celery_app.task(bind=True, name="example", max_retries=3, default_retry_delay=60)

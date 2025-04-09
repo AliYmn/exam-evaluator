@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from libs.models.notifications import Notification
-from fit_service.api.v1.notification.notification_schemas import (
+from content_service.api.v1.notification.notification_schemas import (
     NotificationCreate,
     NotificationUpdate,
     NotificationResponse,

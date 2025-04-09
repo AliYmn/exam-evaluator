@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from libs.models.blog import Blog, BlogCategory, BlogTag, blog_tag_association
-from fit_service.api.v1.blog.blog_schemas import (
+from content_service.api.v1.blog.blog_schemas import (
     BlogCreate,
     BlogUpdate,
     BlogResponse,
