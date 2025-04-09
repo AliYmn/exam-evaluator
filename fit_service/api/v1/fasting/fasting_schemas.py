@@ -7,38 +7,31 @@ from datetime import datetime, time
 class FastingPlanBase(BaseModel):
     """Base model for Fasting Plan data"""
 
-    fasting_type: str = Field(..., description="Fasting type (e.g., '16:8', '18:6', '20:4', 'OMAD')")
-    is_active: bool = Field(True, description="Whether this plan is currently active")
-    target_calories: Optional[int] = Field(None, description="Daily calorie target during eating window")
-    target_meals: Optional[int] = Field(None, description="Target number of meals during eating window")
-    target_water: Optional[float] = Field(None, description="Target water intake in liters")
-    target_protein: Optional[float] = Field(None, description="Target protein intake in grams")
-    target_carb: Optional[float] = Field(None, description="Target carbohydrate intake in grams")
-    target_fat: Optional[float] = Field(None, description="Target fat intake in grams")
+    fasting_hours: int = Field(..., description="Number of hours to fast")
+    eating_hours: int = Field(..., description="Number of hours to eat")
+    target_week: Optional[int] = Field(None, description="Target number of weeks for this fasting plan")
 
 
 class FastingPlanCreate(FastingPlanBase):
     """Request model for creating a Fasting Plan"""
 
 
-class FastingPlanUpdate(BaseModel):
+class FastingPlanUpdate(FastingPlanBase):
     """Request model for updating a Fasting Plan"""
 
-    fasting_type: Optional[str] = Field(None, description="Fasting type (e.g., '16:8', '18:6', '20:4', 'OMAD')")
-    is_active: Optional[bool] = Field(None, description="Whether this plan is currently active")
-    target_calories: Optional[int] = Field(None, description="Daily calorie target during eating window")
-    target_meals: Optional[int] = Field(None, description="Target number of meals during eating window")
-    target_water: Optional[float] = Field(None, description="Target water intake in liters")
-    target_protein: Optional[float] = Field(None, description="Target protein intake in grams")
-    target_carb: Optional[float] = Field(None, description="Target carbohydrate intake in grams")
-    target_fat: Optional[float] = Field(None, description="Target fat intake in grams")
+    fasting_hours: Optional[int] = Field(None, description="Number of hours to fast")
+    eating_hours: Optional[int] = Field(None, description="Number of hours to eat")
+    target_week: Optional[int] = Field(None, description="Target number of weeks for this fasting plan")
 
 
-class FastingPlanResponse(FastingPlanBase):
+class FastingPlanResponse(BaseModel):
     """Response model for Fasting Plan data"""
 
     id: int
     user_id: int
+    fasting_hours: int
+    eating_hours: int
+    target_week: Optional[int] = None
     created_date: datetime
 
     class Config:
@@ -61,6 +54,12 @@ class FastingSessionBase(BaseModel):
     end_time: Optional[time] = Field(None, description="When this fasting session ended (null if ongoing)")
     mood: Optional[str] = Field(None, description="User's mood during fasting (can store emoji)")
     stage: Optional[str] = Field(None, description="Fasting stage (e.g., 'anabolic', 'catabolic', 'ketosis')")
+    target_calories: Optional[int] = Field(None, description="Daily calorie target during eating window")
+    target_meals: Optional[int] = Field(None, description="Target number of meals during eating window")
+    target_water: Optional[float] = Field(None, description="Target water intake in liters")
+    target_protein: Optional[float] = Field(None, description="Target protein intake in grams")
+    target_carb: Optional[float] = Field(None, description="Target carbohydrate intake in grams")
+    target_fat: Optional[float] = Field(None, description="Target fat intake in grams")
 
 
 class FastingSessionCreate(FastingSessionBase):
@@ -78,6 +77,12 @@ class FastingSessionUpdate(BaseModel):
     )
     mood: Optional[str] = Field(None, description="User's mood during fasting (can store emoji)")
     stage: Optional[str] = Field(None, description="Fasting stage (e.g., 'anabolic', 'catabolic', 'ketosis')")
+    target_calories: Optional[int] = Field(None, description="Daily calorie target during eating window")
+    target_meals: Optional[int] = Field(None, description="Target number of meals during eating window")
+    target_water: Optional[float] = Field(None, description="Target water intake in liters")
+    target_protein: Optional[float] = Field(None, description="Target protein intake in grams")
+    target_carb: Optional[float] = Field(None, description="Target carbohydrate intake in grams")
+    target_fat: Optional[float] = Field(None, description="Target fat intake in grams")
 
 
 class FastingSessionResponse(BaseModel):
@@ -91,6 +96,12 @@ class FastingSessionResponse(BaseModel):
     status: str
     mood: Optional[str] = None
     stage: Optional[str] = None
+    target_calories: Optional[int] = None
+    target_meals: Optional[int] = None
+    target_water: Optional[float] = None
+    target_protein: Optional[float] = None
+    target_carb: Optional[float] = None
+    target_fat: Optional[float] = None
     created_date: datetime
 
     class Config:

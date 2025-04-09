@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 
 from libs import settings
 
@@ -23,4 +24,16 @@ celery_app.conf.update(
     accept_content=["json"],
     task_routes={},
     timezone="UTC",
+    beat_schedule={
+        # Send weekly body tracker reminder every Monday at 9:00 AM
+        "send-weekly-body-tracker-reminder": {
+            "task": "send_weekly_body_tracker_reminder",
+            "schedule": crontab(day_of_week=1, hour=9, minute=0),
+        },
+        # Send daily tracker reminder every day at 8:00 AM
+        "send-daily-tracker-reminder": {
+            "task": "send_daily_tracker_reminder",
+            "schedule": crontab(hour=8, minute=0),
+        },
+    },
 )

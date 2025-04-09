@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, Time, JSON
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Time, JSON
 
 from libs.models.base import BaseModel
 
@@ -15,20 +15,12 @@ class FastingPlan(BaseModel):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
     # Fasting schedule information
-    fasting_type = Column(String(50), nullable=False)  # e.g., "16:8", "18:6", "20:4", "OMAD"
-    is_active = Column(Boolean, default=True)  # Whether this plan is currently active
+    fasting_hours = Column(Integer, nullable=True)  # Number of hours to fast
+    eating_hours = Column(Integer, nullable=True)  # Number of hours to eat
     target_week = Column(Integer, nullable=True)  # Target number of weeks for this fasting plan
 
-    # Nutritional targets
-    target_calories = Column(Integer, nullable=True)  # Daily calorie target during eating window
-    target_meals = Column(Integer, nullable=True)  # Target number of meals during eating window
-    target_water = Column(Float, nullable=True)  # Target water intake in liters
-    target_protein = Column(Float, nullable=True)  # Target protein intake in grams
-    target_carb = Column(Float, nullable=True)  # Target carbohydrate intake in grams
-    target_fat = Column(Float, nullable=True)  # Target fat intake in grams
-
     def __repr__(self):
-        return f"<FastingPlan(id={self.id}, user_id={self.user_id}, fasting_type={self.fasting_type})>"
+        return f"<FastingPlan(id={self.id}, user_id={self.user_id}, fasting_hours={self.fasting_hours}, eating_hours={self.eating_hours})>"
 
 
 class FastingSession(BaseModel):
@@ -49,6 +41,14 @@ class FastingSession(BaseModel):
 
     # Session status
     status = Column(String(20), default="active")  # active, completed, broken, skipped, failed etc.
+
+    # Nutritional targets
+    target_calories = Column(Integer, nullable=True)  # Daily calorie target during eating window
+    target_meals = Column(Integer, nullable=True)  # Target number of meals during eating window
+    target_water = Column(Float, nullable=True)  # Target water intake in liters
+    target_protein = Column(Float, nullable=True)  # Target protein intake in grams
+    target_carb = Column(Float, nullable=True)  # Target carbohydrate intake in grams
+    target_fat = Column(Float, nullable=True)  # Target fat intake in grams
 
     # User feedback
     mood = Column(String(50), nullable=True)  # User's mood during fasting (can store emoji)

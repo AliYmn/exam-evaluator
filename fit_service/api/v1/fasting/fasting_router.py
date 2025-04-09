@@ -4,10 +4,6 @@ from fastapi_limiter.depends import RateLimiter
 
 from fit_service.api.v1.fasting.fasting_schemas import (
     FastingPlanCreate,
-    FastingPlanUpdate,
-    FastingPlanListResponse,
-    FastingSessionCreate,
-    FastingSessionUpdate,
     FastingSessionListResponse,
     FastingMealLogCreate,
     FastingMealLogUpdate,
@@ -33,95 +29,32 @@ def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthService:
 
 
 # FastingPlan endpoints
-@router.post("/plans", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))])
-async def create_fasting_plan(
+@router.post(
+    "/plan",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(RateLimiter(times=15, seconds=60))],
+)
+async def create_or_update_fasting_plan(
     plan_data: FastingPlanCreate,
     authorization: Annotated[str | None, Header()] = None,
     fasting_service: FastingService = Depends(get_fasting_service),
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.create_fasting_plan(user.id, plan_data)
+    return await fasting_service.create_or_update_fasting_plan(user.id, plan_data)
 
 
-@router.get("/plans")
-async def list_fasting_plans(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
+@router.get("/plan")
+async def get_latest_fasting_plan(
     authorization: Annotated[str | None, Header()] = None,
     fasting_service: FastingService = Depends(get_fasting_service),
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    plans, total_count = await fasting_service.list_fasting_plans(user.id, skip, limit)
-    return FastingPlanListResponse(
-        items=plans,
-        count=len(plans),
-        total=total_count,
-    )
-
-
-@router.get("/plans/active")
-async def get_active_fasting_plan(
-    authorization: Annotated[str | None, Header()] = None,
-    fasting_service: FastingService = Depends(get_fasting_service),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user = await auth_service.get_user_from_token(authorization)
-    plan = await fasting_service.get_active_fasting_plan(user.id)
-    if not plan:
-        raise HTTPException(status_code=404, detail="No active fasting plan found")
-    return plan
-
-
-@router.get("/plans/{plan_id}")
-async def get_fasting_plan(
-    plan_id: int,
-    authorization: Annotated[str | None, Header()] = None,
-    fasting_service: FastingService = Depends(get_fasting_service),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.get_fasting_plan(plan_id, user.id)
-
-
-@router.put("/plans/{plan_id}")
-async def update_fasting_plan(
-    plan_id: int,
-    plan_data: FastingPlanUpdate,
-    authorization: Annotated[str | None, Header()] = None,
-    fasting_service: FastingService = Depends(get_fasting_service),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.update_fasting_plan(plan_id, user.id, plan_data)
-
-
-@router.delete("/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_fasting_plan(
-    plan_id: int,
-    authorization: Annotated[str | None, Header()] = None,
-    fasting_service: FastingService = Depends(get_fasting_service),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user = await auth_service.get_user_from_token(authorization)
-    await fasting_service.delete_fasting_plan(plan_id, user.id)
+    return await fasting_service.get_latest_fasting_plan(user.id)
 
 
 # FastingSession endpoints
-@router.post(
-    "/sessions", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))]
-)
-async def create_fasting_session(
-    session_data: FastingSessionCreate,
-    authorization: Annotated[str | None, Header()] = None,
-    fasting_service: FastingService = Depends(get_fasting_service),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.create_fasting_session(user.id, session_data)
-
-
 @router.get("/sessions")
 async def list_fasting_sessions(
     skip: int = Query(0, ge=0),
@@ -163,33 +96,8 @@ async def get_fasting_session(
     return await fasting_service.get_fasting_session(session_id, user.id)
 
 
-@router.put("/sessions/{session_id}")
-async def update_fasting_session(
-    session_id: int,
-    session_data: FastingSessionUpdate,
-    authorization: Annotated[str | None, Header()] = None,
-    fasting_service: FastingService = Depends(get_fasting_service),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.update_fasting_session(session_id, user.id, session_data)
-
-
-@router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_fasting_session(
-    session_id: int,
-    authorization: Annotated[str | None, Header()] = None,
-    fasting_service: FastingService = Depends(get_fasting_service),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user = await auth_service.get_user_from_token(authorization)
-    await fasting_service.delete_fasting_session(session_id, user.id)
-
-
 # FastingMealLog endpoints
-@router.post(
-    "/meal-logs", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))]
-)
+@router.post("/meal-logs", status_code=status.HTTP_201_CREATED)
 async def create_meal_log(
     meal_data: FastingMealLogCreate,
     authorization: Annotated[str | None, Header()] = None,
@@ -253,9 +161,7 @@ async def delete_meal_log(
 
 
 # FastingWorkoutLog endpoints
-@router.post(
-    "/workout-logs", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))]
-)
+@router.post("/workout-logs", status_code=status.HTTP_201_CREATED)
 async def create_workout_log(
     workout_data: FastingWorkoutLogCreate,
     authorization: Annotated[str | None, Header()] = None,
