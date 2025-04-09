@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, ForeignKey
+from sqlalchemy import Column, Integer, Float, ForeignKey, String
 from libs.models.base import BaseModel
 
 
@@ -13,6 +13,7 @@ class BodyTracker(BaseModel):
     hip = Column(Float, nullable=True)
     thigh = Column(Float, nullable=True)
     arm = Column(Float, nullable=True)
+    note = Column(String(255), nullable=True)
 
     def __repr__(self):
         return f"<BodyTracker(user_id={self.user_id})>"

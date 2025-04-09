@@ -139,12 +139,12 @@ services:
     networks:
       - fit-network
 
-  ai-service:
+  auth-service:
     build:
       context: .
-      dockerfile: ai_service/compose/local/Dockerfile
+      dockerfile: auth_service/compose/local/Dockerfile
     volumes:
-      - ./ai_service:/app/ai_service
+      - ./auth_service:/app/auth_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
       - pip-cache:/root/.cache/uv
@@ -160,12 +160,12 @@ services:
     networks:
       - fit-network
 
-  ai-worker:
+  auth-worker:
     build:
       context: .
-      dockerfile: ai_service/compose/local/DockerfileWorker
+      dockerfile: auth_service/compose/local/DockerfileWorker
     volumes:
-      - ./ai_service:/app/ai_service
+      - ./auth_service:/app/auth_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
       - pip-cache:/root/.cache/uv
@@ -179,12 +179,12 @@ services:
     networks:
       - fit-network
 
-  ai-beat:
+  auth-beat:
     build:
       context: .
-      dockerfile: ai_service/compose/local/DockerfileBeat
+      dockerfile: auth_service/compose/local/DockerfileBeat
     volumes:
-      - ./ai_service:/app/ai_service
+      - ./auth_service:/app/auth_service
       - ./libs:/app/libs
       - ./requirements.txt:/app/requirements.txt
       - pip-cache:/root/.cache/uv

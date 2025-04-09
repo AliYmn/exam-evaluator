@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
 # Copy application files
-COPY ./ai_service ./ai_service
+COPY ./auth_service ./auth_service
 COPY ./libs ./libs
 COPY ./requirements.txt ./requirements.txt
 
@@ -26,4 +26,4 @@ RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt
 EXPOSE 8001
 
 # Set default command with gunicorn for production
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "ai_service.main:app", "--bind", "0.0.0.0:8001", "--timeout", "90"]
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "auth_service.main:app", "--bind", "0.0.0.0:8001", "--timeout", "90"]

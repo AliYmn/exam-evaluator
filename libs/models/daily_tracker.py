@@ -21,6 +21,7 @@ class DailyTracker(BaseModel):
     training_quality = Column(Integer, nullable=True)
     diet_compliance = Column(Integer, nullable=True)
     training_compliance = Column(Integer, nullable=True)
+    note = Column(String(255), nullable=True)
 
     def __repr__(self):
         return f"<DailyTracker(user_id={self.user_id})>"

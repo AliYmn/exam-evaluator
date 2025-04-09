@@ -21,13 +21,6 @@ celery_app.conf.update(
     result_serializer="json",
     task_serializer="json",
     accept_content=["json"],
-    task_routes={
-        "send_email": {"queue": settings.FIT_QUEUE_NAME},
-        "send_template_email": {"queue": settings.FIT_QUEUE_NAME},
-        "send_welcome_email": {"queue": settings.FIT_QUEUE_NAME},
-        "send_password_reset_email": {"queue": settings.FIT_QUEUE_NAME},
-        "send_password_changed_email": {"queue": settings.FIT_QUEUE_NAME},
-        "send_bulk_emails": {"queue": settings.FIT_QUEUE_NAME},
-    },
+    task_routes={},
     timezone="UTC",
 )

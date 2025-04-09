@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
 # Copy application files
-COPY ./ai_service ./ai_service
+COPY ./auth_service ./auth_service
 COPY ./libs ./libs
 COPY ./requirements.txt ./requirements.txt
 
@@ -27,4 +27,4 @@ RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt && \
 EXPOSE 8001
 
 # Set default command with FastAPI dev mode for local development
-CMD ["uvicorn", "ai_service.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+CMD ["uvicorn", "auth_service.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]

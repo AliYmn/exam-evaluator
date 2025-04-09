@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from libs import ExceptionBase, settings
+from auth_service.api.v1.auth.auth_router import auth_router
 
 
 # App Lifespan
@@ -43,4 +44,4 @@ async def http_exception_handler(_request, exc: ExceptionBase) -> ORJSONResponse
     )
 
 
-# app.include_router(auth_router, prefix=settings.API_STR)
+app.include_router(auth_router, prefix=settings.API_STR)

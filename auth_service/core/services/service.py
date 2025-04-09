@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fit_service.api.v1.auth.auth_schemas import (
+from auth_service.api.v1.auth.auth_schemas import (
     LoginRequest,
     PasswordReset,
     RefreshToken,
@@ -15,7 +15,7 @@ from fit_service.api.v1.auth.auth_schemas import (
     UserResponse,
     to_naive_datetime,
 )
-from fit_service.core.worker.tasks import (
+from auth_service.core.worker.tasks import (
     send_password_changed_email_task,
     send_password_reset_email_task,
     send_welcome_email_task,

@@ -36,8 +36,8 @@ class Config(BaseSettings):
     FERNET_KEY: str
 
     # Celery Worker
-    AI_QUEUE_NAME: str
-    AI_WORKER_NAME: str
+    AUTH_QUEUE_NAME: str
+    AUTH_WORKER_NAME: str
     FIT_QUEUE_NAME: str
     FIT_WORKER_NAME: str
 
