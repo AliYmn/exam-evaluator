@@ -7,10 +7,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi_limiter import FastAPILimiter
 import redis.asyncio as redis
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 
 from tracker_service.api.v1.body_tracker.body_tracker_router import router as body_tracker_router
 from tracker_service.api.v1.daily_tracker.daily_tracker_router import router as daily_tracker_router
 from libs import ExceptionBase, settings
+
+
+# Initialize Sentry if enabled and in production environment
+if settings.SENTRY_ENABLED and settings.ENV_NAME == "production":
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.SENTRY_ENVIRONMENT,
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+        integrations=[
+            StarletteIntegration(transaction_style="endpoint"),
+            FastApiIntegration(transaction_style="endpoint"),
+        ],
+    )
 
 
 # App Lifespan

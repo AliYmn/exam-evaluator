@@ -9,6 +9,23 @@ from libs import ExceptionBase, settings
 from fastapi_limiter import FastAPILimiter
 import redis.asyncio as redis
 from auth_service.api.v1.auth.auth_router import auth_router
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
+
+# Initialize Sentry if enabled and in production environment
+if settings.SENTRY_ENABLED and settings.ENV_NAME == "production":
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.SENTRY_ENVIRONMENT,
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+        integrations=[
+            StarletteIntegration(transaction_style="endpoint"),
+            FastApiIntegration(transaction_style="endpoint"),
+        ],
+    )
 
 
 # App Lifespan

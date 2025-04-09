@@ -66,6 +66,12 @@ class Config(BaseSettings):
     OPENAI_API_KEY: str
     OPENAI_BASE_URL: str
 
+    # Sentry
+    SENTRY_DSN: str
+    SENTRY_ENVIRONMENT: str = "development"
+    SENTRY_ENABLED: bool = False
+    ENV_NAME: str = "development"
+
     class Config:
         env_file = ".env"
         case_sensitive = True
