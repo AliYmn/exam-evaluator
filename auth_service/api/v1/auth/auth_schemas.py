@@ -78,22 +78,10 @@ def validate_phone_number(phone: str) -> str:
     return phone
 
 
-def validate_username(username: str) -> str:
-    """Validate username format"""
-
-    if not username:
-        raise ValueError("Username is required")
-    if len(username) < 3:
-        raise ExceptionBase(ErrorCode.INVALID_USERNAME)
-    if not re.match(r"^[a-zA-Z0-9_]+$", username):
-        raise ExceptionBase(ErrorCode.INVALID_USERNAME)
-    return username
-
-
 class LoginRequest(BaseModel):
     """Login request model for authentication"""
 
-    username: str
+    email: EmailStr
     password: str
     grant_type: Optional[str] = "password"
     scope: Optional[str] = ""
@@ -130,7 +118,7 @@ class Token(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     refresh_token: Optional[str] = None
-    username: str
+    email: EmailStr
 
 
 class TokenPayload(BaseModel):
@@ -143,11 +131,10 @@ class TokenPayload(BaseModel):
 class UserCreate(BaseModel):
     """User creation model with full profile data"""
 
-    username: str  # Mandatory username field
     email: EmailStr
     password: str
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    first_name: str
+    last_name: str
     date_of_birth: Optional[datetime] = None
     profile_picture: Optional[str] = None
     gender: Optional[str] = None
@@ -166,10 +153,6 @@ class UserCreate(BaseModel):
         if v:
             return to_naive_datetime(v)
         return v
-
-    @field_validator("username", mode="before")
-    def validate_username(cls, v):
-        return validate_username(v)
 
     @field_validator("password", mode="before")
     def validate_password(cls, v):
@@ -202,18 +185,11 @@ class UserUpdate(BaseModel):
     timezone: Optional[str] = None
     preferences: Optional[Dict[str, Any]] = None
 
-    @field_validator("date_of_birth", mode="after")
-    def validate_date_of_birth(cls, v):
-        if v:
-            return to_naive_datetime(v)
-        return v
-
 
 class UserResponse(BaseModel):
     """Response model for user profile data"""
 
     id: int
-    username: str
     email: EmailStr
     is_active: bool
     is_verified: Optional[bool] = None
@@ -243,13 +219,18 @@ class UserResponse(BaseModel):
     storage_limit: Optional[int] = None
     package_features: Optional[Dict[str, Any]] = None
 
+    class Config:
+        from_attributes = True
+
     @field_validator(
-        "date_of_birth", "last_login", "reset_token_expiry", "subscription_start", "subscription_end", mode="after"
+        "date_of_birth",
+        "last_login",
+        "reset_token_expiry",
+        "subscription_start",
+        "subscription_end",
+        mode="after",
     )
     def validate_datetimes(cls, v):
         if v:
             return to_naive_datetime(v)
         return v
-
-    class Config:
-        from_attributes = True

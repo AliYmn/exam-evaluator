@@ -34,7 +34,7 @@ async def register_user(user_data: UserCreate, auth_service: AuthService = Depen
 # Login endpoint
 @auth_router.post("/login")
 async def login(login_data: LoginRequest, auth_service: AuthService = Depends(get_auth_service)):
-    return await auth_service.authenticate_user(login_data)
+    return await auth_service.authenticate_user_by_email(login_data)
 
 
 # Token refresh endpoint

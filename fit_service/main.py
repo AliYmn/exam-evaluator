@@ -21,7 +21,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
 # APP Configuration
 app = FastAPI(
-    title=settings.PROJECT_NAME.format(project_name="Auth"),
+    title=settings.PROJECT_NAME.format(project_name="Fit"),
     version=settings.PROJECT_VERSION,
     openapi_url=f"{settings.API_STR}/openapi.json",
     swagger_ui_parameters={"defaultModelsExpandDepth": -1},

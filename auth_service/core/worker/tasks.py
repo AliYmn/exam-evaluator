@@ -37,11 +37,11 @@ def send_template_email_task(
 
 
 @celery_app.task(bind=True, name="send_welcome_email", max_retries=3, default_retry_delay=60)
-def send_welcome_email_task(self, to_email: str, username: str) -> None:
+def send_welcome_email_task(self, to_email: str, first_name: str) -> None:
     """Send welcome email as a background task"""
     try:
         email_service = EmailService()
-        email_service.send_welcome_email(to_email=to_email, username=username)
+        email_service.send_welcome_email(to_email=to_email, first_name=first_name)
         return f"Welcome email sent to {to_email}"
     except Exception as error:
         if self.request.retries >= self.max_retries:
@@ -51,11 +51,11 @@ def send_welcome_email_task(self, to_email: str, username: str) -> None:
 
 
 @celery_app.task(bind=True, name="send_password_reset_email", max_retries=3, default_retry_delay=60)
-def send_password_reset_email_task(self, to_email: str, username: str, reset_token: str) -> None:
+def send_password_reset_email_task(self, to_email: str, first_name: str, reset_token: str) -> None:
     """Send password reset email as a background task"""
     try:
         email_service = EmailService()
-        email_service.send_password_reset_email(to_email=to_email, username=username, reset_token=reset_token)
+        email_service.send_password_reset_email(to_email=to_email, first_name=first_name, reset_token=reset_token)
         return f"Password reset email sent to {to_email}"
     except Exception as error:
         if self.request.retries >= self.max_retries:
@@ -65,11 +65,11 @@ def send_password_reset_email_task(self, to_email: str, username: str, reset_tok
 
 
 @celery_app.task(bind=True, name="send_password_changed_email", max_retries=3, default_retry_delay=60)
-def send_password_changed_email_task(self, to_email: str, username: str) -> None:
+def send_password_changed_email_task(self, to_email: str, first_name: str) -> None:
     """Send password changed notification email as a background task"""
     try:
         email_service = EmailService()
-        email_service.send_password_changed_email(to_email=to_email, username=username)
+        email_service.send_password_changed_email(to_email=to_email, first_name=first_name)
         return f"Password changed email sent to {to_email}"
     except Exception as error:
         if self.request.retries >= self.max_retries:
