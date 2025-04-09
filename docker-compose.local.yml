@@ -82,121 +82,6 @@ services:
     networks:
       - fit-network
 
-  fit-service:
-    build:
-      context: .
-      dockerfile: fit_service/compose/local/Dockerfile
-    volumes:
-      - ./fit_service:/app/fit_service
-      - ./libs:/app/libs
-      - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
-    ports:
-      - "127.0.0.1:8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - .env
-    networks:
-      - fit-network
-
-  fit-worker:
-    build:
-      context: .
-      dockerfile: fit_service/compose/local/DockerfileWorker
-    volumes:
-      - ./fit_service:/app/fit_service
-      - ./libs:/app/libs
-      - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - fit-network
-
-  fit-beat:
-    build:
-      context: .
-      dockerfile: fit_service/compose/local/DockerfileBeat
-    volumes:
-      - ./fit_service:/app/fit_service
-      - ./libs:/app/libs
-      - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
-    env_file:
-      - .env
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - fit-network
-
-  auth-service:
-    build:
-      context: .
-      dockerfile: auth_service/compose/local/Dockerfile
-    volumes:
-      - ./auth_service:/app/auth_service
-      - ./libs:/app/libs
-      - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
-    ports:
-      - "127.0.0.1:8001:8001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - .env
-    networks:
-      - fit-network
-
-  auth-worker:
-    build:
-      context: .
-      dockerfile: auth_service/compose/local/DockerfileWorker
-    volumes:
-      - ./auth_service:/app/auth_service
-      - ./libs:/app/libs
-      - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
-    env_file:
-      - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - fit-network
-
-  auth-beat:
-    build:
-      context: .
-      dockerfile: auth_service/compose/local/DockerfileBeat
-    volumes:
-      - ./auth_service:/app/auth_service
-      - ./libs:/app/libs
-      - ./requirements.txt:/app/requirements.txt
-      - pip-cache:/root/.cache/uv
-    env_file:
-      - .env
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - fit-network
-
-
   ai-service:
     build:
       context: .
@@ -207,7 +92,7 @@ services:
       - ./requirements.txt:/app/requirements.txt
       - pip-cache:/root/.cache/uv
     ports:
-      - "127.0.0.1:8002:8002"
+      - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -264,7 +149,7 @@ services:
       - ./requirements.txt:/app/requirements.txt
       - pip-cache:/root/.cache/uv
     ports:
-      - "127.0.0.1:8002:8002"
+      - "127.0.0.1:8001:8001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -311,6 +196,62 @@ services:
     networks:
       - fit-network
 
+  fit-service:
+    build:
+      context: .
+      dockerfile: fit_service/compose/local/Dockerfile
+    volumes:
+      - ./fit_service:/app/fit_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    ports:
+      - "127.0.0.1:8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - fit-network
+
+  fit-worker:
+    build:
+      context: .
+      dockerfile: fit_service/compose/local/DockerfileWorker
+    volumes:
+      - ./fit_service:/app/fit_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
+
+  fit-beat:
+    build:
+      context: .
+      dockerfile: fit_service/compose/local/DockerfileBeat
+    volumes:
+      - ./fit_service:/app/fit_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
 
   tracker-service:
     build:
@@ -322,7 +263,7 @@ services:
       - ./requirements.txt:/app/requirements.txt
       - pip-cache:/root/.cache/uv
     ports:
-      - "127.0.0.1:8002:8002"
+      - "127.0.0.1:8003:8003"
     depends_on:
       postgres:
         condition: service_healthy
@@ -369,6 +310,62 @@ services:
     networks:
       - fit-network
 
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth_service/compose/local/Dockerfile
+    volumes:
+      - ./auth_service:/app/auth_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    ports:
+      - "127.0.0.1:8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - fit-network
+
+  auth-worker:
+    build:
+      context: .
+      dockerfile: auth_service/compose/local/DockerfileWorker
+    volumes:
+      - ./auth_service:/app/auth_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
+
+  auth-beat:
+    build:
+      context: .
+      dockerfile: auth_service/compose/local/DockerfileBeat
+    volumes:
+      - ./auth_service:/app/auth_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
 
 
 networks:

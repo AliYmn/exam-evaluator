@@ -24,7 +24,7 @@ RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt && \
     uv pip install --system --cache-dir=/root/.cache/uv fastapi-cli
 
 # Expose the application port
-EXPOSE 8001
+EXPOSE 8004
 
 # Set default command with FastAPI dev mode for local development
-CMD ["uvicorn", "auth_service.main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+CMD ["uvicorn", "auth_service.main:app", "--host", "0.0.0.0", "--port", "8004", "--reload"]

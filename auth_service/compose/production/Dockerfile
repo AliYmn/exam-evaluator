@@ -1,5 +1,5 @@
 # Base image for production
-FROM python:3.13.2-slim-bullseye
+FROM python:3.13.2-slim
 
 # Set working directory
 WORKDIR /app
@@ -23,7 +23,7 @@ RUN mkdir -p /root/.cache/uv
 RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt
 
 # Expose the application port
-EXPOSE 8001
+EXPOSE 8004
 
-# Set default command with gunicorn for production
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "auth_service.main:app", "--bind", "0.0.0.0:8001", "--timeout", "90"]
+# Set default command with uvicorn for production with 4 workers
+CMD ["uvicorn", "auth_service.main:app", "--host", "0.0.0.0", "--port", "8004", "--workers", "4"]

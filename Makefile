@@ -55,17 +55,23 @@ restart-prod:
 
 # 📝 View logs for a specific service
 log:
-	docker compose logs -f fit-service
+	@echo '🔍 Enter service name (e.g., fit-service, auth-service): '; \
+	read SERVICE; \
+	docker compose -f docker-compose.local.yml logs -f $$SERVICE
 
 # 🖥️ Open a bash shell in a container
 bash:
-	docker compose exec fit-service bash
+	@echo '🔍 Enter service name (e.g., fit-service, auth-service): '; \
+	read SERVICE; \
+	docker compose -f docker-compose.local.yml exec $$SERVICE bash
 
 # 🐞 Run a service in debug mode with ports exposed
 run-debug:
-	docker compose stop fit-service; \
-	docker compose rm -f fit-service; \
-	docker compose run --rm --service-ports fit-service
+	@echo '🔍 Enter service name (e.g., fit-service, auth-service): '; \
+	read SERVICE; \
+	docker compose -f docker-compose.local.yml stop $$SERVICE; \
+	docker compose -f docker-compose.local.yml rm -f $$SERVICE; \
+	docker compose -f docker-compose.local.yml run --rm --service-ports $$SERVICE
 
 #-----------------------------------------------
 # 🗄️ Database Migration Commands
@@ -112,4 +118,6 @@ pre-check:
 
 # 🐚 Open a Python shell in a service
 service-shell:
-	docker compose run --rm fit-service python /app/libs/shell_plus.py
+	@echo '🔍 Enter service name (e.g., fit-service, auth-service): '; \
+	read SERVICE; \
+	docker compose -f docker-compose.local.yml run --rm $$SERVICE python /app/libs/shell_plus.py

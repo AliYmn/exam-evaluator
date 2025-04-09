@@ -1,5 +1,5 @@
 # Base image for production
-FROM python:3.13.2-slim-bullseye
+FROM python:3.13.2-slim
 
 # Set working directory
 WORKDIR /app
@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
 # Copy application files
-COPY ./fit_service ./fit_service
+COPY ./tracker_service ./tracker_service
 COPY ./libs ./libs
 COPY ./requirements.txt ./requirements.txt
 
@@ -23,7 +23,7 @@ RUN mkdir -p /root/.cache/uv
 RUN uv pip install --system --cache-dir=/root/.cache/uv -r requirements.txt
 
 # Expose the application port
-EXPOSE 8000
+EXPOSE 8003
 
-# Set default command with gunicorn for production
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "fit_service.main:app", "--bind", "0.0.0.0:8000", "--timeout", "90"]
+# Set default command with uvicorn for production with 4 workers
+CMD ["uvicorn", "tracker_service.main:app", "--host", "0.0.0.0", "--port", "8003", "--workers", "4"]
