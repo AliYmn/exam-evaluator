@@ -197,6 +197,179 @@ services:
       - fit-network
 
 
+  ai-service:
+    build:
+      context: .
+      dockerfile: ai_service/compose/local/Dockerfile
+    volumes:
+      - ./ai_service:/app/ai_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    ports:
+      - "127.0.0.1:8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - fit-network
+
+  ai-worker:
+    build:
+      context: .
+      dockerfile: ai_service/compose/local/DockerfileWorker
+    volumes:
+      - ./ai_service:/app/ai_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
+
+  ai-beat:
+    build:
+      context: .
+      dockerfile: ai_service/compose/local/DockerfileBeat
+    volumes:
+      - ./ai_service:/app/ai_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
+
+  content-service:
+    build:
+      context: .
+      dockerfile: content_service/compose/local/Dockerfile
+    volumes:
+      - ./content_service:/app/content_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    ports:
+      - "127.0.0.1:8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - fit-network
+
+  content-worker:
+    build:
+      context: .
+      dockerfile: content_service/compose/local/DockerfileWorker
+    volumes:
+      - ./content_service:/app/content_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
+
+  content-beat:
+    build:
+      context: .
+      dockerfile: content_service/compose/local/DockerfileBeat
+    volumes:
+      - ./content_service:/app/content_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
+
+
+  tracker-service:
+    build:
+      context: .
+      dockerfile: tracker_service/compose/local/Dockerfile
+    volumes:
+      - ./tracker_service:/app/tracker_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    ports:
+      - "127.0.0.1:8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - fit-network
+
+  tracker-worker:
+    build:
+      context: .
+      dockerfile: tracker_service/compose/local/DockerfileWorker
+    volumes:
+      - ./tracker_service:/app/tracker_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
+
+  tracker-beat:
+    build:
+      context: .
+      dockerfile: tracker_service/compose/local/DockerfileBeat
+    volumes:
+      - ./tracker_service:/app/tracker_service
+      - ./libs:/app/libs
+      - ./requirements.txt:/app/requirements.txt
+      - pip-cache:/root/.cache/uv
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fit-network
+
+
 
 networks:
   fit-network:
