@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from libs.db import get_async_db
 from libs.service.auth import AuthService
 
-router = APIRouter(tags=["Body Tracker"], prefix="/tracker")
+router = APIRouter(tags=["Body Tracker"], prefix="/body-tracker")
 
 
 def get_body_tracker_service(db: AsyncSession = Depends(get_async_db)) -> BodyTrackerService:

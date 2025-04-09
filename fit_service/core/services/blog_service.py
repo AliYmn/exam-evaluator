@@ -35,7 +35,7 @@ class BlogService:
         )
         existing_category = result.scalars().first()
         if existing_category:
-            raise ExceptionBase(ErrorCode.ALREADY_EXISTS, "Category with this name already exists")
+            raise ExceptionBase(ErrorCode.DUPLICATE_ENTRY)
 
         new_category = BlogCategory(
             name=category_data.name,
@@ -56,7 +56,7 @@ class BlogService:
         category = result.scalars().first()
 
         if not category:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Category with ID {category_id} not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         return BlogCategoryResponse.model_validate(category)
 
@@ -88,7 +88,7 @@ class BlogService:
         category = result.scalars().first()
 
         if not category:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Category with ID {category_id} not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Check if new name conflicts with existing category
         if category_data.name and category_data.name != category.name:
@@ -102,7 +102,7 @@ class BlogService:
                 )
             )
             if name_check.scalars().first():
-                raise ExceptionBase(ErrorCode.ALREADY_EXISTS, "Category with this name already exists")
+                raise ExceptionBase(ErrorCode.DUPLICATE_ENTRY)
 
         # Update fields if provided
         if category_data.name is not None:
@@ -123,14 +123,14 @@ class BlogService:
         category = result.scalars().first()
 
         if not category:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Category with ID {category_id} not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Check if category is used by any blogs
         blog_check = await self.db.execute(
             select(Blog).where(and_(Blog.category_id == category_id, Blog.deleted_date.is_(None)))
         )
         if blog_check.scalars().first():
-            raise ExceptionBase(ErrorCode.OPERATION_NOT_ALLOWED, "Cannot delete category that is used by blogs")
+            raise ExceptionBase(ErrorCode.OPERATION_NOT_ALLOWED)
 
         # Soft delete by setting deleted_date
         category.deleted_date = datetime.now()
@@ -143,7 +143,7 @@ class BlogService:
         result = await self.db.execute(select(BlogTag).where(BlogTag.name == tag_data.name))
         existing_tag = result.scalars().first()
         if existing_tag:
-            raise ExceptionBase(ErrorCode.ALREADY_EXISTS, "Tag with this name already exists")
+            raise ExceptionBase(ErrorCode.DUPLICATE_ENTRY)
 
         new_tag = BlogTag(
             name=tag_data.name,
@@ -161,7 +161,7 @@ class BlogService:
         tag = result.scalars().first()
 
         if not tag:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Tag with ID {tag_id} not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         return BlogTagResponse.model_validate(tag)
 
@@ -183,7 +183,7 @@ class BlogService:
         tag = result.scalars().first()
 
         if not tag:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Tag with ID {tag_id} not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Check if new name conflicts with existing tag
         if tag_data.name and tag_data.name != tag.name:
@@ -191,7 +191,7 @@ class BlogService:
                 select(BlogTag).where(and_(BlogTag.name == tag_data.name, BlogTag.id != tag_id))
             )
             if name_check.scalars().first():
-                raise ExceptionBase(ErrorCode.ALREADY_EXISTS, "Tag with this name already exists")
+                raise ExceptionBase(ErrorCode.DUPLICATE_ENTRY)
 
         # Update fields if provided
         if tag_data.name is not None:
@@ -208,7 +208,7 @@ class BlogService:
         tag = result.scalars().first()
 
         if not tag:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Tag with ID {tag_id} not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Remove tag from all blogs
         await self.db.execute(blog_tag_association.delete().where(blog_tag_association.c.tag_id == tag_id))
@@ -218,11 +218,23 @@ class BlogService:
         await self.db.commit()
 
     # Blog Methods
-    async def create_blog(self, user_id: int, blog_data: BlogCreate) -> BlogResponse:
+    async def create_blog(self, blog_data: BlogCreate) -> BlogResponse:
         """Create a new blog post"""
+        # Verify category exists if provided
+        if blog_data.category_id:
+            category_check = await self.db.execute(select(BlogCategory).where(BlogCategory.id == blog_data.category_id))
+            if not category_check.scalars().first():
+                raise ExceptionBase(ErrorCode.NOT_FOUND)
+
+        # Verify tags exist if provided
+        if blog_data.tag_ids:
+            for tag_id in blog_data.tag_ids:
+                tag_check = await self.db.execute(select(BlogTag).where(BlogTag.id == tag_id))
+                if not tag_check.scalars().first():
+                    raise ExceptionBase(ErrorCode.NOT_FOUND)
+
         # Create new blog
         new_blog = Blog(
-            user_id=user_id,
             category_id=blog_data.category_id,
             title=blog_data.title,
             content=blog_data.content,
@@ -258,9 +270,40 @@ class BlogService:
         blog = result.unique().scalars().first()
 
         if not blog:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Blog with ID {blog_id} not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
-        return BlogResponse.model_validate(blog)
+        # Convert to dict for manipulation
+        blog_dict = {
+            "id": blog.id,
+            "title": blog.title,
+            "content": blog.content,
+            "summary": blog.summary,
+            "image_url": blog.image_url,
+            "view_count": blog.view_count,
+            "is_published": blog.is_published,
+            "is_featured": blog.is_featured,
+            "blog_type": blog.blog_type,
+            "created_date": blog.created_date,
+            "updated_date": blog.updated_date,
+            "deleted_date": blog.deleted_date,
+            "category": None,
+            "tags": [],
+        }
+
+        # Convert category to BlogCategoryInfo if exists
+        if blog.category:
+            blog_dict["category"] = {
+                "id": blog.category.id,
+                "name": blog.category.name,
+                "description": blog.category.description,
+            }
+
+        # Convert tags to list of BlogTagInfo
+        if blog.tags:
+            blog_dict["tags"] = [{"id": tag.id, "name": tag.name} for tag in blog.tags]
+
+        # Create BlogResponse from dict
+        return BlogResponse.model_validate(blog_dict)
 
     async def list_blogs(
         self,
@@ -311,7 +354,7 @@ class BlogService:
         result = await self.db.execute(query)
         blogs = result.unique().scalars().all()
 
-        return [BlogResponse.model_validate(blog) for blog in blogs], total_count
+        return [await self._get_blog_with_relationships(blog.id) for blog in blogs], total_count
 
     async def update_blog(
         self, blog_id: int, user_id: int, blog_data: BlogUpdate, is_admin: bool = False
@@ -327,7 +370,7 @@ class BlogService:
         blog = result.scalars().first()
 
         if not blog:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Blog with ID {blog_id} not found or not authorized")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Update fields if provided
         if blog_data.category_id is not None:
@@ -369,7 +412,7 @@ class BlogService:
         blog = result.scalars().first()
 
         if not blog:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Blog with ID {blog_id} not found or not authorized")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Soft delete by setting deleted_date
         blog.deleted_date = datetime.now()
@@ -381,7 +424,7 @@ class BlogService:
         blog = result.scalars().first()
 
         if not blog:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Blog with ID {blog_id} not found")
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         blog.view_count += 1
         await self.db.commit()
@@ -396,7 +439,7 @@ class BlogService:
             # Verify tag exists
             tag_check = await self.db.execute(select(BlogTag).where(BlogTag.id == tag_id))
             if not tag_check.scalars().first():
-                raise ExceptionBase(ErrorCode.NOT_FOUND, f"Tag with ID {tag_id} not found")
+                raise ExceptionBase(ErrorCode.NOT_FOUND)
 
             # Add association
             await self.db.execute(blog_tag_association.insert().values(blog_id=blog_id, tag_id=tag_id))

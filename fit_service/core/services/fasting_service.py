@@ -542,6 +542,4 @@ class FastingService:
         session = result.scalars().first()
 
         if not session:
-            raise ExceptionBase(
-                ErrorCode.NOT_FOUND, f"Fasting session with ID {session_id} not found or does not belong to this user"
-            )
+            raise ExceptionBase(ErrorCode.NOT_FOUND)

@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
@@ -180,9 +180,17 @@ class FastingService:
     async def create_fasting_session(self, user_id: int, session_data: FastingSessionCreate) -> FastingSessionResponse:
         """Create a new fasting session for a user"""
         # Check if there's already an active session
-        active_session = await self._get_active_session(user_id)
-        if active_session:
-            raise ExceptionBase(ErrorCode.CONFLICT, "User already has an active fasting session")
+        active_session_check = await self.db.execute(
+            select(FastingSession).where(
+                and_(
+                    FastingSession.user_id == user_id,
+                    FastingSession.end_time.is_(None),
+                    FastingSession.deleted_date.is_(None),
+                )
+            )
+        )
+        if active_session_check.scalars().first():
+            raise ExceptionBase(ErrorCode.CONFLICT)
 
         # Create new session
         new_session = FastingSession(

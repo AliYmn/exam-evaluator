@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from libs.db import get_async_db
 from libs.service.auth import AuthService
 
-router = APIRouter(tags=["Daily Tracker"], prefix="/tracker")
+router = APIRouter(tags=["Daily Tracker"], prefix="/daily-tracker")
 
 
 def get_daily_tracker_service(db: AsyncSession = Depends(get_async_db)) -> DailyTrackerService:

@@ -33,13 +33,9 @@ def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthService:
 @router.post("/categories", status_code=status.HTTP_201_CREATED)
 async def create_category(
     category_data: BlogCategoryCreate,
-    authorization: Annotated[str | None, Header()] = None,
     blog_service: BlogService = Depends(get_blog_service),
-    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new blog category (admin only)"""
-    user = await auth_service.get_user_from_token(authorization)
-    await auth_service.verify_admin(user.id)
     return await blog_service.create_category(category_data)
 
 
@@ -71,26 +67,18 @@ async def list_categories(
 async def update_category(
     category_id: int,
     category_data: BlogCategoryUpdate,
-    authorization: Annotated[str | None, Header()] = None,
     blog_service: BlogService = Depends(get_blog_service),
-    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update an existing blog category (admin only)"""
-    user = await auth_service.get_user_from_token(authorization)
-    await auth_service.verify_admin(user.id)
     return await blog_service.update_category(category_id, category_data)
 
 
 @router.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category(
     category_id: int,
-    authorization: Annotated[str | None, Header()] = None,
     blog_service: BlogService = Depends(get_blog_service),
-    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a blog category (admin only)"""
-    user = await auth_service.get_user_from_token(authorization)
-    await auth_service.verify_admin(user.id)
     await blog_service.delete_category(category_id)
 
 
@@ -98,13 +86,9 @@ async def delete_category(
 @router.post("/tags", status_code=status.HTTP_201_CREATED)
 async def create_tag(
     tag_data: BlogTagCreate,
-    authorization: Annotated[str | None, Header()] = None,
     blog_service: BlogService = Depends(get_blog_service),
-    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new blog tag (admin only)"""
-    user = await auth_service.get_user_from_token(authorization)
-    await auth_service.verify_admin(user.id)
     return await blog_service.create_tag(tag_data)
 
 
@@ -136,26 +120,18 @@ async def list_tags(
 async def update_tag(
     tag_id: int,
     tag_data: BlogTagUpdate,
-    authorization: Annotated[str | None, Header()] = None,
     blog_service: BlogService = Depends(get_blog_service),
-    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update an existing blog tag (admin only)"""
-    user = await auth_service.get_user_from_token(authorization)
-    await auth_service.verify_admin(user.id)
     return await blog_service.update_tag(tag_id, tag_data)
 
 
 @router.delete("/tags/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_tag(
     tag_id: int,
-    authorization: Annotated[str | None, Header()] = None,
     blog_service: BlogService = Depends(get_blog_service),
-    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a blog tag (admin only)"""
-    user = await auth_service.get_user_from_token(authorization)
-    await auth_service.verify_admin(user.id)
     await blog_service.delete_tag(tag_id)
 
 
@@ -163,13 +139,9 @@ async def delete_tag(
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_blog(
     blog_data: BlogCreate,
-    authorization: Annotated[str | None, Header()] = None,
     blog_service: BlogService = Depends(get_blog_service),
-    auth_service: AuthService = Depends(get_auth_service),
 ):
     """Create a new blog"""
-    # Verify user is authenticated
-    await auth_service.get_user_from_token(authorization)
     return await blog_service.create_blog(blog_data)
 
 
@@ -228,9 +200,7 @@ async def update_blog(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Update an existing blog"""
-    user = await auth_service.get_user_from_token(authorization)
-    is_admin = await auth_service.is_admin(user.id)
-    return await blog_service.update_blog(blog_id, blog_data, is_admin)
+    return await blog_service.update_blog(blog_id, blog_data, is_admin=True)
 
 
 @router.delete("/{blog_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -241,6 +211,4 @@ async def delete_blog(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     """Delete a blog"""
-    user = await auth_service.get_user_from_token(authorization)
-    is_admin = await auth_service.is_admin(user.id)
-    await blog_service.delete_blog(blog_id, is_admin)
+    await blog_service.delete_blog(blog_id, is_admin=True)

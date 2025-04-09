@@ -56,7 +56,7 @@ class AuthService:
 
         # Return error if email exists
         if email_exists:
-            raise ExceptionBase(ErrorCode.USER_ALREADY_EXISTS)
+            raise ExceptionBase(ErrorCode.DUPLICATE_ENTRY)
 
         # Create user
         user_dict = user_data.model_dump(exclude={"password"})

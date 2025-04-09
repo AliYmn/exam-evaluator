@@ -8,7 +8,7 @@ broker_url = (
 backend_url = f"db+postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}/{settings.POSTGRES_DB}"
 
 celery_app = Celery(
-    settings.FIT_WORKER_NAME,
+    settings.TRACKER_WORKER_NAME,
     broker=broker_url,
     backend=backend_url,
 )
