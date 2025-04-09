@@ -21,6 +21,7 @@ class ErrorCode(IntEnum):
     UNSUPPORTED_MEDIA_TYPE = (1007, "Unsupported media type", 415)
     RATE_LIMIT_EXCEEDED = (1008, "Rate limit exceeded", 429)
     PAYLOAD_TOO_LARGE = (1009, "Payload too large", 413)
+    INVALID_FILE_TYPE = (1010, "Invalid file type", 400)
 
     # Server errors
     INTERNAL_SERVER_ERROR = (2000, "Internal server error", 500)

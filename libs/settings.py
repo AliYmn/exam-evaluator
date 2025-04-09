@@ -50,6 +50,14 @@ class Config(BaseSettings):
     MAIL_PASSWORD: str
     MAIL_FROM: str
 
+    # DigitalOcean Space
+    DIGITALOCEAN_SECRET_KEY: str
+    DIGITALOCEAN_CDN_URL: str
+    DIGITALOCEAN_ACCESS_KEY: str
+    DIGITALOCEAN_BUCKET_NAME: str
+    DIGITALOCEAN_REGION: str = "nyc3"
+    DIGITALOCEAN_ENDPOINT_URL: str = "https://nyc3.digitaloceanspaces.com"
+
     # GROQ
     GROQ_API_KEY: str
     GROQ_BASE_URL: str

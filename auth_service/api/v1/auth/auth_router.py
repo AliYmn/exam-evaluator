@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +13,7 @@ from auth_service.api.v1.auth.auth_schemas import (
 from auth_service.core.services.service import AuthService
 from libs.db import get_async_db
 from fastapi_limiter.depends import RateLimiter
+from libs.helper.space import SpaceService
 
 # Create router with auth tag
 auth_router = APIRouter(tags=["Auth"], prefix="/auth")
@@ -57,6 +58,29 @@ async def update_user_profile(
 ):
     user = await auth_service.get_current_user(token)
     return await auth_service.update_user_profile(user.id, update_data.model_dump(exclude_unset=True))
+
+
+# Upload profile picture endpoint
+@auth_router.post("/me/profile-picture")
+async def upload_profile_picture(
+    file: UploadFile = File(...),
+    token: str = Depends(oauth2_scheme),
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
+    if file.content_type not in allowed_types:
+        from libs import ErrorCode, ExceptionBase
+
+        raise ExceptionBase(ErrorCode.INVALID_FILE_TYPE)
+
+    # Upload file to DigitalOcean Space
+    space_service = SpaceService()
+    result = await space_service.upload_image(file, folder="profile-pictures")
+
+    # Update user profile with the new image URL
+    user = await auth_service.get_current_user(token)
+    return await auth_service.update_user_profile(user.id, {"profile_picture": result["url"]})
 
 
 # Password reset request endpoint

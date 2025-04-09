@@ -24,3 +24,4 @@ redis==5.2.1
 requests==2.32.3
 openai==1.70.0
 fastapi-limiter==0.1.6
+boto3==1.37.31
