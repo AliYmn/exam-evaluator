@@ -1,2 +1,4 @@
-# ai-api-gateway
-ai-api-gateway
+# TODO:
+- Rate Limiter
+- Sentry
+- Telegram
