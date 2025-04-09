@@ -4,6 +4,7 @@ from libs.models.body_tracker import BodyTracker
 from libs.models.daily_tracker import DailyTracker
 from libs.models.notifications import Notification
 from libs.models.fasting import FastingPlan, FastingSession
+from libs.models.blog import Blog, BlogCategory, BlogTag
 
 __all__ = [
     "BaseModel",
@@ -13,4 +14,7 @@ __all__ = [
     "Notification",
     "FastingPlan",
     "FastingSession",
+    "Blog",
+    "BlogCategory",
+    "BlogTag",
 ]

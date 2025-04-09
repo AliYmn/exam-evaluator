@@ -8,6 +8,8 @@ from fastapi.responses import ORJSONResponse
 
 from fit_service.api.v1.body_tracker.body_tracker_router import router as body_tracker_router
 from fit_service.api.v1.daily_tracker.daily_tracker_router import router as daily_tracker_router
+from fit_service.api.v1.fasting.fasting_router import router as fasting_router
+from fit_service.api.v1.blog.blog_router import router as blog_router
 from libs import ExceptionBase, settings
 
 
@@ -48,3 +50,5 @@ async def http_exception_handler(_request, exc: ExceptionBase) -> ORJSONResponse
 
 app.include_router(body_tracker_router, prefix=settings.API_STR)
 app.include_router(daily_tracker_router, prefix=settings.API_STR)
+app.include_router(fasting_router, prefix=settings.API_STR)
+app.include_router(blog_router, prefix=settings.API_STR)
