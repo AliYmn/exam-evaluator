@@ -21,6 +21,8 @@ celery_app.conf.update(
     result_serializer="json",
     task_serializer="json",
     accept_content=["json"],
-    task_routes={},
+    task_routes={
+        "check_fasting_plans": {"queue": settings.FIT_QUEUE_NAME},
+    },
     timezone="UTC",
 )

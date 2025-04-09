@@ -1,4 +1,5 @@
 from typing import List, Optional, Tuple
+from datetime import datetime, timedelta
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,32 +26,127 @@ class FastingService:
     # FastingPlan methods
     async def create_or_update_fasting_plan(self, user_id: int, plan_data: FastingPlanCreate) -> FastingPlanResponse:
         """Create a new fasting plan or update the existing one for a user"""
-        # Check if user already has a plan
+        # Get the latest fasting plan for the user
         result = await self.db.execute(
-            select(FastingPlan).where(FastingPlan.user_id == user_id, FastingPlan.deleted_date.is_(None))
+            select(FastingPlan)
+            .where(FastingPlan.user_id == user_id, FastingPlan.deleted_date.is_(None))
+            .order_by(FastingPlan.created_date.desc())
         )
-        existing_plan = result.scalars().first()
+        latest_plan = result.scalars().first()
 
-        if existing_plan:
-            # Update existing plan
-            existing_plan.fasting_hours = plan_data.fasting_hours
-            existing_plan.eating_hours = plan_data.eating_hours
-            existing_plan.target_week = plan_data.target_week
-            await self.db.commit()
-            await self.db.refresh(existing_plan)
-            return FastingPlanResponse.model_validate(existing_plan)
+        # Set start_date to today if not provided
+        today = datetime.now()
+        start_date = plan_data.start_date or today
+
+        # Calculate finish_date based on fasting_hours + eating_hours (one cycle) * target_week
+        total_hours = plan_data.fasting_hours + plan_data.eating_hours
+
+        # If target_week is provided, multiply by the number of weeks
+        if plan_data.target_week and plan_data.target_week > 0:
+            total_hours = total_hours * plan_data.target_week
+
+        finish_date = start_date + timedelta(hours=total_hours)
+
+        # Check if we need to create a new plan
+        should_create_new_plan = False  # Default to updating existing plan
+
+        if latest_plan:
+            # Get the latest plan's target_week and current_week
+            target_week = latest_plan.target_week
+            current_week = latest_plan.current_week
+
+            # If current_week >= target_week, create a new plan
+            if current_week is not None and target_week is not None:
+                if current_week >= target_week:
+                    # Current week is equal to or greater than target week, create new plan
+                    should_create_new_plan = True
+                else:
+                    # Current week is less than target week, update existing plan
+                    should_create_new_plan = False
+            else:
+                # Missing week data, update existing plan
+                should_create_new_plan = False
         else:
-            # Create new plan
+            # No existing plan, create a new one
+            should_create_new_plan = True
+
+        if should_create_new_plan:
+            # Create a new plan
             new_plan = FastingPlan(
                 user_id=user_id,
                 fasting_hours=plan_data.fasting_hours,
                 eating_hours=plan_data.eating_hours,
                 target_week=plan_data.target_week,
+                current_week=0,
+                start_date=start_date,
+                finish_date=finish_date,
             )
             self.db.add(new_plan)
             await self.db.commit()
             await self.db.refresh(new_plan)
-            return FastingPlanResponse.model_validate(new_plan)
+            plan_response = FastingPlanResponse.model_validate(new_plan)
+
+            # Create a new session for this plan with current_week = 0
+            await self.create_or_update_fasting_session(user_id, new_plan.id, plan_data, current_week=0)
+
+            return plan_response
+        else:
+            # Update existing plan
+            latest_plan.fasting_hours = plan_data.fasting_hours
+            latest_plan.eating_hours = plan_data.eating_hours
+            latest_plan.target_week = plan_data.target_week
+            # Don't update current_week for existing plan
+            latest_plan.start_date = start_date
+            latest_plan.finish_date = finish_date
+            await self.db.commit()
+            await self.db.refresh(latest_plan)
+            plan_response = FastingPlanResponse.model_validate(latest_plan)
+
+            # Update active session if exists
+            await self.create_or_update_fasting_session(user_id, latest_plan.id, plan_data)
+
+            return plan_response
+
+    async def create_or_update_fasting_session(
+        self, user_id: int, plan_id: int, plan_data: FastingPlanCreate, current_week: int = None
+    ) -> None:
+        """Create a new fasting session or update the active one for a user"""
+        # Check if user has an active session
+        result = await self.db.execute(
+            select(FastingSession)
+            .where(
+                FastingSession.user_id == user_id,
+                FastingSession.status == "active",
+                FastingSession.deleted_date.is_(None),
+            )
+            .order_by(FastingSession.created_date.desc())
+        )
+        active_session = result.scalars().first()
+
+        current_time = datetime.now().time()
+
+        if active_session and current_week is None:
+            # Update existing session
+            active_session.plan_id = plan_id
+            active_session.fasting_hours = plan_data.fasting_hours
+            active_session.eating_hours = plan_data.eating_hours
+            active_session.target_week = plan_data.target_week
+            # Don't update current_week for existing sessions
+            await self.db.commit()
+        else:
+            # Create new session with current_week = 0 or specified value
+            new_session = FastingSession(
+                user_id=user_id,
+                plan_id=plan_id,
+                start_time=current_time,
+                status="active",
+                fasting_hours=plan_data.fasting_hours,
+                eating_hours=plan_data.eating_hours,
+                target_week=plan_data.target_week,
+                current_week=0 if current_week is None else current_week,  # Start with week 0 or specified value
+            )
+            self.db.add(new_session)
+            await self.db.commit()
 
     async def get_latest_fasting_plan(self, user_id: int) -> Optional[FastingPlanResponse]:
         """Get the latest fasting plan for a user"""

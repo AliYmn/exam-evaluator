@@ -9,9 +9,7 @@ from content_service.api.v1.fasting.fasting_schemas import (
     FastingPlanUpdate,
     FastingPlanResponse,
     FastingSessionCreate,
-    FastingSessionUpdate,
     FastingSessionResponse,
-    FastingMealLogCreate,
     FastingMealLogUpdate,
     FastingMealLogResponse,
     FastingWorkoutLogCreate,
@@ -273,82 +271,6 @@ class FastingService:
         sessions = result.scalars().all()
 
         return [FastingSessionResponse.model_validate(session) for session in sessions], total_count or 0
-
-    async def update_fasting_session(
-        self, session_id: int, user_id: int, session_data: FastingSessionUpdate
-    ) -> FastingSessionResponse:
-        """Update a specific fasting session"""
-        # Get the session record
-        result = await self.db.execute(
-            select(FastingSession).where(
-                FastingSession.id == session_id,
-                FastingSession.user_id == user_id,
-                FastingSession.deleted_date.is_(None),
-            )
-        )
-        session = result.scalars().first()
-
-        if not session:
-            raise ExceptionBase(ErrorCode.NOT_FOUND)
-
-        # Update session data
-        if session_data.end_time is not None:
-            session.end_time = session_data.end_time
-        if session_data.status is not None:
-            session.status = session_data.status
-        if session_data.mood is not None:
-            session.mood = session_data.mood
-        if session_data.stage is not None:
-            session.stage = session_data.stage
-
-        await self.db.commit()
-        await self.db.refresh(session)
-
-        return FastingSessionResponse.model_validate(session)
-
-    async def delete_fasting_session(self, session_id: int, user_id: int) -> None:
-        """Soft delete a specific fasting session by setting deleted_date"""
-        # Verify the session exists and belongs to the user
-        result = await self.db.execute(
-            select(FastingSession).where(
-                FastingSession.id == session_id,
-                FastingSession.user_id == user_id,
-                FastingSession.deleted_date.is_(None),
-            )
-        )
-        session = result.scalars().first()
-
-        if not session:
-            raise ExceptionBase(ErrorCode.NOT_FOUND)
-
-        # Soft delete by setting deleted_date
-        session.deleted_date = datetime.now()
-        await self.db.commit()
-
-    # Fasting Meal Log Methods
-    async def create_meal_log(self, user_id: int, meal_data: FastingMealLogCreate) -> FastingMealLogResponse:
-        """Create a new meal log for a fasting session"""
-        # Verify the session exists and belongs to the user
-        await self._verify_session_ownership(user_id, meal_data.session_id)
-
-        # Create new meal log
-        new_meal_log = FastingMealLog(
-            user_id=user_id,
-            session_id=meal_data.session_id,
-            photo_url=meal_data.photo_url,
-            notes=meal_data.notes,
-            calories=meal_data.calories,
-            protein=meal_data.protein,
-            carbs=meal_data.carbs,
-            fat=meal_data.fat,
-            detailed_macros=meal_data.detailed_macros,
-        )
-
-        self.db.add(new_meal_log)
-        await self.db.commit()
-        await self.db.refresh(new_meal_log)
-
-        return FastingMealLogResponse.model_validate(new_meal_log)
 
     async def get_meal_log(self, log_id: int, user_id: int) -> FastingMealLogResponse:
         """Get a specific meal log by ID"""

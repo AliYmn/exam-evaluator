@@ -1,4 +1,4 @@
-from typing import List, Optional, Literal
+from typing import List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime, time
 
@@ -10,6 +10,9 @@ class FastingPlanBase(BaseModel):
     fasting_hours: int = Field(..., description="Number of hours to fast")
     eating_hours: int = Field(..., description="Number of hours to eat")
     target_week: Optional[int] = Field(None, description="Target number of weeks for this fasting plan")
+    current_week: Optional[int] = Field(0, description="Current week of this fasting plan")
+    start_date: Optional[datetime] = Field(None, description="Target start date and time for this fasting plan")
+    finish_date: Optional[datetime] = Field(None, description="Target finish date and time for this fasting plan")
 
 
 class FastingPlanCreate(FastingPlanBase):
@@ -24,49 +27,13 @@ class FastingPlanResponse(BaseModel):
     fasting_hours: Optional[int] = None
     eating_hours: Optional[int] = None
     target_week: Optional[int] = None
+    current_week: Optional[int] = None
+    start_date: Optional[datetime] = None
+    finish_date: Optional[datetime] = None
     created_date: datetime
 
     class Config:
         from_attributes = True
-
-
-# Fasting Session schemas
-class FastingSessionBase(BaseModel):
-    """Base model for Fasting Session data"""
-
-    start_time: time = Field(..., description="When this fasting session started")
-    end_time: Optional[time] = Field(None, description="When this fasting session ended (null if ongoing)")
-    mood: Optional[str] = Field(None, description="User's mood during fasting (can store emoji)")
-    stage: Optional[str] = Field(None, description="Fasting stage (e.g., 'anabolic', 'catabolic', 'ketosis')")
-    target_calories: Optional[int] = Field(None, description="Daily calorie target during eating window")
-    target_meals: Optional[int] = Field(None, description="Target number of meals during eating window")
-    target_water: Optional[float] = Field(None, description="Target water intake in liters")
-    target_protein: Optional[float] = Field(None, description="Target protein intake in grams")
-    target_carb: Optional[float] = Field(None, description="Target carbohydrate intake in grams")
-    target_fat: Optional[float] = Field(None, description="Target fat intake in grams")
-
-
-class FastingSessionCreate(FastingSessionBase):
-    """Request model for creating a Fasting Session"""
-
-    plan_id: Optional[int] = Field(None, description="ID of the associated fasting plan")
-
-
-class FastingSessionUpdate(BaseModel):
-    """Request model for updating a Fasting Session"""
-
-    end_time: Optional[time] = Field(None, description="When this fasting session ended")
-    status: Optional[Literal["PENDING", "STARTED", "FAILED", "COMPLETED"]] = Field(
-        None, description="Status of the fasting session"
-    )
-    mood: Optional[str] = Field(None, description="User's mood during fasting (can store emoji)")
-    stage: Optional[str] = Field(None, description="Fasting stage (e.g., 'anabolic', 'catabolic', 'ketosis')")
-    target_calories: Optional[int] = Field(None, description="Daily calorie target during eating window")
-    target_meals: Optional[int] = Field(None, description="Target number of meals during eating window")
-    target_water: Optional[float] = Field(None, description="Target water intake in liters")
-    target_protein: Optional[float] = Field(None, description="Target protein intake in grams")
-    target_carb: Optional[float] = Field(None, description="Target carbohydrate intake in grams")
-    target_fat: Optional[float] = Field(None, description="Target fat intake in grams")
 
 
 class FastingSessionResponse(BaseModel):
@@ -86,6 +53,10 @@ class FastingSessionResponse(BaseModel):
     target_protein: Optional[float] = None
     target_carb: Optional[float] = None
     target_fat: Optional[float] = None
+    fasting_hours: Optional[int] = None
+    eating_hours: Optional[int] = None
+    target_week: Optional[int] = None
+    current_week: Optional[int] = None
     created_date: datetime
 
     class Config:
