@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, status, Header, HTTPException
 from typing import Annotated
+from fastapi_limiter.depends import RateLimiter
 
 from tracker_service.api.v1.daily_tracker.daily_tracker_schemas import (
     DailyTrackerCreate,
@@ -22,7 +23,7 @@ def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthService:
     return AuthService(db)
 
 
-@router.post("", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(RateLimiter(times=15, seconds=60))])
 async def create_daily_tracker(
     tracker_data: DailyTrackerCreate,
     authorization: Annotated[str | None, Header()] = None,
@@ -33,7 +34,7 @@ async def create_daily_tracker(
     await tracker_service.create_daily_tracker(user.id, tracker_data)
 
 
-@router.get("")
+@router.get("", dependencies=[Depends(RateLimiter(times=15, seconds=60))])
 async def list_daily_trackers(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),

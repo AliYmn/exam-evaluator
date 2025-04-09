@@ -1,5 +1,4 @@
 # TODO:
-- Rate Limiter
 - Sentry
 - Telegram
 - Digitalocean CDN arastir, uyguna ekliyebiliriz.

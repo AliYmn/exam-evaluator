@@ -12,6 +12,7 @@ from auth_service.api.v1.auth.auth_schemas import (
 )
 from auth_service.core.services.service import AuthService
 from libs.db import get_async_db
+from fastapi_limiter.depends import RateLimiter
 
 # Create router with auth tag
 auth_router = APIRouter(tags=["Auth"], prefix="/auth")
@@ -25,14 +26,14 @@ async def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthServ
     return AuthService(db)
 
 
-# User registration endpoint
-@auth_router.post("/register", status_code=204)
+# User registration endpoint - Limit to 5 registrations per IP address in 5 minutes
+@auth_router.post("/register", status_code=204, dependencies=[Depends(RateLimiter(times=5, seconds=300))])
 async def register_user(user_data: UserCreate, auth_service: AuthService = Depends(get_auth_service)):
     await auth_service.create_user(user_data)
 
 
-# Login endpoint
-@auth_router.post("/login")
+# Login endpoint - Limit to 10 login attempts per IP address in 1 minute
+@auth_router.post("/login", dependencies=[Depends(RateLimiter(times=10, seconds=60))])
 async def login(login_data: LoginRequest, auth_service: AuthService = Depends(get_auth_service)):
     return await auth_service.authenticate_user_by_email(login_data)
 

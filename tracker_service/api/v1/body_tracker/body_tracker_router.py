@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, status, Header
 from typing import Annotated
+from fastapi_limiter.depends import RateLimiter
 
 from tracker_service.api.v1.body_tracker.body_tracker_schemas import (
     TrackerCreate,
@@ -22,7 +23,7 @@ def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthService:
     return AuthService(db)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))])
 async def create_tracker(
     tracker_data: TrackerCreate,
     authorization: Annotated[str | None, Header()] = None,
@@ -46,7 +47,7 @@ async def get_tracker(
     return await body_tracker_service.get_tracker(tracker_id, user.id)
 
 
-@router.get("")
+@router.get("", dependencies=[Depends(RateLimiter(times=15, seconds=60))])
 async def list_trackers(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),

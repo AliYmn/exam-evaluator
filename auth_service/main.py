@@ -6,15 +6,27 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from libs import ExceptionBase, settings
+from fastapi_limiter import FastAPILimiter
+import redis.asyncio as redis
 from auth_service.api.v1.auth.auth_router import auth_router
 
 
 # App Lifespan
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
+    # Thread limiter setting
     limiter = anyio.to_thread.current_default_thread_limiter()
     limiter.total_tokens = 100
+
+    # Initialize rate limiter with Redis connection
+    redis_url = f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
+    redis_instance = redis.from_url(redis_url, encoding="utf-8", decode_responses=True)
+    await FastAPILimiter.init(redis_instance)
+
     yield
+
+    # Close Redis connection on shutdown
+    await redis_instance.close()
 
 
 # APP Configuration

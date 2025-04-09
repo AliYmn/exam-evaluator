@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, status, Header, HTTPException
 from typing import Annotated
+from fastapi_limiter.depends import RateLimiter
 
 from fit_service.api.v1.fasting.fasting_schemas import (
     FastingPlanCreate,
@@ -32,7 +33,7 @@ def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthService:
 
 
 # FastingPlan endpoints
-@router.post("/plans", status_code=status.HTTP_201_CREATED)
+@router.post("/plans", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))])
 async def create_fasting_plan(
     plan_data: FastingPlanCreate,
     authorization: Annotated[str | None, Header()] = None,
@@ -108,7 +109,9 @@ async def delete_fasting_plan(
 
 
 # FastingSession endpoints
-@router.post("/sessions", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/sessions", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))]
+)
 async def create_fasting_session(
     session_data: FastingSessionCreate,
     authorization: Annotated[str | None, Header()] = None,
@@ -184,7 +187,9 @@ async def delete_fasting_session(
 
 
 # FastingMealLog endpoints
-@router.post("/meal-logs", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/meal-logs", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))]
+)
 async def create_meal_log(
     meal_data: FastingMealLogCreate,
     authorization: Annotated[str | None, Header()] = None,
@@ -248,7 +253,9 @@ async def delete_meal_log(
 
 
 # FastingWorkoutLog endpoints
-@router.post("/workout-logs", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/workout-logs", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))]
+)
 async def create_workout_log(
     workout_data: FastingWorkoutLogCreate,
     authorization: Annotated[str | None, Header()] = None,

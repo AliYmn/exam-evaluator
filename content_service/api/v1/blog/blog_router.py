@@ -1,5 +1,6 @@
 from typing import Optional, Annotated
 from fastapi import APIRouter, Depends, Query, status, Header
+from fastapi_limiter.depends import RateLimiter
 
 from content_service.api.v1.blog.blog_schemas import (
     BlogCreate,
@@ -30,7 +31,9 @@ def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthService:
 
 
 # Blog Category endpoints
-@router.post("/categories", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/categories", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=20, seconds=60))]
+)
 async def create_category(
     category_data: BlogCategoryCreate,
     blog_service: BlogService = Depends(get_blog_service),
