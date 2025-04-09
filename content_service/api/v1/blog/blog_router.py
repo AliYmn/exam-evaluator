@@ -167,9 +167,10 @@ async def create_blog(
     blog_service: BlogService = Depends(get_blog_service),
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    """Create a new blog post"""
-    user = await auth_service.get_user_from_token(authorization)
-    return await blog_service.create_blog(user.id, blog_data)
+    """Create a new blog"""
+    # Verify user is authenticated
+    await auth_service.get_user_from_token(authorization)
+    return await blog_service.create_blog(blog_data)
 
 
 @router.get("/{blog_id}")
@@ -191,7 +192,6 @@ async def get_blog(
 async def list_blogs(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=50),
-    user_id: Optional[int] = Query(None, description="Filter by user ID"),
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
     tag_id: Optional[int] = Query(None, description="Filter by tag ID"),
     blog_type: Optional[str] = Query(None, description="Filter by blog type (e.g., explore, recipe)"),
@@ -204,7 +204,6 @@ async def list_blogs(
     blogs, total_count = await blog_service.list_blogs(
         skip=skip,
         limit=limit,
-        user_id=user_id,
         category_id=category_id,
         tag_id=tag_id,
         blog_type=blog_type,
@@ -231,7 +230,7 @@ async def update_blog(
     """Update an existing blog"""
     user = await auth_service.get_user_from_token(authorization)
     is_admin = await auth_service.is_admin(user.id)
-    return await blog_service.update_blog(blog_id, user.id, blog_data, is_admin)
+    return await blog_service.update_blog(blog_id, blog_data, is_admin)
 
 
 @router.delete("/{blog_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -244,4 +243,4 @@ async def delete_blog(
     """Delete a blog"""
     user = await auth_service.get_user_from_token(authorization)
     is_admin = await auth_service.is_admin(user.id)
-    await blog_service.delete_blog(blog_id, user.id, is_admin)
+    await blog_service.delete_blog(blog_id, is_admin)

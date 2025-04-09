@@ -14,6 +14,7 @@ class BodyTracker(BaseModel):
     thigh = Column(Float, nullable=True)
     arm = Column(Float, nullable=True)
     note = Column(String(255), nullable=True)
+    ai_content = Column(String(9999), nullable=True)
 
     def __repr__(self):
         return f"<BodyTracker(user_id={self.user_id})>"

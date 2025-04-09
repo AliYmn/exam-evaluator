@@ -7,7 +7,6 @@ class DailyTracker(BaseModel):
     __tablename__ = "daily_trackers"
 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-
     energy = Column(Integer, nullable=True)
     sleep = Column(Integer, nullable=True)
     stress = Column(Integer, nullable=True)
@@ -22,6 +21,7 @@ class DailyTracker(BaseModel):
     diet_compliance = Column(Integer, nullable=True)
     training_compliance = Column(Integer, nullable=True)
     note = Column(String(255), nullable=True)
+    ai_content = Column(String(9999), nullable=True)
 
     def __repr__(self):
         return f"<DailyTracker(user_id={self.user_id})>"

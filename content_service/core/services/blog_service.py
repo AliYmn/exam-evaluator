@@ -218,11 +218,10 @@ class BlogService:
         await self.db.commit()
 
     # Blog Methods
-    async def create_blog(self, user_id: int, blog_data: BlogCreate) -> BlogResponse:
+    async def create_blog(self, blog_data: BlogCreate) -> BlogResponse:
         """Create a new blog post"""
         # Create new blog
         new_blog = Blog(
-            user_id=user_id,
             category_id=blog_data.category_id,
             title=blog_data.title,
             content=blog_data.content,
@@ -266,7 +265,6 @@ class BlogService:
         self,
         skip: int = 0,
         limit: int = 100,
-        user_id: Optional[int] = None,
         category_id: Optional[int] = None,
         tag_id: Optional[int] = None,
         blog_type: Optional[str] = None,
@@ -281,8 +279,6 @@ class BlogService:
         )
 
         # Apply filters
-        if user_id is not None:
-            query = query.where(Blog.user_id == user_id)
         if category_id is not None:
             query = query.where(Blog.category_id == category_id)
         if tag_id is not None:
@@ -313,21 +309,31 @@ class BlogService:
 
         return [BlogResponse.model_validate(blog) for blog in blogs], total_count
 
-    async def update_blog(
-        self, blog_id: int, user_id: int, blog_data: BlogUpdate, is_admin: bool = False
-    ) -> BlogResponse:
+    async def update_blog(self, blog_id: int, blog_data: BlogUpdate, is_admin: bool = False) -> BlogResponse:
         """Update an existing blog"""
         query = select(Blog).where(and_(Blog.id == blog_id, Blog.deleted_date.is_(None)))
 
-        # If not admin, restrict to user's own blogs
+        # If not admin, only allow updates to published status
         if not is_admin:
-            query = query.where(Blog.user_id == user_id)
+            # Only allow updating specific fields for non-admins
+            if any(
+                field is not None
+                for field in [
+                    blog_data.category_id,
+                    blog_data.title,
+                    blog_data.content,
+                    blog_data.summary,
+                    blog_data.image_url,
+                    blog_data.blog_type,
+                ]
+            ):
+                raise ExceptionBase(ErrorCode.PERMISSION_DENIED, "Only admins can update blog content")
 
         result = await self.db.execute(query)
         blog = result.scalars().first()
 
         if not blog:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Blog with ID {blog_id} not found or not authorized")
+            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Blog with ID {blog_id} not found")
 
         # Update fields if provided
         if blog_data.category_id is not None:
@@ -357,19 +363,19 @@ class BlogService:
         # Fetch the blog with relationships for response
         return await self._get_blog_with_relationships(blog_id)
 
-    async def delete_blog(self, blog_id: int, user_id: int, is_admin: bool = False) -> None:
+    async def delete_blog(self, blog_id: int, is_admin: bool = False) -> None:
         """Soft delete a blog"""
         query = select(Blog).where(and_(Blog.id == blog_id, Blog.deleted_date.is_(None)))
 
-        # If not admin, restrict to user's own blogs
+        # If not admin, don't allow deletion
         if not is_admin:
-            query = query.where(Blog.user_id == user_id)
+            raise ExceptionBase(ErrorCode.PERMISSION_DENIED, "Only admins can delete blogs")
 
         result = await self.db.execute(query)
         blog = result.scalars().first()
 
         if not blog:
-            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Blog with ID {blog_id} not found or not authorized")
+            raise ExceptionBase(ErrorCode.NOT_FOUND, f"Blog with ID {blog_id} not found")
 
         # Soft delete by setting deleted_date
         blog.deleted_date = datetime.now()

@@ -83,6 +83,9 @@ class FastingMealLog(BaseModel):
     # Detailed macro data
     detailed_macros = Column(JSON, nullable=True)  # Detailed breakdown of nutrients in JSON format
 
+    # AI generated data
+    ai_content = Column(String(9999), nullable=True)
+
     def __repr__(self):
         return f"<FastingMealLog(id={self.id}, user_id={self.user_id}, session_id={self.session_id})>"
 

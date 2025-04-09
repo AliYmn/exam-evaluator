@@ -57,7 +57,6 @@ class Blog(BaseModel):
     __tablename__ = "blogs"
 
     # Relationships
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     category_id = Column(Integer, ForeignKey("blog_categories.id"), nullable=True)
 
     # Blog content

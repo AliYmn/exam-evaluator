@@ -130,7 +130,6 @@ class BlogResponse(BaseModel):
     """Response model for Blog"""
 
     id: int
-    user_id: int
     title: str
     content: str
     summary: Optional[str] = None
