@@ -52,7 +52,7 @@ class FastingService:
             await self.db.refresh(new_plan)
             return FastingPlanResponse.model_validate(new_plan)
 
-    async def get_latest_fasting_plan(self, user_id: int) -> FastingPlanResponse:
+    async def get_latest_fasting_plan(self, user_id: int) -> Optional[FastingPlanResponse]:
         """Get the latest fasting plan for a user"""
         result = await self.db.execute(
             select(FastingPlan)
@@ -63,7 +63,7 @@ class FastingService:
         plan = result.scalars().first()
 
         if not plan:
-            raise ExceptionBase(ErrorCode.NOT_FOUND)
+            return None
 
         return FastingPlanResponse.model_validate(plan)
 
@@ -137,11 +137,6 @@ class FastingService:
             session_id=meal_data.session_id,
             photo_url=meal_data.photo_url,
             notes=meal_data.notes,
-            calories=meal_data.calories,
-            protein=meal_data.protein,
-            carbs=meal_data.carbs,
-            fat=meal_data.fat,
-            detailed_macros=meal_data.detailed_macros,
         )
 
         self.db.add(new_meal_log)
@@ -201,16 +196,6 @@ class FastingService:
             meal_log.photo_url = meal_data.photo_url
         if meal_data.notes is not None:
             meal_log.notes = meal_data.notes
-        if meal_data.calories is not None:
-            meal_log.calories = meal_data.calories
-        if meal_data.protein is not None:
-            meal_log.protein = meal_data.protein
-        if meal_data.carbs is not None:
-            meal_log.carbs = meal_data.carbs
-        if meal_data.fat is not None:
-            meal_log.fat = meal_data.fat
-        if meal_data.detailed_macros is not None:
-            meal_log.detailed_macros = meal_data.detailed_macros
 
         await self.db.commit()
         await self.db.refresh(meal_log)

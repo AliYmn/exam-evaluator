@@ -1,4 +1,4 @@
-from typing import List, Optional, Literal, Dict, Any
+from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 from datetime import datetime, time
 
@@ -16,34 +16,18 @@ class FastingPlanCreate(FastingPlanBase):
     """Request model for creating a Fasting Plan"""
 
 
-class FastingPlanUpdate(FastingPlanBase):
-    """Request model for updating a Fasting Plan"""
-
-    fasting_hours: Optional[int] = Field(None, description="Number of hours to fast")
-    eating_hours: Optional[int] = Field(None, description="Number of hours to eat")
-    target_week: Optional[int] = Field(None, description="Target number of weeks for this fasting plan")
-
-
 class FastingPlanResponse(BaseModel):
     """Response model for Fasting Plan data"""
 
     id: int
     user_id: int
-    fasting_hours: int
-    eating_hours: int
+    fasting_hours: Optional[int] = None
+    eating_hours: Optional[int] = None
     target_week: Optional[int] = None
     created_date: datetime
 
     class Config:
         from_attributes = True
-
-
-class FastingPlanListResponse(BaseModel):
-    """Response model for a list of Fasting Plan records"""
-
-    items: List[FastingPlanResponse]
-    count: int
-    total: int
 
 
 # Fasting Session schemas
@@ -123,11 +107,6 @@ class FastingMealLogBase(BaseModel):
     session_id: int = Field(..., description="ID of the associated fasting session")
     photo_url: Optional[str] = Field(None, description="URL to the uploaded photo")
     notes: Optional[str] = Field(None, description="User notes about the meal")
-    calories: Optional[int] = Field(None, description="Estimated calories")
-    protein: Optional[float] = Field(None, description="Protein in grams")
-    carbs: Optional[float] = Field(None, description="Carbohydrates in grams")
-    fat: Optional[float] = Field(None, description="Fat in grams")
-    detailed_macros: Optional[Dict[str, Any]] = Field(None, description="Detailed breakdown of nutrients")
 
 
 class FastingMealLogCreate(FastingMealLogBase):
@@ -139,11 +118,6 @@ class FastingMealLogUpdate(BaseModel):
 
     photo_url: Optional[str] = Field(None, description="URL to the uploaded photo")
     notes: Optional[str] = Field(None, description="User notes about the meal")
-    calories: Optional[int] = Field(None, description="Estimated calories")
-    protein: Optional[float] = Field(None, description="Protein in grams")
-    carbs: Optional[float] = Field(None, description="Carbohydrates in grams")
-    fat: Optional[float] = Field(None, description="Fat in grams")
-    detailed_macros: Optional[Dict[str, Any]] = Field(None, description="Detailed breakdown of nutrients")
 
 
 class FastingMealLogResponse(FastingMealLogBase):
@@ -152,6 +126,7 @@ class FastingMealLogResponse(FastingMealLogBase):
     id: int
     user_id: int
     created_date: datetime
+    ai_content: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -175,6 +150,7 @@ class FastingWorkoutLogBase(BaseModel):
     calories_burned: Optional[int] = Field(None, description="Estimated calories burned")
     intensity: Optional[str] = Field(None, description="Workout intensity (Low, Medium, High)")
     notes: Optional[str] = Field(None, description="User notes about the workout")
+    ai_content: Optional[str] = Field(None, description="AI generated content")
 
 
 class FastingWorkoutLogCreate(FastingWorkoutLogBase):

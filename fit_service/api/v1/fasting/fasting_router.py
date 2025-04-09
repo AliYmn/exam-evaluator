@@ -51,7 +51,10 @@ async def get_latest_fasting_plan(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.get_latest_fasting_plan(user.id)
+    plan = await fasting_service.get_latest_fasting_plan(user.id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="No fasting plan found")
+    return plan
 
 
 # FastingSession endpoints
