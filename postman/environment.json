@@ -1,0 +1,63 @@
+{
+  "id": "c8c9e7a2-5d1f-4e1a-8c0f-3a2b4c5d6e7f",
+  "name": "Fit API Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8004",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "auth_url",
+      "value": "http://localhost:8004",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "content_url",
+      "value": "http://localhost:8001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "fit_url",
+      "value": "http://localhost:8002",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "tracker_url",
+      "value": "http://localhost:8003",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "user_email",
+      "value": "test@example.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "user_password",
+      "value": "Password123!",
+      "type": "secret",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2025-04-09T16:45:00.000Z",
+  "_postman_exported_using": "Postman/10.18.0"
+}

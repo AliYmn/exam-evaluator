@@ -17,7 +17,7 @@ class EmailService:
         self.password = settings.MAIL_PASSWORD
         self.from_email = settings.MAIL_FROM
         self.template_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader("fit_service/core/templates"),
+            loader=jinja2.FileSystemLoader("auth_service/core/templates"),
             autoescape=jinja2.select_autoescape(["html", "xml"]),
         )
 
@@ -42,9 +42,9 @@ class EmailService:
         html_content = template.render(**template_vars)
         self.send_email(to_email, subject, html_content)
 
-    def send_welcome_email(self, to_email: str, username: str) -> None:
+    def send_welcome_email(self, to_email: str, first_name: str) -> None:
         """Send welcome email to new users"""
-        template_vars = {"username": username, "login_url": f"{settings.BASE_URL}/login"}
+        template_vars = {"first_name": first_name, "login_url": f"{settings.BASE_URL}/login"}
         self.send_template_email(
             to_email=to_email,
             subject="Welcome to Our Platform",
@@ -52,9 +52,9 @@ class EmailService:
             template_vars=template_vars,
         )
 
-    def send_password_reset_email(self, to_email: str, username: str, reset_token: str) -> None:
+    def send_password_reset_email(self, to_email: str, first_name: str, reset_token: str) -> None:
         """Send password reset email"""
-        template_vars = {"username": username, "reset_token": reset_token, "current_year": datetime.now().year}
+        template_vars = {"first_name": first_name, "reset_token": reset_token, "current_year": datetime.now().year}
         self.send_template_email(
             to_email=to_email,
             subject="Password Reset Request",
@@ -62,9 +62,9 @@ class EmailService:
             template_vars=template_vars,
         )
 
-    def send_password_changed_email(self, to_email: str, username: str) -> None:
+    def send_password_changed_email(self, to_email: str, first_name: str) -> None:
         """Send notification when password has been changed"""
-        template_vars = {"username": username}
+        template_vars = {"first_name": first_name}
         self.send_template_email(
             to_email=to_email,
             subject="Your Password Has Been Changed",

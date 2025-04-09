@@ -14,7 +14,7 @@ from auth_service.core.services.service import AuthService
 from libs.db import get_async_db
 
 # Create router with auth tag
-auth_router = APIRouter(tags=["Auth"])
+auth_router = APIRouter(tags=["Auth"], prefix="/auth")
 
 # Set up OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

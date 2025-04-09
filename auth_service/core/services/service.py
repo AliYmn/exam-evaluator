@@ -82,9 +82,8 @@ class AuthService:
         # Generate tokens - we already validated the user so skip validation in shared service
         access_token, refresh_token, expires_in = await self.auth_service.create_token_pair(
             user_id=str(user.id),
+            username=f"{user.first_name} {user.last_name}",
             email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
             check_user=False,  # Skip redundant user check
         )
 
@@ -118,9 +117,8 @@ class AuthService:
         # Generate new tokens - we already validated the user so skip validation in shared service
         access_token, refresh_token, expires_in = await self.auth_service.create_token_pair(
             user_id=str(user.id),
+            username=f"{user.first_name} {user.last_name}",
             email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
             check_user=False,  # Skip redundant user check
         )
 

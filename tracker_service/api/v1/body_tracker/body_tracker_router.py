@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query, status, Header
 from typing import Annotated
 
-from fit_service.api.v1.body_tracker.body_tracker_schemas import (
+from tracker_service.api.v1.body_tracker.body_tracker_schemas import (
     TrackerCreate,
     TrackerUpdate,
     TrackerListResponse,
 )
-from fit_service.core.services.body_tracker_service import BodyTrackerService
+from tracker_service.core.services.body_tracker_service import BodyTrackerService
 from sqlalchemy.ext.asyncio import AsyncSession
 from libs.db import get_async_db
 from libs.service.auth import AuthService

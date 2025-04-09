@@ -1,0 +1,290 @@
+{
+  "info": {
+    "_postman_id": "d4e5f6g7-h8i9-0123-d4e5-f6g7h8i90123",
+    "name": "Tracker Service",
+    "description": "Tracker service endpoints for body measurements and daily tracking",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Body Tracker",
+      "item": [
+        {
+          "name": "Create Body Tracker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weight\": 75.5,\n  \"height\": 180,\n  \"neck\": 38,\n  \"chest\": 95,\n  \"waist\": 80,\n  \"hips\": 90,\n  \"thigh\": 55,\n  \"arm\": 32,\n  \"note\": \"Initial measurements\"\n}"
+            },
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/tracker",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "tracker"]
+            },
+            "description": "Create a new body tracker record for the authenticated user"
+          }
+        },
+        {
+          "name": "Get Body Tracker",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/tracker/1",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "tracker", "1"]
+            },
+            "description": "Get a specific body tracker record by ID"
+          }
+        },
+        {
+          "name": "List Body Trackers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/tracker?skip=0&limit=10",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "tracker"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "List all body tracker records for the authenticated user"
+          }
+        },
+        {
+          "name": "Update Body Tracker",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"weight\": 74.8,\n  \"neck\": 37.5,\n  \"chest\": 94,\n  \"waist\": 79,\n  \"hips\": 89,\n  \"thigh\": 54,\n  \"arm\": 32.5,\n  \"note\": \"Progress after 2 weeks\"\n}"
+            },
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/tracker/1",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "tracker", "1"]
+            },
+            "description": "Update an existing body tracker record"
+          }
+        },
+        {
+          "name": "Delete Body Tracker",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/tracker/1",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "tracker", "1"]
+            },
+            "description": "Delete a body tracker record"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Daily Tracker",
+      "item": [
+        {
+          "name": "Create Daily Tracker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"energy\": 8,\n  \"sleep\": 7,\n  \"stress\": 4,\n  \"mood\": 8,\n  \"hydration\": 9,\n  \"digestion\": 7,\n  \"hunger\": 5,\n  \"cravings\": 4,\n  \"diet_compliance\": 8,\n  \"training_compliance\": 9,\n  \"note\": \"Feeling good today\"\n}"
+            },
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/daily-tracker",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "daily-tracker"]
+            },
+            "description": "Create a new daily tracker record for the authenticated user"
+          }
+        },
+        {
+          "name": "List Daily Trackers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/daily-tracker?skip=0&limit=10",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "daily-tracker"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "List all daily tracker records for the authenticated user"
+          }
+        },
+        {
+          "name": "Get Latest Daily Tracker",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/daily-tracker/latest",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "daily-tracker", "latest"]
+            },
+            "description": "Get the latest daily tracker record for the authenticated user"
+          }
+        },
+        {
+          "name": "Get Daily Tracker",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/daily-tracker/1",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "daily-tracker", "1"]
+            },
+            "description": "Get a specific daily tracker record by ID"
+          }
+        },
+        {
+          "name": "Update Daily Tracker",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"energy\": 7,\n  \"sleep\": 8,\n  \"stress\": 5,\n  \"mood\": 7,\n  \"hydration\": 8,\n  \"digestion\": 6,\n  \"hunger\": 6,\n  \"cravings\": 5,\n  \"diet_compliance\": 7,\n  \"training_compliance\": 8,\n  \"note\": \"Updated daily tracker\"\n}"
+            },
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/daily-tracker/1",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "daily-tracker", "1"]
+            },
+            "description": "Update an existing daily tracker record"
+          }
+        },
+        {
+          "name": "Delete Daily Tracker",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{tracker_url}}/api/v1/daily-tracker/1",
+              "host": ["{{tracker_url}}"],
+              "path": ["api", "v1", "daily-tracker", "1"]
+            },
+            "description": "Delete a daily tracker record"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
