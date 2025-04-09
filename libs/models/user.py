@@ -20,6 +20,8 @@ class User(BaseModel):
     profile_picture = Column(String(255), nullable=True)
     gender = Column(String(10), nullable=True)
     height = Column(Integer, nullable=True)
+    weight = Column(Integer, nullable=True)
+    bmi = Column(Integer, nullable=True)
     body_tracker_period = Column(String(20), default="weekly")
     language = Column(String(10), nullable=True)
     referral_code = Column(String(50), nullable=True)
@@ -53,4 +55,4 @@ class User(BaseModel):
         super().__init__(**kwargs)
 
     def __repr__(self):
-        return f"<User(id={self.id}, username={self.username}, email={self.email}>"
+        return f"<User(id={self.id}, first_name={self.first_name}, last_name={self.last_name}, email={self.email}>"
