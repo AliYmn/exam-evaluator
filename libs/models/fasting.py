@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Time, JSON, DateTime
-from datetime import datetime
 
 from libs.models.base import BaseModel
 
@@ -20,11 +19,12 @@ class FastingPlan(BaseModel):
     eating_hours = Column(Integer, nullable=True)  # Number of hours to eat
     target_week = Column(Integer, nullable=True)  # Target number of weeks for this fasting plan
     current_week = Column(Float, nullable=True, default=0)  # Current week of the fasting plan
+    status = Column(String(20), default="inactive")  # active, completed, broken, skipped, failed etc.
+
+    # Target start and finish dates
     start_date = Column(DateTime, nullable=True)  # Target start date and time for this fasting plan
     finish_date = Column(DateTime, nullable=True)  # Target finish date and time for this fasting plan
-    created_date = Column(DateTime, default=datetime.now)
-    updated_date = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-    deleted_date = Column(DateTime, nullable=True)
+    renewal_date = Column(DateTime, nullable=True)  # Target renewal date and time for this fasting plan
 
     def __repr__(self):
         return f"<FastingPlan(id={self.id}, user_id={self.user_id}, fasting_hours={self.fasting_hours}, eating_hours={self.eating_hours})>"
@@ -47,7 +47,7 @@ class FastingSession(BaseModel):
     end_time = Column(Time, nullable=True)  # When this fasting session ended (null if ongoing)
 
     # Session status
-    status = Column(String(20), default="active")  # active, completed, broken, skipped, failed etc.
+    status = Column(String(20), default="inactive")  # active, completed, broken, skipped, failed etc.
 
     # Fasting metrics
     fasting_hours = Column(Integer, nullable=True)  # Number of hours fasted

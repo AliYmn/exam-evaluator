@@ -7,6 +7,7 @@ from libs.db.db import (
     get_db,
     get_db_context,
     get_sync_db,
+    get_db_session_sync,
     get_sync_db_context,
 )
 
