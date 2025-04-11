@@ -13,6 +13,9 @@ class FastingPlanBase(BaseModel):
     current_week: Optional[int] = Field(0, description="Current week of this fasting plan")
     start_date: Optional[datetime] = Field(None, description="Target start date and time for this fasting plan")
     finish_date: Optional[datetime] = Field(None, description="Target finish date and time for this fasting plan")
+    target_meals: Optional[int] = Field(None, description="Target number of meals per day")
+    mood: Optional[str] = Field(None, description="User mood")
+    stage: Optional[str] = Field(None, description="User stage")
 
 
 class FastingPlanCreate(FastingPlanBase):

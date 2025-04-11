@@ -39,6 +39,9 @@ class FastingService:
                 fasting_hours=plan_data.fasting_hours,
                 eating_hours=plan_data.eating_hours,
                 target_week=plan_data.target_week,
+                target_meals=plan_data.target_meals,
+                mood=plan_data.mood,
+                stage=plan_data.stage,
                 current_week=0,
                 start_date=datetime.now(),
                 finish_date=datetime.now() + timedelta(hours=plan_data.fasting_hours + plan_data.eating_hours),
@@ -52,8 +55,12 @@ class FastingService:
             latest_plan.fasting_hours = plan_data.fasting_hours
             latest_plan.eating_hours = plan_data.eating_hours
             latest_plan.target_week = plan_data.target_week
-            latest_plan.start_date = plan_data.start_date
-            latest_plan.finish_date = plan_data.finish_date
+            latest_plan.target_meals = plan_data.target_meals
+            latest_plan.mood = plan_data.mood
+            latest_plan.stage = plan_data.stage
+            latest_plan.finish_date = latest_plan.start_date + timedelta(
+                hours=plan_data.fasting_hours + plan_data.eating_hours
+            )
             await self.db.commit()
             await self.db.refresh(latest_plan)
             return FastingPlanResponse.model_validate(latest_plan)
