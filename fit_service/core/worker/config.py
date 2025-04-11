@@ -33,6 +33,6 @@ celery_app.conf.update(
 celery_app.conf.beat_schedule = {
     "check_all_fasting_plans": {
         "task": "check_all_fasting_plans",
-        "schedule": crontab(minute="*/1"),
+        "schedule": crontab(minute="*/15"),
     },
 }
