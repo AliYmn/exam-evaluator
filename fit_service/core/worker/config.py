@@ -25,6 +25,8 @@ celery_app.conf.update(
     task_routes={
         "check_all_fasting_plans": {"queue": settings.FIT_QUEUE_NAME},
         "check_user_fasting_plans": {"queue": settings.FIT_QUEUE_NAME},
+        "analyze_fasting_workout_log": {"queue": settings.FIT_QUEUE_NAME},
+        "analyze_fasting_meal_log": {"queue": settings.FIT_QUEUE_NAME},
     },
     timezone="UTC",
 )

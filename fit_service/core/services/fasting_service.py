@@ -16,6 +16,7 @@ from fit_service.api.v1.fasting.fasting_schemas import (
 )
 from libs import ErrorCode, ExceptionBase
 from libs.models.fasting import FastingPlan, FastingMealLog, FastingWorkoutLog
+from fit_service.core.worker.tasks import analyze_fasting_meal_log, analyze_fasting_workout_log
 
 
 class FastingService:
@@ -131,6 +132,9 @@ class FastingService:
         self.db.add(new_meal_log)
         await self.db.commit()
         await self.db.refresh(new_meal_log)
+
+        # Trigger analysis as a background task
+        analyze_fasting_meal_log.delay(new_meal_log.id)
 
         return FastingMealLogResponse.model_validate(new_meal_log)
 
@@ -250,6 +254,9 @@ class FastingService:
         self.db.add(new_workout_log)
         await self.db.commit()
         await self.db.refresh(new_workout_log)
+
+        # Trigger analysis as a background task
+        analyze_fasting_workout_log.delay(new_workout_log.id)
 
         return FastingWorkoutLogResponse.model_validate(new_workout_log)
 
