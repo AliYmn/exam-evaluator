@@ -64,6 +64,7 @@ class Blog(BaseModel):
     content = Column(Text, nullable=False)
     summary = Column(String(500), nullable=True)
     image_url = Column(String(255), nullable=True)
+    language = Column(String(10), nullable=True)
 
     # Blog metadata
     view_count = Column(Integer, default=0)
