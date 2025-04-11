@@ -19,7 +19,7 @@ class FastingPlan(BaseModel):
     eating_hours = Column(Integer, nullable=True)  # Number of hours to eat
     target_week = Column(Integer, nullable=True)  # Target number of weeks for this fasting plan
     current_week = Column(Float, nullable=True, default=0)  # Current week of the fasting plan
-    status = Column(String(20), default="inactive")  # active, completed, broken, skipped, failed etc.
+    status = Column(String(20), default="active")  # active, completed, broken, skipped, failed etc.
 
     # Nutritional targets
     target_calories = Column(Integer, nullable=True)  # Daily calorie target during eating window

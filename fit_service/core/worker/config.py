@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 
 from libs import settings
 
@@ -21,6 +22,17 @@ celery_app.conf.update(
     result_serializer="json",
     task_serializer="json",
     accept_content=["json"],
-    task_routes={},
+    task_routes={
+        "check_all_fasting_plans": {"queue": settings.FIT_QUEUE_NAME},
+        "check_user_fasting_plans": {"queue": settings.FIT_QUEUE_NAME},
+    },
     timezone="UTC",
 )
+
+
+celery_app.conf.beat_schedule = {
+    "check_all_fasting_plans": {
+        "task": "check_all_fasting_plans",
+        "schedule": crontab(minute="*/5"),
+    },
+}

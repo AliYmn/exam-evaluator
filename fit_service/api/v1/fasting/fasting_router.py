@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status, Header, HTTPException
+from fastapi import APIRouter, Depends, Query, status, Header
 from typing import Annotated
 from fastapi_limiter.depends import RateLimiter
 
@@ -51,10 +51,7 @@ async def get_latest_fasting_plan(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    plan = await fasting_service.get_latest_fasting_plan(user.id)
-    if not plan:
-        raise HTTPException(status_code=404, detail="No fasting plan found")
-    return plan
+    return await fasting_service.get_latest_fasting_plan(user.id)
 
 
 @router.get("/plans")
