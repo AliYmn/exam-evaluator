@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from datetime import datetime, time
+from datetime import datetime
 
 
 # Fasting Plan schemas
@@ -31,20 +31,7 @@ class FastingPlanResponse(BaseModel):
     start_date: Optional[datetime] = None
     finish_date: Optional[datetime] = None
     created_date: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class FastingSessionResponse(BaseModel):
-    """Response model for Fasting Session data"""
-
-    id: int
-    user_id: int
-    plan_id: Optional[int] = None
-    start_time: time
-    end_time: Optional[time] = None
-    status: str
+    status: Optional[str] = None
     mood: Optional[str] = None
     stage: Optional[str] = None
     target_calories: Optional[int] = None
@@ -53,20 +40,15 @@ class FastingSessionResponse(BaseModel):
     target_protein: Optional[float] = None
     target_carb: Optional[float] = None
     target_fat: Optional[float] = None
-    fasting_hours: Optional[int] = None
-    eating_hours: Optional[int] = None
-    target_week: Optional[int] = None
-    current_week: Optional[int] = None
-    created_date: datetime
 
     class Config:
         from_attributes = True
 
 
-class FastingSessionListResponse(BaseModel):
-    """Response model for a list of Fasting Session records"""
+class FastingPlanListResponse(BaseModel):
+    """Response model for a list of Fasting Plan records"""
 
-    items: List[FastingSessionResponse]
+    items: List[FastingPlanResponse]
     count: int
     total: int
 
@@ -75,7 +57,7 @@ class FastingSessionListResponse(BaseModel):
 class FastingMealLogBase(BaseModel):
     """Base model for Fasting Meal Log"""
 
-    session_id: int = Field(..., description="ID of the associated fasting session")
+    plan_id: int = Field(..., description="ID of the associated fasting plan")
     photo_url: Optional[str] = Field(None, description="URL to the uploaded photo")
     notes: Optional[str] = Field(None, description="User notes about the meal")
 
@@ -115,7 +97,7 @@ class FastingMealLogListResponse(BaseModel):
 class FastingWorkoutLogBase(BaseModel):
     """Base model for Fasting Workout Log"""
 
-    session_id: int = Field(..., description="ID of the associated fasting session")
+    plan_id: int = Field(..., description="ID of the associated fasting plan")
     workout_name: str = Field(..., description="Name of the workout")
     duration_minutes: Optional[int] = Field(None, description="Duration in minutes")
     calories_burned: Optional[int] = Field(None, description="Estimated calories burned")

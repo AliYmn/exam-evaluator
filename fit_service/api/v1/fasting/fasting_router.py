@@ -4,7 +4,7 @@ from fastapi_limiter.depends import RateLimiter
 
 from fit_service.api.v1.fasting.fasting_schemas import (
     FastingPlanCreate,
-    FastingSessionListResponse,
+    FastingPlanListResponse,
     FastingMealLogCreate,
     FastingMealLogUpdate,
     FastingMealLogListResponse,
@@ -57,9 +57,8 @@ async def get_latest_fasting_plan(
     return plan
 
 
-# FastingSession endpoints
-@router.get("/sessions")
-async def list_fasting_sessions(
+@router.get("/plans")
+async def list_fasting_plans(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     authorization: Annotated[str | None, Header()] = None,
@@ -67,36 +66,12 @@ async def list_fasting_sessions(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    sessions, total_count = await fasting_service.list_fasting_sessions(user.id, skip, limit)
-    return FastingSessionListResponse(
-        items=sessions,
-        count=len(sessions),
+    plans, total_count = await fasting_service.list_fasting_plans(user.id, skip, limit)
+    return FastingPlanListResponse(
+        items=plans,
+        count=len(plans),
         total=total_count,
     )
-
-
-@router.get("/sessions/latest")
-async def get_latest_fasting_session(
-    authorization: Annotated[str | None, Header()] = None,
-    fasting_service: FastingService = Depends(get_fasting_service),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user = await auth_service.get_user_from_token(authorization)
-    session = await fasting_service.get_latest_fasting_session(user.id)
-    if not session:
-        raise HTTPException(status_code=404, detail="No fasting sessions found")
-    return session
-
-
-@router.get("/sessions/{session_id}")
-async def get_fasting_session(
-    session_id: int,
-    authorization: Annotated[str | None, Header()] = None,
-    fasting_service: FastingService = Depends(get_fasting_service),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.get_fasting_session(session_id, user.id)
 
 
 # FastingMealLog endpoints
@@ -124,7 +99,7 @@ async def get_meal_log(
 
 @router.get("/meal-logs")
 async def list_meal_logs(
-    session_id: int = Query(None, description="Filter logs by session ID"),
+    plan_id: int = Query(None, description="Filter logs by plan ID"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     authorization: Annotated[str | None, Header()] = None,
@@ -132,7 +107,7 @@ async def list_meal_logs(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    logs, total_count = await fasting_service.list_meal_logs(user.id, session_id, skip, limit)
+    logs, total_count = await fasting_service.list_meal_logs(user.id, plan_id, skip, limit)
     return FastingMealLogListResponse(
         items=logs,
         count=len(logs),
@@ -188,7 +163,7 @@ async def get_workout_log(
 
 @router.get("/workout-logs")
 async def list_workout_logs(
-    session_id: int = Query(None, description="Filter logs by session ID"),
+    plan_id: int = Query(None, description="Filter logs by plan ID"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
     authorization: Annotated[str | None, Header()] = None,
@@ -196,7 +171,7 @@ async def list_workout_logs(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    logs, total_count = await fasting_service.list_workout_logs(user.id, session_id, skip, limit)
+    logs, total_count = await fasting_service.list_workout_logs(user.id, plan_id, skip, limit)
     return FastingWorkoutLogListResponse(
         items=logs,
         count=len(logs),
