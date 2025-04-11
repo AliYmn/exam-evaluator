@@ -94,5 +94,8 @@ class FastingWorkoutLog(BaseModel):
     intensity = Column(String(50), nullable=True)  # Low, Medium, High
     notes = Column(String(9999), nullable=True)  # User notes about the workout
 
+    # AI generated data
+    ai_content = Column(String(9999), nullable=True)
+
     def __repr__(self):
         return f"<FastingWorkoutLog(id={self.id}, user_id={self.user_id}, plan_id={self.plan_id}, workout_name={self.workout_name})>"
