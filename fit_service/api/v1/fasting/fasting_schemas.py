@@ -16,6 +16,7 @@ class FastingPlanBase(BaseModel):
     target_meals: Optional[int] = Field(None, description="Target number of meals per day")
     mood: Optional[str] = Field(None, description="User mood")
     stage: Optional[str] = Field(None, description="User stage")
+    status: Optional[str] = Field(None, description="Status of the fasting plan")
 
 
 class FastingPlanCreate(FastingPlanBase):

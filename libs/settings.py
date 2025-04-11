@@ -42,6 +42,8 @@ class Config(BaseSettings):
     FIT_WORKER_NAME: str
     TRACKER_QUEUE_NAME: str
     TRACKER_WORKER_NAME: str
+    CONTENT_QUEUE_NAME: str
+    CONTENT_WORKER_NAME: str
 
     # Email Settings
     MAIL_HOST: str = "smtp.gmail.com"

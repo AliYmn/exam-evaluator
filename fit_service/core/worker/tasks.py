@@ -14,7 +14,7 @@ def check_all_fasting_plans(self) -> None:
             user_ids = fasting_service.get_users_with_active_plans()
             # Create individual tasks for each user
             for user_id in user_ids:
-                check_user_fasting_plans.delay(user_id)
+                check_user_fasting_plans.apply_async(args=(user_id,))
         return f"Created fasting plan check tasks for {len(user_ids)} users"
     except Exception as error:
         if self.request.retries >= self.max_retries:

@@ -61,6 +61,7 @@ class FastingService:
             latest_plan.finish_date = latest_plan.start_date + timedelta(
                 hours=plan_data.fasting_hours + plan_data.eating_hours
             )
+            latest_plan.status = plan_data.status or latest_plan.status
             await self.db.commit()
             await self.db.refresh(latest_plan)
             return FastingPlanResponse.model_validate(latest_plan)

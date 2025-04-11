@@ -1,33 +1,36 @@
 from datetime import datetime, timedelta
 
 from sqlalchemy import select, distinct, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from libs.models.fasting import FastingPlan
-from libs.models.notifications import Notification
-from libs.models.users import User
+from libs.models import Notification
+from libs.models import User
 
 
 class FastingScheduleService:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: Session):
         self.db = db
 
-    async def get_users_with_active_plans(self):
+    def get_users_with_active_plans(self):
         """Get all users who have active fasting plans"""
-        result = await self.db.execute(
+        # Query for users with active fasting plans
+        result = self.db.execute(
             select(distinct(FastingPlan.user_id)).where(
-                FastingPlan.status == "active", FastingPlan.deleted_date.is_(None)
+                FastingPlan.status == "active",
+                FastingPlan.deleted_date.is_(None),
+                FastingPlan.finish_date < datetime.now(),
             )
         )
         user_ids = [row[0] for row in result.all()]
         return user_ids
 
-    async def check_user_fasting_plans(self, user_id: int):
+    def check_user_fasting_plans(self, user_id: int):
         """Check and update fasting plans for a specific user"""
         now = datetime.now()
 
         # Find expired active plans for this user that are not already being processed
-        result = await self.db.execute(
+        result = self.db.execute(
             select(FastingPlan).where(
                 FastingPlan.user_id == user_id,
                 FastingPlan.status == "active",
@@ -43,8 +46,8 @@ class FastingScheduleService:
 
         # Mark plans as being processed to prevent duplicate processing in retry scenarios
         plan_ids = [plan.id for plan in expired_plans]
-        await self.db.execute(update(FastingPlan).where(FastingPlan.id.in_(plan_ids)).values(status="processing"))
-        await self.db.commit()
+        self.db.execute(update(FastingPlan).where(FastingPlan.id.in_(plan_ids)).values(status="processing"))
+        self.db.commit()
 
         updated_plans = 0
 
@@ -64,7 +67,7 @@ class FastingScheduleService:
                     plan.status = "completed"
 
                     # Create completion notification
-                    await self._create_notification(
+                    self._create_notification(
                         user_id=plan.user_id,
                         title="Fasting Plan Completed",
                         message=f"Congratulations! You've completed your {plan.target_week} week fasting plan.",
@@ -97,7 +100,7 @@ class FastingScheduleService:
                     self.db.add(new_plan)
 
                     # Create new cycle notification
-                    await self._create_notification(
+                    self._create_notification(
                         user_id=plan.user_id,
                         title="New Fasting Cycle Started",
                         message=f"Week {round(plan.current_week, 1)} of your fasting plan has started. Keep going!",
@@ -106,18 +109,18 @@ class FastingScheduleService:
                     )
 
                 # Save changes
-                await self.db.commit()
+                self.db.commit()
                 updated_plans += 1
             except Exception as e:
                 # If an error occurs, revert the plan status to active
                 plan.status = "active"
-                await self.db.commit()
+                self.db.commit()
                 # Re-raise the exception for the task to handle
                 raise e
 
         return updated_plans
 
-    async def _create_notification(
+    def _create_notification(
         self, user_id: int, title: str, message: str, n_type: str = "info", target_screen: str = None
     ):
         """Create a notification for a specific user"""
@@ -126,13 +129,13 @@ class FastingScheduleService:
         )
 
         # Add the user to the notification
-        result = await self.db.execute(select(User).where(User.id == user_id))
+        result = self.db.execute(select(User).where(User.id == user_id))
         user = result.scalars().first()
 
         if user:
             notification.users.append(user)
             self.db.add(notification)
-            await self.db.commit()
+            self.db.commit()
             return notification
 
         return None
