@@ -22,7 +22,10 @@ celery_app.conf.update(
     result_serializer="json",
     task_serializer="json",
     accept_content=["json"],
-    task_routes={},
+    task_routes={
+        "analyze_body_tracker": {"queue": settings.TRACKER_QUEUE_NAME},
+        "analyze_daily_tracker": {"queue": settings.TRACKER_QUEUE_NAME},
+    },
     timezone="UTC",
     beat_schedule={
         # Send weekly body tracker reminder every Monday at 9:00 AM

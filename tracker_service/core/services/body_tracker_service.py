@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tracker_service.api.v1.body_tracker.body_tracker_schemas import TrackerCreate, TrackerUpdate, TrackerResponse
 from libs import ErrorCode, ExceptionBase
 from libs.models.body_tracker import BodyTracker
+from tracker_service.core.worker.tasks import analyze_body_tracker
 
 
 class BodyTrackerService:
@@ -27,6 +28,9 @@ class BodyTrackerService:
         self.db.add(new_tracker)
         await self.db.commit()
         await self.db.refresh(new_tracker)
+
+        # Trigger analysis as a background task
+        analyze_body_tracker.delay(new_tracker.id)
 
         return TrackerResponse.model_validate(new_tracker)
 
@@ -113,3 +117,21 @@ class BodyTrackerService:
         # Soft delete
         tracker.soft_delete()
         await self.db.commit()
+
+    async def analyze_tracker(self, tracker_id: int, user_id: int) -> Optional[TrackerResponse]:
+        """Analyze a specific tracker record and update its AI content"""
+        # First verify the tracker exists and belongs to the user
+        result = await self.db.execute(
+            select(BodyTracker).where(
+                BodyTracker.id == tracker_id, BodyTracker.user_id == user_id, BodyTracker.deleted_date.is_(None)
+            )
+        )
+        tracker = result.scalars().first()
+
+        if not tracker:
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
+
+        # Trigger analysis as a background task
+        analyze_body_tracker.delay(tracker_id)
+
+        return TrackerResponse.model_validate(tracker)

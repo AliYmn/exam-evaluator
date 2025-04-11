@@ -10,6 +10,7 @@ from tracker_service.api.v1.daily_tracker.daily_tracker_schemas import (
 )
 from libs import ErrorCode, ExceptionBase
 from libs.models.daily_tracker import DailyTracker
+from tracker_service.core.worker.tasks import analyze_daily_tracker
 
 
 class DailyTrackerService:
@@ -35,6 +36,9 @@ class DailyTrackerService:
         self.db.add(new_tracker)
         await self.db.commit()
         await self.db.refresh(new_tracker)
+
+        # Trigger analysis as a background task
+        analyze_daily_tracker.delay(new_tracker.id)
 
     async def get_daily_tracker(self, tracker_id: int, user_id: int) -> Optional[DailyTrackerResponse]:
         """Get a specific daily tracker record by ID, ensuring it belongs to the user"""
@@ -140,5 +144,23 @@ class DailyTrackerService:
 
         if not tracker:
             return None
+
+        return DailyTrackerResponse.model_validate(tracker)
+
+    async def analyze_daily_tracker(self, tracker_id: int, user_id: int) -> Optional[DailyTrackerResponse]:
+        """Analyze a specific daily tracker record and update its AI content"""
+        # First verify the tracker exists and belongs to the user
+        result = await self.db.execute(
+            select(DailyTracker).where(
+                DailyTracker.id == tracker_id, DailyTracker.user_id == user_id, DailyTracker.deleted_date.is_(None)
+            )
+        )
+        tracker = result.scalars().first()
+
+        if not tracker:
+            raise ExceptionBase(ErrorCode.NOT_FOUND)
+
+        # Trigger analysis as a background task
+        analyze_daily_tracker.delay(tracker_id)
 
         return DailyTrackerResponse.model_validate(tracker)
