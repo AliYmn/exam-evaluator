@@ -60,6 +60,7 @@ async def list_blogs(
     is_featured: Optional[bool] = Query(None, description="Filter by featured status"),
     search: Optional[str] = Query(None, description="Search term for title, content, or summary"),
     blog_service: BlogService = Depends(get_blog_service),
+    language: Optional[str] = Query(None, description="Filter by language"),
 ):
     """List blogs with various filters"""
     blogs, total_count = await blog_service.list_blogs(
@@ -71,6 +72,7 @@ async def list_blogs(
         is_published=is_published,
         is_featured=is_featured,
         search_term=search,
+        language=language,
     )
 
     return BlogListResponse(

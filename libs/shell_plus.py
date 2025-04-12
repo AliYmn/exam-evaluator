@@ -22,7 +22,6 @@ os.makedirs(HISTORY_DIR, exist_ok=True)
 
 # Basic settings
 c.InteractiveShell.colors = "LightBG"
-c.InteractiveShell.highlighting_style = "monokai"
 c.InteractiveShell.confirm_exit = False
 c.TerminalIPythonApp.display_banner = True
 

@@ -63,6 +63,7 @@ class BlogService:
         is_published: Optional[bool] = None,
         is_featured: Optional[bool] = None,
         search_term: Optional[str] = None,
+        language: Optional[str] = "en",
     ) -> Tuple[List[BlogResponse], int]:
         """List blogs with various filters"""
         # Build base query
@@ -91,6 +92,9 @@ class BlogService:
                 Blog.summary.ilike(f"%{search_term}%"),
             )
             base_query = base_query.where(search_filter)
+
+        if language is not None:
+            base_query = base_query.where(Blog.language == language)
 
         # Get total count
         count_query = select(func.count()).select_from(base_query.subquery())

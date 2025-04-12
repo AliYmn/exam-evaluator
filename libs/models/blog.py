@@ -60,9 +60,9 @@ class Blog(BaseModel):
     category_id = Column(Integer, ForeignKey("blog_categories.id"), nullable=True)
 
     # Blog content
-    title = Column(String(200), nullable=False)
+    title = Column(String(9999), nullable=False)
     content = Column(Text, nullable=False)
-    summary = Column(String(500), nullable=True)
+    summary = Column(String(9999), nullable=True)
     image_url = Column(String(255), nullable=True)
     language = Column(String(10), nullable=True)
 
