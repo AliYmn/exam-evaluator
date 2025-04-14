@@ -39,7 +39,7 @@ class BlogService:
 
     # Blog Methods
     async def get_blog(self, blog_id: int) -> BlogResponse:
-        """Get a specific blog by ID"""
+        """Get a specific blog by ID and increment its view count"""
         query = (
             select(Blog)
             .options(joinedload(Blog.category), joinedload(Blog.tags))
@@ -50,6 +50,10 @@ class BlogService:
 
         if not blog:
             raise ExceptionBase(ErrorCode.NOT_FOUND)
+
+        # Increment view count
+        blog.view_count += 1
+        await self.db.commit()
 
         return BlogResponse.model_validate(blog)
 
