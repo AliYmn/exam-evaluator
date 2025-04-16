@@ -26,26 +26,6 @@ services:
       timeout: 5s
       retries: 5
 
-  redis:
-    image: redis:7.2.4-alpine
-    restart: always
-    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis_data:/var/lib/redis/data
-    expose:
-      - "${REDIS_PORT}"
-    networks:
-      - fit-network
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   rabbitmq:
     image: rabbitmq:3.13.0-management-alpine
     restart: always
@@ -78,8 +58,6 @@ services:
       - "8001"
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     env_file:
       - .env
@@ -139,8 +117,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     env_file:
       - .env
     networks:
@@ -199,8 +175,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     env_file:
       - .env
     networks:
@@ -258,8 +232,6 @@ services:
       - "8004"
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     env_file:
       - .env
@@ -339,8 +311,6 @@ networks:
 volumes:
   postgres_data:
     # Persistent volume for PostgreSQL data
-  redis_data:
-    # Persistent volume for Redis data
   rabbitmq_data:
     # Persistent volume for RabbitMQ data
   uv-cache:

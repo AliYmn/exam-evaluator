@@ -23,7 +23,6 @@ from auth_service.core.worker.tasks import (
 )
 from libs import ErrorCode, ExceptionBase
 from libs.models.user import User
-from libs.redis.cache import CacheService
 from libs.service.auth import AuthService as SharedAuthService
 
 
@@ -36,7 +35,6 @@ class AuthService:
             argon2__memory_cost=102400,
             argon2__parallelism=8,
         )
-        self.cache = CacheService()
         self.auth_service = SharedAuthService(db)
 
     async def get_user(self, value: str, field: Literal["email", "id"] = "email") -> Optional[User]:
@@ -139,38 +137,21 @@ class AuthService:
         if not user:
             raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
 
-        # Try to get user from cache
-        cache_key = f"user:{user.id}"
-        cached_user = None
-        try:
-            cached_user = await self.cache.get_cache(cache_key)
-        except Exception:
-            pass
-
-        if cached_user:
-            return UserResponse.model_validate_json(cached_user)
-
-        # Cache and return
-        user_response = UserResponse.model_validate(user)
-        try:
-            await self.cache.set_cache(cache_key, user_response.model_dump_json(), 3600)
-        except Exception:
-            pass
-        return user_response
+        # Return user response
+        return UserResponse.model_validate(user)
 
     async def update_user_profile(self, user_id: str, update_data: UserUpdate) -> UserResponse:
-        # Get user
+        # Get user and validate existence
         user = await self.get_user(user_id, "id")
         if not user:
             raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
 
-        # Update user with validated data from Pydantic model
-        update_dict = update_data.model_dump(exclude_unset=True)
-        for key, value in update_dict.items():
-            if hasattr(user, key):
-                setattr(user, key, value)
+        # Apply updates from validated schema and calculate BMI
+        user_data = update_data.model_dump(exclude_unset=True)
+        for field, value in user_data.items():
+            setattr(user, field, value)
 
-        # Calculate BMI if height and weight are provided
+        # Auto-calculate BMI when height and weight are available
         if user.height and user.weight:
             user.bmi = self.calculate_bmi(user.height, user.weight)
 
@@ -178,12 +159,6 @@ class AuthService:
         await self.db.commit()
         await self.db.refresh(user)
 
-        # Clear cache and return updated user
-        try:
-            await self.cache.delete_cache(f"user:{user_id}")
-        except Exception:
-            # Continue without cache if Redis is unavailable
-            pass
         return UserResponse.model_validate(user)
 
     def calculate_bmi(self, height: int, weight: int) -> int:
