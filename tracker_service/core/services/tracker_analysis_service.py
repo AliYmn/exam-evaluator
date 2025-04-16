@@ -51,6 +51,7 @@ class TrackerAnalysisService:
 
         body_info = self._format_body_info(tracker, user, previous_trackers)
         prompt = self.get_body_analysis_prompt(body_info, language)
+        print(prompt)
         system_prompt = self.get_body_system_prompt(language)
 
         response = self.client.chat.completions.create(
@@ -271,7 +272,7 @@ class TrackerAnalysisService:
             if user.bmi:
                 body_info += f"BMI: {user.bmi}\n"
 
-            body_info += "\nVücut Ölçüleri:\n"
+            body_info += "\nMevcut şu an ki vücut Ölçüleri:\n"
             if tracker.weight:
                 body_info += f"Kilo: {tracker.weight} kg\n"
             if tracker.neck:
@@ -324,7 +325,7 @@ class TrackerAnalysisService:
             if user.bmi:
                 body_info += f"BMI: {user.bmi}\n"
 
-            body_info += "\nBody Measurements:\n"
+            body_info += "\n Current Body Measurements:\n"
             if tracker.weight:
                 body_info += f"Weight: {tracker.weight} kg\n"
             if tracker.neck:
@@ -347,7 +348,9 @@ class TrackerAnalysisService:
             if previous_trackers:
                 body_info += "\nPrevious Body Measurements:\n"
                 for i, previous_tracker in enumerate(previous_trackers):
-                    body_info += f"\nMeasurement {i + 1}:\n"
+                    body_info += (
+                        f"\nMeasurement {i + 1} - {previous_tracker.created_date.strftime('%Y-%m-%d %H:%M')}:\n"
+                    )
                     if previous_tracker.weight:
                         body_info += f"Weight: {previous_tracker.weight} kg\n"
                     if previous_tracker.neck:
