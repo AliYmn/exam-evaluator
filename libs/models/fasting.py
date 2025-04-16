@@ -54,6 +54,7 @@ class FastingMealLog(BaseModel):
     plan_id = Column(Integer, ForeignKey("fasting_plans.id"), nullable=False, index=True)
 
     # Meal content
+    title = Column(String(255), nullable=True)  # Title of the meal
     photo_url = Column(String(255), nullable=True)  # URL to the uploaded photo
     notes = Column(String(9999), nullable=True)  # User notes about the meal
 

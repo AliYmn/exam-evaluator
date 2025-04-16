@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status, Header
+from fastapi import APIRouter, Depends, Query, status, Header, File, UploadFile, Form
 from typing import Annotated
 from fastapi_limiter.depends import RateLimiter
 
@@ -74,13 +74,21 @@ async def list_fasting_plans(
 # FastingMealLog endpoints
 @router.post("/meal-logs", status_code=status.HTTP_201_CREATED)
 async def create_meal_log(
-    meal_data: FastingMealLogCreate,
+    plan_id: int = Form(...),
+    title: str = Form(None),
+    notes: str = Form(None),
+    photo: UploadFile = File(None),
     authorization: Annotated[str | None, Header()] = None,
     fasting_service: FastingService = Depends(get_fasting_service),
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.create_meal_log(user.id, meal_data)
+    meal_data = FastingMealLogCreate(
+        plan_id=plan_id,
+        title=title,
+        notes=notes,
+    )
+    return await fasting_service.create_meal_log(user.id, meal_data, photo=photo)
 
 
 @router.get("/meal-logs/{log_id}")
@@ -115,13 +123,21 @@ async def list_meal_logs(
 @router.put("/meal-logs/{log_id}")
 async def update_meal_log(
     log_id: int,
-    meal_data: FastingMealLogUpdate,
+    title: str = Form(None),
+    notes: str = Form(None),
+    photo: UploadFile = File(None),
     authorization: Annotated[str | None, Header()] = None,
     fasting_service: FastingService = Depends(get_fasting_service),
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.update_meal_log(log_id, user.id, meal_data)
+    update_data = {}
+    if title is not None:
+        update_data["title"] = title
+    if notes is not None:
+        update_data["notes"] = notes
+    meal_data = FastingMealLogUpdate(**update_data)
+    return await fasting_service.update_meal_log(log_id, user.id, meal_data, photo=photo)
 
 
 @router.delete("/meal-logs/{log_id}", status_code=status.HTTP_204_NO_CONTENT)

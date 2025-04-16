@@ -62,6 +62,7 @@ class FastingMealLogBase(BaseModel):
     """Base model for Fasting Meal Log"""
 
     plan_id: int = Field(..., description="ID of the associated fasting plan")
+    title: Optional[str] = Field(None, description="Title of the meal")
     photo_url: Optional[str] = Field(None, description="URL to the uploaded photo")
     notes: Optional[str] = Field(None, description="User notes about the meal")
 
@@ -73,6 +74,7 @@ class FastingMealLogCreate(FastingMealLogBase):
 class FastingMealLogUpdate(BaseModel):
     """Request model for updating a Fasting Meal Log"""
 
+    title: Optional[str] = Field(None, description="Title of the meal")
     photo_url: Optional[str] = Field(None, description="URL to the uploaded photo")
     notes: Optional[str] = Field(None, description="User notes about the meal")
 

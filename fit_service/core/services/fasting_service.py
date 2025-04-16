@@ -17,6 +17,8 @@ from fit_service.api.v1.fasting.fasting_schemas import (
 from libs import ErrorCode, ExceptionBase
 from libs.models.fasting import FastingPlan, FastingMealLog, FastingWorkoutLog
 from fit_service.core.worker.tasks import analyze_fasting_meal_log, analyze_fasting_workout_log
+from libs.helper.space import SpaceService
+from fastapi import UploadFile
 
 
 class FastingService:
@@ -50,7 +52,11 @@ class FastingService:
             self.db.add(new_plan)
             await self.db.commit()
             await self.db.refresh(new_plan)
-            return FastingPlanResponse.model_validate(new_plan)
+            # Ensure current_week is an int for Pydantic validation
+            plan_dict = new_plan.__dict__.copy()
+            if plan_dict.get("current_week") is not None:
+                plan_dict["current_week"] = int(plan_dict["current_week"])
+            return FastingPlanResponse.model_validate(plan_dict)
         else:
             # Update existing plan
             latest_plan.fasting_hours = plan_data.fasting_hours
@@ -65,7 +71,11 @@ class FastingService:
             latest_plan.status = plan_data.status or latest_plan.status
             await self.db.commit()
             await self.db.refresh(latest_plan)
-            return FastingPlanResponse.model_validate(latest_plan)
+            # Ensure current_week is an int for Pydantic validation
+            plan_dict = latest_plan.__dict__.copy()
+            if plan_dict.get("current_week") is not None:
+                plan_dict["current_week"] = int(plan_dict["current_week"])
+            return FastingPlanResponse.model_validate(plan_dict)
 
     async def get_latest_fasting_plan(self, user_id: int) -> Optional[FastingPlanResponse]:
         """Get the latest fasting plan for a user"""
@@ -80,7 +90,11 @@ class FastingService:
         if not plan:
             return None
 
-        return FastingPlanResponse.model_validate(plan)
+        # Ensure current_week is an int for Pydantic validation
+        plan_dict = plan.__dict__.copy()
+        if plan_dict.get("current_week") is not None:
+            plan_dict["current_week"] = int(plan_dict["current_week"])
+        return FastingPlanResponse.model_validate(plan_dict)
 
     async def list_fasting_plans(
         self, user_id: int, skip: int = 0, limit: int = 100
@@ -107,7 +121,17 @@ class FastingService:
         return [FastingPlanResponse.model_validate(plan) for plan in plans], total_count
 
     # FastingMealLog methods
-    async def create_meal_log(self, user_id: int, meal_data: FastingMealLogCreate) -> FastingMealLogResponse:
+    async def _handle_meal_log_photo(self, photo: UploadFile) -> str:
+        """Upload photo to DigitalOcean Spaces and return the file URL."""
+        if photo is None:
+            return None
+        space_service = SpaceService()
+        result = await space_service.upload_image(photo, folder="meal_photos")
+        return result.get("url")
+
+    async def create_meal_log(
+        self, user_id: int, meal_data: FastingMealLogCreate, photo: UploadFile = None
+    ) -> FastingMealLogResponse:
         """Create a new meal log for a fasting plan"""
         # Verify the plan exists and belongs to the user
         result = await self.db.execute(
@@ -122,11 +146,17 @@ class FastingService:
         if not plan:
             raise ExceptionBase(ErrorCode.NOT_FOUND)
 
+        # Handle photo upload if provided
+        photo_url = meal_data.photo_url
+        if photo is not None:
+            photo_url = await self._handle_meal_log_photo(photo)
+
         # Create the meal log
         new_meal_log = FastingMealLog(
             user_id=user_id,
             plan_id=meal_data.plan_id,
-            photo_url=meal_data.photo_url,
+            title=getattr(meal_data, "title", None),
+            photo_url=photo_url,
             notes=meal_data.notes,
         )
         self.db.add(new_meal_log)
@@ -180,9 +210,9 @@ class FastingService:
         return [FastingMealLogResponse.model_validate(log) for log in logs], total_count
 
     async def update_meal_log(
-        self, log_id: int, user_id: int, meal_data: FastingMealLogUpdate
+        self, log_id: int, user_id: int, meal_data: FastingMealLogUpdate, photo: UploadFile = None
     ) -> FastingMealLogResponse:
-        """Update a meal log, ensuring it belongs to the user"""
+        """Update a meal log, ensuring it belongs to the user. Allows updating title, notes, and photo."""
         result = await self.db.execute(
             select(FastingMealLog).where(
                 FastingMealLog.id == log_id,
@@ -195,15 +225,16 @@ class FastingService:
         if not log:
             raise ExceptionBase(ErrorCode.NOT_FOUND)
 
-        # Update fields if provided
-        if meal_data.photo_url is not None:
-            log.photo_url = meal_data.photo_url
+        # Update only provided fields
+        if meal_data.title is not None:
+            log.title = meal_data.title
         if meal_data.notes is not None:
             log.notes = meal_data.notes
+        if photo is not None:
+            log.photo_url = await self._handle_meal_log_photo(photo)
 
         await self.db.commit()
         await self.db.refresh(log)
-
         return FastingMealLogResponse.model_validate(log)
 
     async def delete_meal_log(self, log_id: int, user_id: int) -> None:
