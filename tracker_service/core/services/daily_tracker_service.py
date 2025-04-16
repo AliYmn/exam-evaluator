@@ -38,7 +38,7 @@ class DailyTrackerService:
         await self.db.refresh(new_tracker)
 
         # Trigger analysis as a background task
-        analyze_daily_tracker.delay(new_tracker.id)
+        analyze_daily_tracker.delay(new_tracker.id, user_id)
 
     async def get_daily_tracker(self, tracker_id: int, user_id: int) -> Optional[DailyTrackerResponse]:
         """Get a specific daily tracker record by ID, ensuring it belongs to the user"""
@@ -161,6 +161,6 @@ class DailyTrackerService:
             raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Trigger analysis as a background task
-        analyze_daily_tracker.delay(tracker_id)
+        analyze_daily_tracker.delay(tracker_id, user_id)
 
         return DailyTrackerResponse.model_validate(tracker)

@@ -170,6 +170,9 @@ class UserUpdate(BaseModel):
     date_of_birth: Optional[datetime] = None
     profile_picture: Optional[str] = None
     gender: Optional[str] = None
+    height: Optional[int] = None
+    weight: Optional[int] = None
+    body_tracker_period: Optional[str] = None
     language: Optional[str] = None
     country: Optional[str] = None
     city: Optional[str] = None
@@ -177,6 +180,12 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = None
     timezone: Optional[str] = None
     preferences: Optional[Dict[str, Any]] = None
+
+    @field_validator("phone_number")
+    def validate_phone(cls, v):
+        if v:
+            return validate_phone_number(v)
+        return v
 
 
 class UserResponse(BaseModel):

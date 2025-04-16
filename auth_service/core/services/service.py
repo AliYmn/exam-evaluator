@@ -1,6 +1,6 @@
 import secrets
 from datetime import UTC, datetime, timedelta
-from typing import Any, Dict, Optional, Literal
+from typing import Optional, Literal
 
 from passlib.context import CryptContext
 from sqlalchemy import select
@@ -13,6 +13,7 @@ from auth_service.api.v1.auth.auth_schemas import (
     Token,
     UserCreate,
     UserResponse,
+    UserUpdate,
     to_naive_datetime,
 )
 from auth_service.core.worker.tasks import (
@@ -157,31 +158,21 @@ class AuthService:
             pass
         return user_response
 
-    async def update_user_profile(self, user_id: str, update_data: Dict[str, Any]) -> UserResponse:
+    async def update_user_profile(self, user_id: str, update_data: UserUpdate) -> UserResponse:
         # Get user
         user = await self.get_user(user_id, "id")
         if not user:
             raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
 
-        # Define allowed fields and update them
-        allowed_fields = {
-            "first_name",
-            "last_name",
-            "date_of_birth",
-            "profile_picture",
-            "gender",
-            "language",
-            "country",
-            "city",
-            "address",
-            "phone_number",
-            "timezone",
-            "preferences",
-        }
-
-        for key, value in update_data.items():
-            if key in allowed_fields and hasattr(user, key):
+        # Update user with validated data from Pydantic model
+        update_dict = update_data.model_dump(exclude_unset=True)
+        for key, value in update_dict.items():
+            if hasattr(user, key):
                 setattr(user, key, value)
+
+        # Calculate BMI if height and weight are provided
+        if user.height and user.weight:
+            user.bmi = self.calculate_bmi(user.height, user.weight)
 
         # Save changes
         await self.db.commit()
@@ -194,6 +185,24 @@ class AuthService:
             # Continue without cache if Redis is unavailable
             pass
         return UserResponse.model_validate(user)
+
+    def calculate_bmi(self, height: int, weight: int) -> int:
+        """
+        Calculate BMI (Body Mass Index) using height in cm and weight in kg.
+        Formula: BMI = weight(kg) / (height(m))²
+        Returns BMI as an integer.
+        """
+        if height <= 0 or weight <= 0:
+            return 0
+
+        # Convert height from cm to meters
+        height_in_meters = height / 100
+
+        # Calculate BMI
+        bmi = weight / (height_in_meters * height_in_meters)
+
+        # Return as integer
+        return int(round(bmi))
 
     async def request_password_reset(self, email_data: PasswordReset) -> None:
         # Get user by email

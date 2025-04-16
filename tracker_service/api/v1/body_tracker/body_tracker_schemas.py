@@ -14,6 +14,8 @@ class TrackerBase(BaseModel):
     hip: Optional[float] = None
     thigh: Optional[float] = None
     arm: Optional[float] = None
+    ai_content: Optional[str] = None
+    rate: Optional[int] = None
 
 
 class TrackerCreate(TrackerBase):

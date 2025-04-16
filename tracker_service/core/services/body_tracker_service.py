@@ -30,7 +30,7 @@ class BodyTrackerService:
         await self.db.refresh(new_tracker)
 
         # Trigger analysis as a background task
-        analyze_body_tracker.delay(new_tracker.id)
+        analyze_body_tracker.delay(new_tracker.id, user_id)
 
         return TrackerResponse.model_validate(new_tracker)
 
@@ -132,6 +132,6 @@ class BodyTrackerService:
             raise ExceptionBase(ErrorCode.NOT_FOUND)
 
         # Trigger analysis as a background task
-        analyze_body_tracker.delay(tracker_id)
+        analyze_body_tracker.delay(tracker_id, user_id)
 
         return TrackerResponse.model_validate(tracker)

@@ -43,7 +43,7 @@ def send_daily_tracker_reminder(self) -> None:
 
 
 @celery_app.task(bind=True, name="analyze_body_tracker", max_retries=3, default_retry_delay=60)
-def analyze_body_tracker(self, tracker_id: int) -> None:
+def analyze_body_tracker(self, tracker_id: int, user_id: int) -> None:
     """
     Analyze a single body tracker record.
     This task is triggered when a new body tracker record is created.
@@ -51,7 +51,7 @@ def analyze_body_tracker(self, tracker_id: int) -> None:
     try:
         with get_db_session_sync() as db:
             tracker_analysis_service = TrackerAnalysisService(db)
-            success = tracker_analysis_service.analyze_body_tracker(tracker_id)
+            success = tracker_analysis_service.analyze_body_tracker(tracker_id, user_id)
 
             if success:
                 return f"Successfully analyzed body tracker ID {tracker_id}"
@@ -65,7 +65,7 @@ def analyze_body_tracker(self, tracker_id: int) -> None:
 
 
 @celery_app.task(bind=True, name="analyze_daily_tracker", max_retries=3, default_retry_delay=60)
-def analyze_daily_tracker(self, tracker_id: int) -> None:
+def analyze_daily_tracker(self, tracker_id: int, user_id: int) -> None:
     """
     Analyze a single daily tracker record.
     This task is triggered when a new daily tracker record is created.
@@ -73,7 +73,7 @@ def analyze_daily_tracker(self, tracker_id: int) -> None:
     try:
         with get_db_session_sync() as db:
             tracker_analysis_service = TrackerAnalysisService(db)
-            success = tracker_analysis_service.analyze_daily_tracker(tracker_id)
+            success = tracker_analysis_service.analyze_daily_tracker(tracker_id, user_id)
 
             if success:
                 return f"Successfully analyzed daily tracker ID {tracker_id}"

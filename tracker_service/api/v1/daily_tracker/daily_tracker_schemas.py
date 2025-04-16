@@ -17,6 +17,8 @@ class DailyTrackerBase(BaseModel):
     mood: Optional[str] = Field(None, description="Mood", max_length=50)
     training_quality: Optional[int] = Field(None, description="Training quality", ge=1, le=10)
     diet_compliance: Optional[int] = Field(None, description="Diet compliance", ge=1, le=10)
+    ai_content: Optional[str] = None
+    rate: Optional[int] = None
 
 
 class DailyTrackerCreate(DailyTrackerBase):
