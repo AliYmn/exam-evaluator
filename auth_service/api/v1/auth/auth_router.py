@@ -53,16 +53,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme), auth_service: Au
 
 
 # Update user profile endpoint
-@auth_router.patch("/me")
+@auth_router.patch("/me", status_code=204)
 async def update_user_profile(
     update_data: UserUpdate, token: str = Depends(oauth2_scheme), auth_service: AuthService = Depends(get_auth_service)
 ):
     user = await auth_service.get_current_user(token)
-    return await auth_service.update_user_profile(user.id, update_data.model_dump(exclude_unset=True))
+    await auth_service.update_user_profile(user.id, update_data.model_dump(exclude_unset=True))
 
 
 # Upload profile picture endpoint
-@auth_router.post("/me/profile-picture")
+@auth_router.post("/me/profile-picture", status_code=204)
 async def upload_profile_picture(
     file: UploadFile = File(...),
     token: str = Depends(oauth2_scheme),
@@ -79,7 +79,7 @@ async def upload_profile_picture(
 
     # Update user profile with the new image URL
     user = await auth_service.get_current_user(token)
-    return await auth_service.update_user_profile(user.id, {"profile_picture": result["url"]})
+    await auth_service.update_user_profile(user.id, {"profile_picture": result["url"]})
 
 
 # Password reset request endpoint

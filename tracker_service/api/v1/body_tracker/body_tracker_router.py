@@ -23,7 +23,7 @@ def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthService:
     return AuthService(db)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(RateLimiter(times=15, seconds=60))])
+@router.post("", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(RateLimiter(times=15, seconds=60))])
 async def create_tracker(
     tracker_data: TrackerCreate,
     authorization: Annotated[str | None, Header()] = None,
@@ -32,7 +32,7 @@ async def create_tracker(
 ):
     """Create a new tracker record for the authenticated user"""
     user = await auth_service.get_user_from_token(authorization)
-    return await body_tracker_service.create_tracker(user.id, tracker_data)
+    await body_tracker_service.create_tracker(user.id, tracker_data)
 
 
 @router.get("/{tracker_id}")

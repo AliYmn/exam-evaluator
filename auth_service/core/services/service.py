@@ -1,6 +1,6 @@
 import secrets
 from datetime import UTC, datetime, timedelta
-from typing import Optional, Literal
+from typing import Optional, Literal, Union
 
 from passlib.context import CryptContext
 from sqlalchemy import select
@@ -140,14 +140,20 @@ class AuthService:
         # Return user response
         return UserResponse.model_validate(user)
 
-    async def update_user_profile(self, user_id: str, update_data: UserUpdate) -> UserResponse:
+    async def update_user_profile(self, user_id: str, update_data: Union[UserUpdate, dict]) -> UserResponse:
         # Get user and validate existence
         user = await self.get_user(user_id, "id")
         if not user:
             raise ExceptionBase(ErrorCode.USER_NOT_FOUND)
 
         # Apply updates from validated schema and calculate BMI
-        user_data = update_data.model_dump(exclude_unset=True)
+        if hasattr(update_data, "model_dump"):
+            # If it's a Pydantic model
+            user_data = update_data.model_dump(exclude_unset=True)
+        else:
+            # If it's a dictionary
+            user_data = update_data
+
         for field, value in user_data.items():
             setattr(user, field, value)
 

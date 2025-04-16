@@ -31,7 +31,7 @@ def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthService:
 # FastingPlan endpoints
 @router.post(
     "/plan",
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(RateLimiter(times=15, seconds=60))],
 )
 async def create_or_update_fasting_plan(
@@ -41,7 +41,7 @@ async def create_or_update_fasting_plan(
     auth_service: AuthService = Depends(get_auth_service),
 ):
     user = await auth_service.get_user_from_token(authorization)
-    return await fasting_service.create_or_update_fasting_plan(user.id, plan_data)
+    await fasting_service.create_or_update_fasting_plan(user.id, plan_data)
 
 
 @router.get("/plan")
@@ -72,7 +72,7 @@ async def list_fasting_plans(
 
 
 # FastingMealLog endpoints
-@router.post("/meal-logs", status_code=status.HTTP_201_CREATED)
+@router.post("/meal-logs", status_code=status.HTTP_204_NO_CONTENT)
 async def create_meal_log(
     plan_id: int = Form(...),
     title: str = Form(None),
@@ -88,7 +88,7 @@ async def create_meal_log(
         title=title,
         notes=notes,
     )
-    return await fasting_service.create_meal_log(user.id, meal_data, photo=photo)
+    await fasting_service.create_meal_log(user.id, meal_data, photo=photo)
 
 
 @router.get("/meal-logs/{log_id}")
@@ -152,7 +152,7 @@ async def delete_meal_log(
 
 
 # FastingWorkoutLog endpoints
-@router.post("/workout-logs", status_code=status.HTTP_201_CREATED)
+@router.post("/workout-logs", status_code=status.HTTP_204_NO_CONTENT)
 async def create_workout_log(
     workout_data: FastingWorkoutLogCreate,
     authorization: Annotated[str | None, Header()] = None,

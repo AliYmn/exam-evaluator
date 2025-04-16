@@ -27,7 +27,7 @@ class FastingService:
         self.db = db
 
     # FastingPlan methods
-    async def create_or_update_fasting_plan(self, user_id: int, plan_data: FastingPlanCreate) -> FastingPlanResponse:
+    async def create_or_update_fasting_plan(self, user_id: int, plan_data: FastingPlanCreate) -> None:
         """Create a new fasting plan or update the existing one for a user"""
         result = await self.db.execute(
             select(FastingPlan)
@@ -57,7 +57,6 @@ class FastingService:
             plan_dict = new_plan.__dict__.copy()
             if plan_dict.get("current_week") is not None:
                 plan_dict["current_week"] = int(plan_dict["current_week"])
-            return FastingPlanResponse.model_validate(plan_dict)
         else:
             # Update existing plan
             latest_plan.fasting_hours = plan_data.fasting_hours
@@ -76,7 +75,6 @@ class FastingService:
             plan_dict = latest_plan.__dict__.copy()
             if plan_dict.get("current_week") is not None:
                 plan_dict["current_week"] = int(plan_dict["current_week"])
-            return FastingPlanResponse.model_validate(plan_dict)
 
     async def get_latest_fasting_plan(self, user_id: int) -> Optional[FastingPlanResponse]:
         """Get the latest fasting plan for a user"""
@@ -130,9 +128,7 @@ class FastingService:
         result = await space_service.upload_image(photo, folder="meal_photos")
         return result.get("url")
 
-    async def create_meal_log(
-        self, user_id: int, meal_data: FastingMealLogCreate, photo: UploadFile = None
-    ) -> FastingMealLogResponse:
+    async def create_meal_log(self, user_id: int, meal_data: FastingMealLogCreate, photo: UploadFile = None) -> None:
         """Create a new meal log for a fasting plan"""
         # Verify the plan exists and belongs to the user
         result = await self.db.execute(
@@ -177,8 +173,6 @@ class FastingService:
 
         # Trigger analysis as a background task
         analyze_fasting_meal_log.delay(new_meal_log.id, user_language)
-
-        return FastingMealLogResponse.model_validate(new_meal_log)
 
     async def get_meal_log(self, log_id: int, user_id: int) -> FastingMealLogResponse:
         """Get a specific meal log by ID, ensuring it belongs to the user"""
@@ -306,8 +300,6 @@ class FastingService:
 
         # Trigger analysis as a background task
         analyze_fasting_workout_log.delay(new_workout_log.id, user_language)
-
-        return FastingWorkoutLogResponse.model_validate(new_workout_log)
 
     async def get_workout_log(self, log_id: int, user_id: int) -> FastingWorkoutLogResponse:
         """Get a specific workout log by ID, ensuring it belongs to the user"""

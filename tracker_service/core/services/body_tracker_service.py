@@ -12,7 +12,7 @@ class BodyTrackerService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_tracker(self, user_id: int, tracker_data: TrackerCreate) -> TrackerResponse:
+    async def create_tracker(self, user_id: int, tracker_data: TrackerCreate) -> None:
         """Create a new tracker record for a user"""
         new_tracker = BodyTracker(
             user_id=user_id,
@@ -31,8 +31,6 @@ class BodyTrackerService:
 
         # Trigger analysis as a background task
         analyze_body_tracker.delay(new_tracker.id, user_id)
-
-        return TrackerResponse.model_validate(new_tracker)
 
     async def get_tracker(self, tracker_id: int, user_id: int) -> Optional[TrackerResponse]:
         """Get a specific tracker record by ID, ensuring it belongs to the user"""
