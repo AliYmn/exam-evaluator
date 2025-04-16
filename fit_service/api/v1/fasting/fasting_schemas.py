@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from datetime import datetime
 
@@ -65,6 +65,11 @@ class FastingMealLogBase(BaseModel):
     title: Optional[str] = Field(None, description="Title of the meal")
     photo_url: Optional[str] = Field(None, description="URL to the uploaded photo")
     notes: Optional[str] = Field(None, description="User notes about the meal")
+    calories: Optional[int] = Field(None, description="Estimated calories")
+    protein: Optional[float] = Field(None, description="Protein in grams")
+    carbs: Optional[float] = Field(None, description="Carbohydrates in grams")
+    fat: Optional[float] = Field(None, description="Fat in grams")
+    detailed_macros: Optional[Dict[str, Any]] = Field(None, description="Detailed breakdown of nutrients")
 
 
 class FastingMealLogCreate(FastingMealLogBase):

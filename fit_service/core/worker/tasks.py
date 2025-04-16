@@ -42,7 +42,7 @@ def check_user_fasting_plans(self, user_id: int) -> None:
 
 
 @celery_app.task(bind=True, name="analyze_fasting_workout_log", max_retries=3, default_retry_delay=60)
-def analyze_fasting_workout_log(self, log_id: int) -> None:
+def analyze_fasting_workout_log(self, log_id: int, language: str) -> None:
     """
     Analyze a single fasting workout log.
     This task is triggered when a new workout log is created.
@@ -50,7 +50,7 @@ def analyze_fasting_workout_log(self, log_id: int) -> None:
     try:
         with get_db_session_sync() as db:
             analysis_service = FastingAnalysisService(db)
-            success = analysis_service.analyze_workout_log(log_id)
+            success = analysis_service.analyze_workout_log(log_id, language)
 
             if success:
                 return f"Successfully analyzed fasting workout log ID {log_id}"
@@ -64,7 +64,7 @@ def analyze_fasting_workout_log(self, log_id: int) -> None:
 
 
 @celery_app.task(bind=True, name="analyze_fasting_meal_log", max_retries=3, default_retry_delay=60)
-def analyze_fasting_meal_log(self, log_id: int) -> None:
+def analyze_fasting_meal_log(self, log_id: int, language: str) -> None:
     """
     Analyze a single fasting meal log.
     This task is triggered when a new meal log is created.
@@ -72,7 +72,7 @@ def analyze_fasting_meal_log(self, log_id: int) -> None:
     try:
         with get_db_session_sync() as db:
             analysis_service = FastingAnalysisService(db)
-            success = analysis_service.analyze_meal_log(log_id)
+            success = analysis_service.analyze_meal_log(log_id, language)
 
             if success:
                 return f"Successfully analyzed fasting meal log ID {log_id}"

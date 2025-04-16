@@ -23,7 +23,7 @@ class User(BaseModel):
     weight = Column(Integer, nullable=True)
     bmi = Column(Integer, nullable=True)
     body_tracker_period = Column(String(20), default="weekly")
-    language = Column(String(10), nullable=True)
+    language = Column(String(10), nullable=True, default="en")
     referral_code = Column(String(50), nullable=True)
 
     # Location and contact details

@@ -19,6 +19,7 @@ from libs.models.fasting import FastingPlan, FastingMealLog, FastingWorkoutLog
 from fit_service.core.worker.tasks import analyze_fasting_meal_log, analyze_fasting_workout_log
 from libs.helper.space import SpaceService
 from fastapi import UploadFile
+from libs.models.user import User
 
 
 class FastingService:
@@ -146,6 +147,13 @@ class FastingService:
         if not plan:
             raise ExceptionBase(ErrorCode.NOT_FOUND)
 
+        # Get user language preference
+        user_result = await self.db.execute(select(User.language).where(User.id == user_id))
+        user_language = user_result.scalar_one_or_none()
+
+        if not user_language:
+            raise ExceptionBase(ErrorCode.INVALID_PARAMETERS)
+
         # Handle photo upload if provided
         photo_url = meal_data.photo_url
         if photo is not None:
@@ -155,16 +163,22 @@ class FastingService:
         new_meal_log = FastingMealLog(
             user_id=user_id,
             plan_id=meal_data.plan_id,
-            title=getattr(meal_data, "title", None),
+            title=meal_data.title,
             photo_url=photo_url,
             notes=meal_data.notes,
+            calories=meal_data.calories,
+            protein=meal_data.protein,
+            carbs=meal_data.carbs,
+            fat=meal_data.fat,
+            detailed_macros=meal_data.detailed_macros,
+            ai_content=meal_data.ai_content,
         )
         self.db.add(new_meal_log)
         await self.db.commit()
         await self.db.refresh(new_meal_log)
 
         # Trigger analysis as a background task
-        analyze_fasting_meal_log.delay(new_meal_log.id)
+        analyze_fasting_meal_log.delay(new_meal_log.id, user_language)
 
         return FastingMealLogResponse.model_validate(new_meal_log)
 
@@ -272,6 +286,13 @@ class FastingService:
         if not plan:
             raise ExceptionBase(ErrorCode.NOT_FOUND)
 
+        # Get user language preference
+        user_result = await self.db.execute(select(User.language).where(User.id == user_id))
+        user_language = user_result.scalar_one_or_none()
+
+        if not user_language:
+            raise ExceptionBase(ErrorCode.INVALID_PARAMETERS)
+
         # Create the workout log
         new_workout_log = FastingWorkoutLog(
             user_id=user_id,
@@ -287,7 +308,7 @@ class FastingService:
         await self.db.refresh(new_workout_log)
 
         # Trigger analysis as a background task
-        analyze_fasting_workout_log.delay(new_workout_log.id)
+        analyze_fasting_workout_log.delay(new_workout_log.id, user_language)
 
         return FastingWorkoutLogResponse.model_validate(new_workout_log)
 
