@@ -60,7 +60,7 @@ def get_blog_prompt_en(recent_titles):
         "    'content': 'Full blog content in Markdown (1000–1500 words)',\n"
         "    'summary': 'Brief summary (max 150 words)',\n"
         "    'category': 'Blog category (e.g., Nutrition, Intermittent Fasting)',\n"
-        "    'tags': ['tag1', 'tag2', 'tag3', 'tag4', 'tag5']\n"
+        "    'tags': ['tag1', 'tag2', 'tag3', 'tag4', 'tag5'] (lowercase and without spaces, ex: 'intermittent-fasting')\n"
         "}"
     )
     if recent_titles:
@@ -103,7 +103,7 @@ def get_blog_prompt_tr(recent_titles):
         "    'content': 'Markdown formatında 1000–1500 kelimelik tam blog içeriği',\n"
         "    'summary': 'Kısa özet (en fazla 150 kelime)',\n"
         "    'category': 'Kategori (Beslenme, Aralıklı Oruç vb.)',\n"
-        "    'tags': ['etiket1', 'etiket2', 'etiket3', 'etiket4', 'etiket5']\n"
+        "    'tags': ['etiket1', 'etiket2', 'etiket3', 'etiket4', 'etiket5'] (küçük harf ve boşluk olmadan, örn: 'aralikli-oruc')\n"
         "}"
     )
     if recent_titles:

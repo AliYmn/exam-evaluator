@@ -113,7 +113,7 @@ class BlogService:
             .limit(limit)
         )
         result = await self.db.execute(query)
-        blogs = result.scalars().all()
+        blogs = result.unique().scalars().all()
 
         return [BlogResponse.model_validate(blog) for blog in blogs], total
 
