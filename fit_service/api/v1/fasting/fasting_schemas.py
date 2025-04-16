@@ -70,6 +70,7 @@ class FastingMealLogBase(BaseModel):
     carbs: Optional[float] = Field(None, description="Carbohydrates in grams")
     fat: Optional[float] = Field(None, description="Fat in grams")
     detailed_macros: Optional[Dict[str, Any]] = Field(None, description="Detailed breakdown of nutrients")
+    ai_content: Optional[str] = Field(None, description="AI generated content")
 
 
 class FastingMealLogCreate(FastingMealLogBase):

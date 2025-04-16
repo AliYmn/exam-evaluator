@@ -149,10 +149,7 @@ class FastingService:
 
         # Get user language preference
         user_result = await self.db.execute(select(User.language).where(User.id == user_id))
-        user_language = user_result.scalar_one_or_none()
-
-        if not user_language:
-            raise ExceptionBase(ErrorCode.INVALID_PARAMETERS)
+        user_language = user_result.scalar_one_or_none() or "en"
 
         # Handle photo upload if provided
         photo_url = meal_data.photo_url
@@ -288,10 +285,7 @@ class FastingService:
 
         # Get user language preference
         user_result = await self.db.execute(select(User.language).where(User.id == user_id))
-        user_language = user_result.scalar_one_or_none()
-
-        if not user_language:
-            raise ExceptionBase(ErrorCode.INVALID_PARAMETERS)
+        user_language = user_result.scalar_one_or_none() or "en"
 
         # Create the workout log
         new_workout_log = FastingWorkoutLog(
