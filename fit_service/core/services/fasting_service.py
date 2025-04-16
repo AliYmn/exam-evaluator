@@ -169,6 +169,7 @@ class FastingService:
             fat=meal_data.fat,
             detailed_macros=meal_data.detailed_macros,
             ai_content=meal_data.ai_content,
+            rate=meal_data.rate,
         )
         self.db.add(new_meal_log)
         await self.db.commit()
@@ -296,6 +297,8 @@ class FastingService:
             calories_burned=workout_data.calories_burned,
             intensity=workout_data.intensity,
             notes=workout_data.notes,
+            ai_content=workout_data.ai_content,
+            rate=workout_data.rate,
         )
         self.db.add(new_workout_log)
         await self.db.commit()

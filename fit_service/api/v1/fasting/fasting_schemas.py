@@ -17,6 +17,7 @@ class FastingPlanBase(BaseModel):
     mood: Optional[str] = Field(None, description="User mood")
     stage: Optional[str] = Field(None, description="User stage")
     status: Optional[str] = Field(None, description="Status of the fasting plan")
+    rate: Optional[float] = Field(0, description="Rate of calories burned")
 
 
 class FastingPlanCreate(FastingPlanBase):
@@ -44,6 +45,7 @@ class FastingPlanResponse(BaseModel):
     target_protein: Optional[float] = None
     target_carb: Optional[float] = None
     target_fat: Optional[float] = None
+    rate: Optional[float] = 0
 
     class Config:
         from_attributes = True
@@ -71,6 +73,7 @@ class FastingMealLogBase(BaseModel):
     fat: Optional[float] = Field(None, description="Fat in grams")
     detailed_macros: Optional[Dict[str, Any]] = Field(None, description="Detailed breakdown of nutrients")
     ai_content: Optional[str] = Field(None, description="AI generated content")
+    rate: Optional[float] = Field(0, description="Rate of calories burned")
 
 
 class FastingMealLogCreate(FastingMealLogBase):
@@ -92,6 +95,7 @@ class FastingMealLogResponse(FastingMealLogBase):
     user_id: int
     created_date: datetime
     ai_content: Optional[str] = None
+    rate: Optional[float] = 0
 
     class Config:
         from_attributes = True
@@ -116,6 +120,7 @@ class FastingWorkoutLogBase(BaseModel):
     intensity: Optional[str] = Field(None, description="Workout intensity (Low, Medium, High)")
     notes: Optional[str] = Field(None, description="User notes about the workout")
     ai_content: Optional[str] = Field(None, description="AI generated content")
+    rate: Optional[float] = Field(0, description="Rate of calories burned")
 
 
 class FastingWorkoutLogCreate(FastingWorkoutLogBase):
@@ -130,6 +135,7 @@ class FastingWorkoutLogUpdate(BaseModel):
     calories_burned: Optional[int] = Field(None, description="Estimated calories burned")
     intensity: Optional[str] = Field(None, description="Workout intensity (Low, Medium, High)")
     notes: Optional[str] = Field(None, description="User notes about the workout")
+    rate: Optional[float] = Field(0, description="Rate of calories burned")
 
 
 class FastingWorkoutLogResponse(FastingWorkoutLogBase):

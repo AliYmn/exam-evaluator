@@ -14,6 +14,7 @@ from auth_service.core.services.service import AuthService
 from libs.db import get_async_db
 from fastapi_limiter.depends import RateLimiter
 from libs.helper.space import SpaceService
+from libs import ErrorCode, ExceptionBase
 
 # Create router with auth tag
 auth_router = APIRouter(tags=["Auth"], prefix="/auth")
@@ -70,8 +71,6 @@ async def upload_profile_picture(
     # Validate file type
     allowed_types = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
     if file.content_type not in allowed_types:
-        from libs import ErrorCode, ExceptionBase
-
         raise ExceptionBase(ErrorCode.INVALID_FILE_TYPE)
 
     # Upload file to DigitalOcean Space

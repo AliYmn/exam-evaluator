@@ -22,6 +22,7 @@ class DailyTracker(BaseModel):
     training_compliance = Column(Integer, nullable=True)
     note = Column(String(255), nullable=True)
     ai_content = Column(String(9999), nullable=True)
+    rate = Column(Float, nullable=True)
 
     def __repr__(self):
         return f"<DailyTracker(user_id={self.user_id})>"

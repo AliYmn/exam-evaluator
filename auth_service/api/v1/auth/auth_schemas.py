@@ -121,13 +121,6 @@ class Token(BaseModel):
     email: EmailStr
 
 
-class TokenPayload(BaseModel):
-    """Token payload model for validation"""
-
-    sub: str
-    exp: int
-
-
 class UserCreate(BaseModel):
     """User creation model with full profile data"""
 

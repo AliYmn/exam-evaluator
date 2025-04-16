@@ -16,7 +16,7 @@ from libs import ExceptionBase, settings
 
 
 # Initialize Sentry if enabled and in production environment
-if settings.SENTRY_ENABLED and settings.ENV_NAME == "production":
+if settings.SENTRY_ENABLED and settings.ENV_NAME == "PRODUCTION":
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
         environment=settings.SENTRY_ENVIRONMENT,
@@ -61,7 +61,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_headers=["*"],
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_credentials=False,
 )
 

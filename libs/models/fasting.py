@@ -63,6 +63,7 @@ class FastingMealLog(BaseModel):
     protein = Column(Float, nullable=True)  # Protein in grams
     carbs = Column(Float, nullable=True)  # Carbohydrates in grams
     fat = Column(Float, nullable=True)  # Fat in grams
+    rate = Column(Float, nullable=True)  # Rate of calories burned
 
     # Detailed macro data
     detailed_macros = Column(JSON, nullable=True)  # Detailed breakdown of nutrients in JSON format
@@ -90,6 +91,7 @@ class FastingWorkoutLog(BaseModel):
     workout_name = Column(String(100), nullable=False)  # Name of the workout
     duration_minutes = Column(Integer, nullable=True)  # Duration in minutes
     calories_burned = Column(Integer, nullable=True)  # Estimated calories burned
+    rate = Column(Float, nullable=True)  # Rate of calories burned
 
     # Optional workout details
     intensity = Column(String(50), nullable=True)  # Low, Medium, High

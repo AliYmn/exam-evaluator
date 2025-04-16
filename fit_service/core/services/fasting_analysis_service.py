@@ -63,6 +63,7 @@ class FastingAnalysisService:
 
             {{
             "ai_content": "Yemeğin içeriği ve sağlık açısından değerlendirilmesi, motive edici bir kişisel yorum (emoji kullanarak)",
+            "health_rating": "Yemeğin sağlık açısından değerlendirilmesi (1–10 scale, e.g., 8)",
             "calories": "Toplam tahmini kalori (örnek: 450 kcal)",
             "macros": {{
                 "protein": "Tahmini protein miktarı (örnek: 30g)",
@@ -106,6 +107,7 @@ class FastingAnalysisService:
 
             {{
             "ai_content": "Analysis of the meal content and health evaluation, a motivating personal comment (using emojis)",
+            "health_rating": "Overall health rating of the meal (1–10 scale, e.g., 8)",
             "calories": "Total estimated calories (example: 450 kcal)",
             "macros": {{
                 "protein": "Estimated protein amount (example: 30g)",
@@ -143,48 +145,36 @@ class FastingAnalysisService:
     def get_workout_analysis_prompt(self, workout_info: str, language: str = "tr") -> str:
         if language == "tr":
             return f"""
-            Aşağıda kullanıcının spor günlüğü verileri bulunmaktadır.
+            Aşağıda kullanıcının spor günlüğü verileri yer almaktadır.
 
             Lütfen antrenmanın türünü, süresini, zorluk seviyesini ve genel sağlık üzerindeki etkilerini bilimsel ve profesyonel bir bakış açısıyla analiz et.
-            Yanıtı yalnızca aşağıdaki JSON formatında ve Türkçe olarak oluştur:
+            Yanıtını yalnızca aşağıdaki JSON formatında ve **Türkçe olarak** üret:
 
             {{
-            "ai_content": "Antrenman analizi ve motive edici kişisel yorum (emoji kullanarak)",
-            "calories_accuracy": "Yakılan kalori tahmini doğruluğu (düşük/orta/yüksek)",
-            "intensity_evaluation": "Antrenman yoğunluğu değerlendirmesi",
-            "training_effect": "Antrenmanın vücut üzerindeki etkileri",
-            "recommendations": "İyileştirme önerileri",
-            "benefits": {{
-                "cardiovascular": "Kardiyovasküler sistem üzerindeki faydalar",
-                "muscular": "Kas sistemi üzerindeki faydalar",
-                "metabolic": "Metabolik faydalar",
-                "mental": "Zihinsel faydalar"
+            "ai_content": "Antrenmanın tüm değerlendirmesi, motive edici kişisel yorum ve kalori doğruluğu, zorluk seviyesi, faydalar gibi tüm detaylar bu alanda açıklanmalı. Emoji kullan 🏃‍♀️💪🔥",
+            "workout_rating": "Antrenmanın sağlık açısından genel değerlendirmesi (1–10 arasında bir sayı)",
+            "estimated_calories": "Tahmini yakılan kalori miktarı (örnek: 320 kcal)",
             }}
-            }}
+
+            Ek açıklama ya da başka alan verme. Sadece bu iki alanı içeren JSON üret. Yanıtta tüm analiz metni `ai_content` alanında bulunmalı.
 
             Spor Bilgileri:
             {workout_info}
             """
         else:
             return f"""
-            Below are the details from a user's workout log.
+            Below is a user's workout log information.
 
-            Please analyze the type, duration, difficulty level, and general health effects of the workout from a scientific and professional perspective.
-            Create your response only in the following JSON format and in English:
+            Please analyze the type, duration, intensity, and health effects of the workout with a professional and scientific approach.
+            Respond **only** in the following JSON format and **in English**:
 
             {{
-            "ai_content": "Workout analysis and motivating personal comment (using emojis)",
-            "calories_accuracy": "Accuracy of estimated calories burned (low/medium/high)",
-            "intensity_evaluation": "Workout intensity evaluation",
-            "training_effect": "Effects of the workout on the body",
-            "recommendations": "Improvement suggestions",
-            "benefits": {{
-                "cardiovascular": "Benefits for the cardiovascular system",
-                "muscular": "Benefits for the muscular system",
-                "metabolic": "Metabolic benefits",
-                "mental": "Mental benefits"
+            "ai_content": "Full workout evaluation, motivational personal comment, including intensity, calorie accuracy, benefits, and suggestions. Use emojis 🏃‍♂️🔥💪",
+            "workout_rating": "Overall workout health and effectiveness score (a number from 1 to 10)",
+            "estimated_calories": "Estimated calories burned (e.g., 320 kcal)"
             }}
-            }}
+
+            Do not include any extra explanation or fields—just return this JSON. The entire analysis must be inside the `ai_content` field.
 
             Workout Information:
             {workout_info}
@@ -195,7 +185,7 @@ class FastingAnalysisService:
             select(FastingWorkoutLog).where(FastingWorkoutLog.id == log_id, FastingWorkoutLog.deleted_date.is_(None))
         ).scalar_one()
 
-        workout_info = self._format_workout_info(log)
+        workout_info = self._format_workout_info(log, language)
         prompt = self.get_workout_analysis_prompt(workout_info, language)
         system_prompt = self.get_workout_system_prompt(language)
 
@@ -211,10 +201,11 @@ class FastingAnalysisService:
         analysis_data = json.loads(analysis_json)
 
         log.ai_content = analysis_data.get("ai_content", "")
+        log.rate = self._extract_numeric_value(analysis_data.get("workout_rating", "0"))
 
-        calories_estimate = analysis_data.get("calories", analysis_data.get("estimated_calories", None))
-        if calories_estimate:
-            log.calories_burned = self._extract_numeric_value(str(calories_estimate))
+        calories_estimate = self._extract_numeric_value(analysis_data.get("estimated_calories", "0"))
+        if not log.calories_burned:
+            log.calories_burned = calories_estimate
 
         self.db.commit()
         return True
@@ -224,7 +215,7 @@ class FastingAnalysisService:
             select(FastingMealLog).where(FastingMealLog.id == log_id, FastingMealLog.deleted_date.is_(None))
         ).scalar_one()
 
-        prompt = self.get_meal_analysis_prompt(self._format_meal_info(log), language)
+        prompt = self.get_meal_analysis_prompt(self._format_meal_info(log, language), language)
         system_prompt = self.get_meal_system_prompt(language)
 
         content = [{"type": "text", "text": prompt}]
@@ -246,6 +237,7 @@ class FastingAnalysisService:
         log.carbs = self._extract_numeric_value(
             analysis_data.get("macros", {}).get("carbohydrates", {}).get("total", "0")
         )
+        log.rate = self._extract_numeric_value(analysis_data.get("health_rating", "0"))
         log.fat = self._extract_numeric_value(analysis_data.get("macros", {}).get("fats", {}).get("total", "0"))
         log.detailed_macros = analysis_data.get("macros", {})
         self.db.commit()
@@ -255,21 +247,38 @@ class FastingAnalysisService:
         match = re.search(r"(\d+(?:\.\d+)?)", value_str)
         return float(match.group(1)) if match else 0
 
-    def _format_workout_info(self, log: FastingWorkoutLog) -> str:
-        workout_info = f"Antrenman Adı: {log.workout_name}\n"
-        workout_info += f"Süre: {log.duration_minutes} dakika\n"
-        workout_info += f"Zorluk Seviyesi: {log.intensity}\n"
-        workout_info += f"Yakılan Kalori: {log.calories_burned}\n"
-        if log.notes:
-            workout_info += f"Notlar: {log.notes}\n"
-        return workout_info
+    def _format_workout_info(self, log: FastingWorkoutLog, language: str = "tr") -> str:
+        if language == "tr":
+            workout_info = f"Antrenman Adı: {log.workout_name}\n"
+            workout_info += f"Süre: {log.duration_minutes} dakika\n"
+            workout_info += f"Zorluk Seviyesi: {log.intensity}\n"
+            if log.notes:
+                workout_info += f"Notlar: {log.notes}\n"
+            return workout_info
+        else:
+            workout_info = f"Workout Name: {log.workout_name}\n"
+            workout_info += f"Duration: {log.duration_minutes} minutes\n"
+            workout_info += f"Intensity: {log.intensity}\n"
+            if log.notes:
+                workout_info += f"Notes: {log.notes}\n"
+            return workout_info
 
-    def _format_meal_info(self, log: FastingMealLog) -> str:
-        meal_info = ""
-        if log.title:
-            meal_info += f"Yemek Başlığı: {log.title}\n"
-        if log.photo_url:
-            meal_info += f"Fotoğraf URL: {log.photo_url}\n"
-        if log.notes:
-            meal_info += f"Notlar: {log.notes}\n"
-        return meal_info
+    def _format_meal_info(self, log: FastingMealLog, language: str = "tr") -> str:
+        if language == "tr":
+            meal_info = ""
+            if log.title:
+                meal_info += f"Yemek Başlığı: {log.title}\n"
+            if log.photo_url:
+                meal_info += f"Fotoğraf URL: {log.photo_url}\n"
+            if log.notes:
+                meal_info += f"Notlar: {log.notes}\n"
+            return meal_info
+        else:
+            meal_info = ""
+            if log.title:
+                meal_info += f"Meal Title: {log.title}\n"
+            if log.photo_url:
+                meal_info += f"Image URL: {log.photo_url}\n"
+            if log.notes:
+                meal_info += f"Notes: {log.notes}\n"
+            return meal_info
