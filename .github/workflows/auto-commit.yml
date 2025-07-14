@@ -2,8 +2,8 @@ name: Auto Commit
 
 on:
   schedule:
-    # Run every 10 minutes
-    - cron: '*/1 * * * *'
+    # Run once daily at midnight UTC
+    - cron: '0 0 * * *'
   # Allow manual triggering
   workflow_dispatch:
 
@@ -34,8 +34,8 @@ jobs:
 
       - name: Commit and push if changed
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
+          git config --global user.name 'AliYmn'
+          git config --global user.email 'aliymn.db@gmail.com'
 
           git add last_updated.txt
 
