@@ -10,18 +10,14 @@ on:
 jobs:
   auto-commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          # Use the default GitHub token
-          token: ${{ github.token }}
-
-      - name: Setup Git user
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
+          fetch-depth: 0
 
       - name: Update timestamp file
         run: |
@@ -31,16 +27,17 @@ jobs:
           # Add some random data to ensure the commit is unique
           echo "Random: $RANDOM" >> last_updated.txt
 
-      - name: Commit and push changes
+          # Debug information
+          echo "Current directory: $(pwd)"
+          echo "Repository contents:"
+          ls -la
+
+      - name: Commit and push if changed
         run: |
-          # Add the file first
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+
           git add last_updated.txt
 
-          # Check if there are changes to commit
-          if git diff --staged --exit-code; then
-            echo "No changes to commit"
-            exit 0
-          fi
-
-          git commit -m "Auto update: $(date)"
-          git push
+          # Only commit and push if there are changes
+          git diff --staged --quiet || (git commit -m "Auto update: $(date)" && git push)
