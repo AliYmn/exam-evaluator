@@ -15,8 +15,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          # Use a personal access token to allow pushing to the repository
-          token: ${{ secrets.AUTO_COMMIT_TOKEN }}
+          # Use the default GitHub token
+          token: ${{ github.token }}
 
       - name: Setup Git user
         run: |
