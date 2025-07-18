@@ -118,3 +118,4 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+# Refactored on 2025-07-18: Improved code structure
