@@ -39,3 +39,4 @@ def downgrade() -> None:
 # Updated on 2025-07-19: Improved code documentation
 # Refactored on 2025-07-19: Improved code structure
 # Fixed formatting on 2025-07-20
+# Refactored on 2025-07-21: Improved code structure
