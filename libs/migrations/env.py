@@ -134,3 +134,4 @@ else:
 # Updated on 2025-07-25: Improved code documentation
 # Updated on 2025-07-25: Improved code documentation
 # Updated on 2025-07-26: Improved code documentation
+# Refactored on 2025-07-26: Improved code structure
