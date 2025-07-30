@@ -138,3 +138,4 @@ else:
 # Updated on 2025-07-29: Improved code documentation
 # Refactored on 2025-07-29: Improved code structure
 # Updated on 2025-07-30: Improved code documentation
+# Fixed formatting on 2025-07-30
