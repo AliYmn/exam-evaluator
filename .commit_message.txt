@@ -1,1 +1,1 @@
-refactor: improve code structure
+docs: update project progress notes
