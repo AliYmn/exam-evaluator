@@ -145,3 +145,4 @@ else:
 # Refactored on 2025-08-01: Improved code structure
 # Refactored on 2025-08-02: Improved code structure
 # Refactored on 2025-08-03: Improved code structure
+# Updated on 2025-08-04: Improved code documentation
