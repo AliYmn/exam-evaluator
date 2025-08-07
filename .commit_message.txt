@@ -1,1 +1,1 @@
-config: update system configuration
+docs: improve code documentation
