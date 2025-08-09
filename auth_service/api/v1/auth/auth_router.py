@@ -94,3 +94,4 @@ async def reset_password(
     reset_token: str, password_data: NewPassword, auth_service: AuthService = Depends(get_auth_service)
 ):
     await auth_service.reset_password(reset_token, password_data.password)
+# Fixed formatting on 2025-08-09
