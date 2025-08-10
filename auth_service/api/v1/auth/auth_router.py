@@ -95,3 +95,4 @@ async def reset_password(
 ):
     await auth_service.reset_password(reset_token, password_data.password)
 # Fixed formatting on 2025-08-09
+# Fixed formatting on 2025-08-10
