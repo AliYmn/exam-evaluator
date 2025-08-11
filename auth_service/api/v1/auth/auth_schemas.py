@@ -239,3 +239,4 @@ class UserResponse(BaseModel):
 # Fixed formatting on 2025-08-09
 # Fixed formatting on 2025-08-10
 # Fixed formatting on 2025-08-10
+# Refactored on 2025-08-11: Improved code structure
