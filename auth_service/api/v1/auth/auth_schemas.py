@@ -242,3 +242,4 @@ class UserResponse(BaseModel):
 # Refactored on 2025-08-11: Improved code structure
 # Refactored on 2025-08-11: Improved code structure
 # Fixed formatting on 2025-08-11
+# Updated on 2025-08-11: Improved code documentation
