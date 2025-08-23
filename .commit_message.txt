@@ -1,1 +1,1 @@
-style: fix code formatting
+refactor: improve code structure
