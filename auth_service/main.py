@@ -74,3 +74,4 @@ async def http_exception_handler(_request, exc: ExceptionBase) -> ORJSONResponse
 
 
 app.include_router(auth_router, prefix=settings.API_STR)
+# Updated on 2025-08-27: Improved code documentation
