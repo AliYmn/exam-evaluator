@@ -1,1 +1,1 @@
-docs: update project progress notes
+config: update system configuration
