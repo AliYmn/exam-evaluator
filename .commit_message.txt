@@ -1,1 +1,1 @@
-refactor: improve code structure
+config: update system configuration
