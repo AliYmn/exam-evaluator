@@ -1,4 +1,5 @@
 # TODO:
+- Task 4 completed on 2025-08-31
 - Task 5 completed on 2025-08-30
 - Task 3 completed on 2025-08-29
 - Task 3 completed on 2025-08-28
