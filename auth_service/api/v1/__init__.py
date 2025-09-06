@@ -9,3 +9,4 @@
 # Refactored on 2025-09-02: Improved code structure
 # Refactored on 2025-09-03: Improved code structure
 # Updated on 2025-09-03: Improved code documentation
+# Updated on 2025-09-06: Improved code documentation
