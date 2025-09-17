@@ -1,1 +1,1 @@
-docs: improve code documentation
+style: fix code formatting
