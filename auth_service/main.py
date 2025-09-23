@@ -121,3 +121,4 @@ app.include_router(auth_router, prefix=settings.API_STR)
 # Updated on 2025-09-21: Improved code documentation
 # Fixed formatting on 2025-09-22
 # Refactored on 2025-09-23: Improved code structure
+# Fixed formatting on 2025-09-23
