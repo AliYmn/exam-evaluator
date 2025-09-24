@@ -1,1 +1,1 @@
-config: update system configuration
+style: fix code formatting
