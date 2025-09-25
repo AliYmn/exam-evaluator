@@ -1,1 +1,1 @@
-docs: improve code documentation
+docs: update project progress notes
