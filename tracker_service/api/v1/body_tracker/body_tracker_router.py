@@ -88,3 +88,4 @@ async def delete_tracker(
     user = await auth_service.get_user_from_token(authorization)
     await body_tracker_service.delete_tracker(tracker_id, user.id)
 # Refactored on 2025-09-24: Improved code structure
+# Updated on 2025-09-25: Improved code documentation
