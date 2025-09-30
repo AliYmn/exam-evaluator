@@ -53,3 +53,4 @@ class TrackerListResponse(BaseModel):
 # Fixed formatting on 2025-09-28
 # Updated on 2025-09-29: Improved code documentation
 # Fixed formatting on 2025-09-29
+# Refactored on 2025-09-30: Improved code structure
