@@ -1,1 +1,1 @@
-style: fix code formatting
+docs: update project progress notes
