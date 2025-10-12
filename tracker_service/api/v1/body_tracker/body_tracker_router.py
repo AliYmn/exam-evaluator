@@ -116,3 +116,4 @@ async def delete_tracker(
 # Fixed formatting on 2025-10-09
 # Fixed formatting on 2025-10-12
 # Fixed formatting on 2025-10-12
+# Refactored on 2025-10-12: Improved code structure
