@@ -10,17 +10,7 @@ from libs import ErrorCode, ExceptionBase
 def validate_strong_password(password: str) -> str:
     """Validate password strength"""
     # Length check
-    if len(password) < 8:
-        raise ExceptionBase(ErrorCode.WEAK_PASSWORD)
-
-    # Character type checks
-    if not re.search(r"[A-Z]", password):
-        raise ExceptionBase(ErrorCode.WEAK_PASSWORD)
-    if not re.search(r"[a-z]", password):
-        raise ExceptionBase(ErrorCode.WEAK_PASSWORD)
-    if not re.search(r"\d", password):
-        raise ExceptionBase(ErrorCode.WEAK_PASSWORD)
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+    if len(password) < 6:
         raise ExceptionBase(ErrorCode.WEAK_PASSWORD)
 
     return password
