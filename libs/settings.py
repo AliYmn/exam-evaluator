@@ -20,6 +20,12 @@ class Config(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PORT: int
 
+    # RabbitMQ
+    RABBITMQ_PASS: str
+    RABBITMQ_USER: str
+    RABBITMQ_HOST: str
+    RABBITMQ_PORT: int
+
     # REDIS
     REDIS_PORT: int
     REDIS_HOST: str
@@ -27,6 +33,10 @@ class Config(BaseSettings):
     REDIS_TTL: int
     REDIS_PREFIX: str
     FERNET_KEY: str
+
+    # Celery Worker
+    CONTENT_QUEUE_NAME: str
+    CONTENT_WORKER_NAME: str
 
     # GROQ
     GROQ_API_KEY: str
