@@ -22,7 +22,6 @@ class AuthService:
         self.SECRET_KEY = settings.JWT_SECRET_KEY
         self.ALGORITHM = settings.JWT_ALGORITHM
         self.ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
-        self.REFRESH_TOKEN_EXPIRE_DAYS = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
 
     async def create_token(
         self,
@@ -30,20 +29,17 @@ class AuthService:
         username: str,
         email: str,
         expires_minutes: Optional[int] = None,
-        is_refresh_token: bool = False,
         check_user: bool = True,
-    ) -> Union[str, Tuple[str, str, int]]:
+    ) -> Tuple[str, int]:
         # Check if user exists (optional)
         if check_user:
             user = await self.check_user(user_id)
             if not user:
                 raise ExceptionBase(ErrorCode.INVALID_CREDENTIALS)
 
-        # Determine expiration time
+        # Determine expiration time (default 24 hours)
         if expires_minutes is None:
-            expires_minutes = (
-                self.ACCESS_TOKEN_EXPIRE_MINUTES if not is_refresh_token else self.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60
-            )
+            expires_minutes = self.ACCESS_TOKEN_EXPIRE_MINUTES
 
         # Create token expiration time
         expires_delta = timedelta(minutes=expires_minutes)
@@ -60,36 +56,13 @@ class AuthService:
         # Encode the token
         access_token = jwt.encode(claims, self.SECRET_KEY, algorithm=self.ALGORITHM)
 
-        # Return only access token if not creating refresh token
-        if is_refresh_token:
-            return access_token
-
-        # Return both tokens and expiry time in seconds
-        return (
-            access_token,
-            await self.refresh_token(claims, check_user=check_user),
-            self.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        )
+        # Return access token and expiry time in seconds
+        return access_token, self.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 
     async def create_token_pair(
         self, user_id: str, username: str, email: str, check_user: bool = True
-    ) -> Tuple[str, str, int]:
+    ) -> Tuple[str, int]:
         return await self.create_token(user_id=user_id, username=username, email=email, check_user=check_user)
-
-    async def refresh_token(self, claims: Dict[str, Any], check_user: bool = True) -> str:
-        # Verify user still exists before creating refresh token (optional)
-        if check_user:
-            user_id = claims.get("sub")
-            if not user_id:
-                raise ExceptionBase(ErrorCode.INVALID_TOKEN)
-
-            user = await self.check_user(user_id)
-            if not user:
-                raise ExceptionBase(ErrorCode.INVALID_TOKEN)
-
-        refresh_exp = datetime.now(UTC) + timedelta(minutes=self.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60)
-        refresh_claims = {**claims, "token_type": "refresh", "exp": refresh_exp}
-        return jwt.encode(refresh_claims, self.SECRET_KEY, algorithm=self.ALGORITHM)
 
     async def validate_token(self, token: str) -> Dict[str, Any]:
         return await self._process_token(token, check_user=False)
@@ -106,7 +79,6 @@ class AuthService:
         self, token: str, check_user: bool = True
     ) -> Union[Dict[str, Any], Tuple[Dict[str, Any], UserModel]]:
         if not token:
-            print("Token yok")
             raise ExceptionBase(ErrorCode.UNAUTHORIZED)
 
         try:

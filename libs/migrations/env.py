@@ -118,39 +118,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-# Refactored on 2025-07-18: Improved code structure
-# Updated on 2025-07-19: Improved code documentation
-# Fixed formatting on 2025-07-19
-# Updated on 2025-07-19: Improved code documentation
-# Refactored on 2025-07-19: Improved code structure
-# Fixed formatting on 2025-07-20
-# Refactored on 2025-07-21: Improved code structure
-# Updated on 2025-07-22: Improved code documentation
-# Updated on 2025-07-23: Improved code documentation
-# Updated on 2025-07-23: Improved code documentation
-# Updated on 2025-07-23: Improved code documentation
-# Fixed formatting on 2025-07-24
-# Fixed formatting on 2025-07-25
-# Updated on 2025-07-25: Improved code documentation
-# Updated on 2025-07-25: Improved code documentation
-# Updated on 2025-07-26: Improved code documentation
-# Refactored on 2025-07-26: Improved code structure
-# Updated on 2025-07-29: Improved code documentation
-# Refactored on 2025-07-29: Improved code structure
-# Updated on 2025-07-30: Improved code documentation
-# Fixed formatting on 2025-07-30
-# Fixed formatting on 2025-07-31
-# Refactored on 2025-07-31: Improved code structure
-# Updated on 2025-08-01: Improved code documentation
-# Refactored on 2025-08-01: Improved code structure
-# Refactored on 2025-08-02: Improved code structure
-# Refactored on 2025-08-03: Improved code structure
-# Updated on 2025-08-04: Improved code documentation
-# Fixed formatting on 2025-08-04
-# Refactored on 2025-08-04: Improved code structure
-# Fixed formatting on 2025-08-05
-# Refactored on 2025-08-05: Improved code structure
-# Fixed formatting on 2025-08-06
-# Updated on 2025-08-06: Improved code documentation
-# Updated on 2025-08-07: Improved code documentation
-# Fixed formatting on 2025-08-07

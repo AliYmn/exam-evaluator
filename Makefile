@@ -1,77 +1,57 @@
-# 🚀 Fit API Gateway Makefile
+# 🚀 Exam Evaluator Makefile
 # Modern and easy-to-understand build automation
 
 #-----------------------------------------------
-# 🐳 Docker Commands - Local Environment
+# 🐳 Docker Commands
 #-----------------------------------------------
 
-# 🏗️ Build all containers for local development
+# 🏗️ Build all containers
 build:
-	docker compose -f docker-compose.local.yml build
+	docker compose build
 
-# 🚀 Start all services in detached mode for local development
+# 🚀 Start all services in detached mode
 up:
-	docker compose -f docker-compose.local.yml up -d
+	docker compose up -d
 
-# 🛑 Stop and remove all containers for local development
+# 🛑 Stop and remove all containers
 down:
-	docker compose -f docker-compose.local.yml down
+	docker compose down
 
-# ⏹️ Stop all services without removing them for local development
+# ⏹️ Stop all services without removing them
 stop:
-	docker compose -f docker-compose.local.yml stop
+	docker compose stop
 
-# 🔄 Restart all services for local development
+# 🔄 Restart all services
 restart:
-	docker compose -f docker-compose.local.yml restart
-
-#-----------------------------------------------
-# 🐳 Docker Commands - Production Environment
-#-----------------------------------------------
-
-# 🏗️ Build all containers for production
-build-prod:
-	docker compose -f docker-compose.production.yml build
-
-# 🚀 Start all services in detached mode for production
-up-prod:
-	docker compose -f docker-compose.production.yml up -d
-
-# 🛑 Stop and remove all containers for production
-down-prod:
-	docker compose -f docker-compose.production.yml down
-
-# ⏹️ Stop all services without removing them for production
-stop-prod:
-	docker compose -f docker-compose.production.yml stop
-
-# 🔄 Restart all services for production
-restart-prod:
-	docker compose -f docker-compose.production.yml restart
+	docker compose restart
 
 #-----------------------------------------------
 # 📊 Logging & Debugging
 #-----------------------------------------------
 
+# 📝 View logs for all services
+logs:
+	docker compose logs -f
+
 # 📝 View logs for a specific service
 log:
-	@echo '🔍 Enter service name (e.g., fit-service, auth-service): '; \
+	@echo '🔍 Enter service name (e.g., content-service, auth-service): '; \
 	read SERVICE; \
-	docker compose -f docker-compose.local.yml logs -f $$SERVICE
+	docker compose logs -f $$SERVICE
 
 # 🖥️ Open a bash shell in a container
 bash:
-	@echo '🔍 Enter service name (e.g., fit-service, auth-service): '; \
+	@echo '🔍 Enter service name (e.g., content-service, auth-service): '; \
 	read SERVICE; \
-	docker compose -f docker-compose.local.yml exec $$SERVICE bash
+	docker compose exec $$SERVICE bash
 
 # 🐞 Run a service in debug mode with ports exposed
 run-debug:
-	@echo '🔍 Enter service name (e.g., fit-service, auth-service): '; \
+	@echo '🔍 Enter service name (e.g., content-service, auth-service): '; \
 	read SERVICE; \
-	docker compose -f docker-compose.local.yml stop $$SERVICE; \
-	docker compose -f docker-compose.local.yml rm -f $$SERVICE; \
-	docker compose -f docker-compose.local.yml run --rm --service-ports $$SERVICE
+	docker compose stop $$SERVICE; \
+	docker compose rm -f $$SERVICE; \
+	docker compose run --rm --service-ports $$SERVICE
 
 #-----------------------------------------------
 # 🗄️ Database Migration Commands
@@ -81,28 +61,28 @@ run-debug:
 makemigrations:
 	@echo '✏️ Migration Name: '; \
 	read NAME; \
-	docker compose run --rm fit-service alembic -c /app/libs/alembic.ini revision --autogenerate -m "$$NAME"
+	docker compose run --rm content-service alembic -c /app/libs/alembic.ini revision --autogenerate -m "$$NAME"
 
 # ⬆️ Apply all migrations
 migrate:
-	docker compose run --rm fit-service alembic -c /app/libs/alembic.ini upgrade heads
+	docker compose run --rm content-service alembic -c /app/libs/alembic.ini upgrade heads
 
 # 📋 Show migration history
 showmigrations:
-	docker compose run --rm fit-service alembic -c /app/libs/alembic.ini history
+	docker compose run --rm content-service alembic -c /app/libs/alembic.ini history
 
 # 🏁 Initialize migrations
 initmigrations:
-	docker compose run --rm fit-service alembic -c /app/libs/alembic.ini init migrations
+	docker compose run --rm content-service alembic -c /app/libs/alembic.ini init migrations
 
 # ⬇️ Downgrade to a previous migration
 downgrade:
 	@echo '⏮️ Enter revision (or press enter for -1): '; \
 	read REVISION; \
 	if [ -z "$$REVISION" ]; then \
-		docker compose run --rm fit-service alembic -c /app/libs/alembic.ini downgrade -1; \
+		docker compose run --rm content-service alembic -c /app/libs/alembic.ini downgrade -1; \
 	else \
-		docker compose run --rm fit-service alembic -c /app/libs/alembic.ini downgrade $$REVISION; \
+		docker compose run --rm content-service alembic -c /app/libs/alembic.ini downgrade $$REVISION; \
 	fi
 
 #-----------------------------------------------
@@ -118,6 +98,15 @@ pre-check:
 
 # 🐚 Open a Python shell in a service
 service-shell:
-	@echo '🔍 Enter service name (e.g., fit-service, auth-service): '; \
+	@echo '🔍 Enter service name (e.g., content-service, auth-service): '; \
 	read SERVICE; \
-	docker compose -f docker-compose.local.yml run --rm $$SERVICE python /app/libs/shell_plus.py
+	docker compose run --rm $$SERVICE python /app/libs/shell_plus.py
+
+# 📊 Show running containers
+ps:
+	docker compose ps
+
+# 🧹 Clean up unused Docker resources
+clean:
+	docker compose down -v
+	docker system prune -f
