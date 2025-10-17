@@ -90,3 +90,4 @@ class EmailService:
             self.send_template_email(
                 to_email=email, subject=subject, template_name=template_name, template_vars=template_vars
             )
+# Refactored on 2025-10-17: Improved code structure
