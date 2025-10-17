@@ -96,9 +96,10 @@ services:
       - ./backend/content_service:/app/content_service
       - ./backend/libs:/app/libs
       - ./backend/requirements.txt:/app/requirements.txt
+      - ./backend/uploads:/app/uploads
       - uv-cache:/root/.cache/uv
     ports:
-      - "127.0.0.1:8001:8001"
+      - "0.0.0.0:8001:8001"
     depends_on:
       postgres:
         condition: service_healthy

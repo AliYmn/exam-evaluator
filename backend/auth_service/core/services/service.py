@@ -73,12 +73,13 @@ class AuthService:
             check_user=False,  # Skip redundant user check
         )
 
-        # Return token (24 hours expiry)
+        # Return token with user info (24 hours expiry)
         return Token(
             access_token=access_token,
             token_type="bearer",
             expires_in=expires_in,
             email=user.email,
+            user=UserResponse.model_validate(user),
         )
 
     async def get_current_user(self, token: str) -> UserResponse:

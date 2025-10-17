@@ -1,42 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authAPI } from '@/lib/api';
+import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
-import toast from 'react-hot-toast';
 import { Terminal, ArrowRight } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const { setAuth, isAuthenticated, _hasHydrated } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
-      const response = await authAPI.login(formData);
-      setAuth(
-        {
-          id: response.id || 1,
-          email: response.email,
-          first_name: response.first_name || 'User',
-          last_name: response.last_name || 'Name',
-        },
-        response.access_token
-      );
-      toast.success('Welcome back');
+      const response = await authApi.login(formData);
+      setAuth(response.user, response.access_token);
+
+      // Wait for Zustand persist to complete before redirect
+      await new Promise(resolve => setTimeout(resolve, 150));
+
       router.push('/dashboard');
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Invalid credentials');
-      console.error('Login error:', error);
+    } catch (err: any) {
+      setError(err.message || 'Geçersiz kullanıcı adı veya şifre');
     } finally {
       setLoading(false);
     }
@@ -59,16 +61,16 @@ export default function LoginPage() {
               <span className="text-sm font-mono text-gray-500">exam-evaluator</span>
             </div>
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-              Welcome back
+              Tekrar Hoş Geldiniz
             </h1>
-            <p className="text-gray-600 text-sm">Sign in to continue</p>
+            <p className="text-gray-600 text-sm">Devam etmek için giriş yapın</p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <label className="block text-xs font-medium text-gray-700 uppercase tracking-wide">
-                Email
+                E-posta
               </label>
               <input
                 type="email"
@@ -76,13 +78,13 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all text-gray-900 placeholder-gray-400"
-                placeholder="developer@example.com"
+                placeholder="ornek@mail.com"
               />
             </div>
 
             <div className="space-y-2">
               <label className="block text-xs font-medium text-gray-700 uppercase tracking-wide">
-                Password
+                Şifre
               </label>
               <input
                 type="password"
@@ -94,6 +96,13 @@ export default function LoginPage() {
               />
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+                {error}
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -102,11 +111,11 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Signing in...</span>
+                  <span>Giriş yapılıyor...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign in</span>
+                  <span>Giriş Yap</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -116,12 +125,12 @@ export default function LoginPage() {
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-100">
             <p className="text-center text-sm text-gray-600">
-              Don't have an account?{' '}
+              Hesabınız yok mu?{' '}
               <Link
                 href="/register"
                 className="text-blue-600 hover:text-blue-700 font-medium hover:underline underline-offset-4 transition-colors"
               >
-                Sign up
+                Kayıt Ol
               </Link>
             </p>
           </div>
@@ -129,7 +138,7 @@ export default function LoginPage() {
 
         {/* Bottom hint */}
         <p className="text-center mt-6 text-xs text-gray-500 font-mono">
-          v1.0.0 • Secure authentication
+          v1.0.0 • Güvenli kimlik doğrulama
         </p>
       </div>
     </div>

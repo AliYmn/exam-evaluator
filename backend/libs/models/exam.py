@@ -32,6 +32,9 @@ class Evaluation(BaseModel):
     # Unique identifier for this evaluation
     evaluation_id = Column(String(100), unique=True, nullable=False, index=True)
 
+    # Exam Title
+    exam_title = Column(String(255), nullable=True)
+
     # Status & Progress
     status = Column(SQLEnum(EvaluationStatus), default=EvaluationStatus.PENDING, nullable=False, index=True)
     progress_percentage = Column(Float, default=0.0)  # 0-100

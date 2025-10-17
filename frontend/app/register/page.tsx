@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authAPI } from '@/lib/api';
-import toast from 'react-hot-toast';
+import { authApi } from '@/lib/api';
 import { Terminal, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,15 +20,17 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
-      await authAPI.register(formData);
-      toast.success('Account created successfully');
+      await authApi.register(formData);
+
+      // Wait briefly for success state then redirect
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       router.push('/login');
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.detail || 'Registration failed';
-      toast.error(errorMsg);
-      console.error('Registration error:', error);
+    } catch (err: any) {
+      setError(err.message || 'Kayıt işlemi başarısız oldu');
     } finally {
       setLoading(false);
     }
@@ -51,9 +53,9 @@ export default function RegisterPage() {
               <span className="text-sm font-mono text-gray-500">exam-evaluator</span>
             </div>
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-              Create your account
+              Hesap Oluştur
             </h1>
-            <p className="text-gray-600 text-sm">Start evaluating exams with AI</p>
+            <p className="text-gray-600 text-sm">AI ile sınav değerlendirmeye başlayın</p>
           </div>
 
           {/* Form */}
@@ -61,7 +63,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="block text-xs font-medium text-gray-700 uppercase tracking-wide">
-                  First name
+                  Ad
                 </label>
                 <input
                   type="text"
@@ -69,13 +71,13 @@ export default function RegisterPage() {
                   value={formData.first_name}
                   onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                   className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all text-gray-900 placeholder-gray-400 text-sm"
-                  placeholder="John"
+                  placeholder="Ali"
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="block text-xs font-medium text-gray-700 uppercase tracking-wide">
-                  Last name
+                  Soyad
                 </label>
                 <input
                   type="text"
@@ -83,14 +85,14 @@ export default function RegisterPage() {
                   value={formData.last_name}
                   onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                   className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all text-gray-900 placeholder-gray-400 text-sm"
-                  placeholder="Doe"
+                  placeholder="Yaman"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="block text-xs font-medium text-gray-700 uppercase tracking-wide">
-                Email
+                E-posta
               </label>
               <input
                 type="email"
@@ -98,13 +100,13 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all text-gray-900 placeholder-gray-400"
-                placeholder="developer@example.com"
+                placeholder="ornek@mail.com"
               />
             </div>
 
             <div className="space-y-2">
               <label className="block text-xs font-medium text-gray-700 uppercase tracking-wide">
-                Password
+                Şifre
               </label>
               <input
                 type="password"
@@ -117,9 +119,16 @@ export default function RegisterPage() {
               />
               <p className="text-xs text-gray-500 flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
-                Minimum 6 characters
+                Minimum 6 karakter
               </p>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+                {error}
+              </div>
+            )}
 
             <button
               type="submit"

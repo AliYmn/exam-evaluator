@@ -38,13 +38,8 @@ class Config(BaseSettings):
     CONTENT_QUEUE_NAME: str
     CONTENT_WORKER_NAME: str
 
-    # GROQ
-    GROQ_API_KEY: str
-    GROQ_BASE_URL: str
-
-    # OPENAI
-    OPENAI_API_KEY: str
-    OPENAI_BASE_URL: str
+    # GEMINI (Google)
+    GEMINI_API_KEY: str
 
     # Sentry
     SENTRY_DSN: str
@@ -55,6 +50,7 @@ class Config(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Ignore extra env vars
 
 
 settings = Config()

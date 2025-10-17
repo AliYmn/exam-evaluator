@@ -11,7 +11,7 @@ import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
 
-from content_service.api.v1.blog.blog_router import router as blog_router
+from content_service.api.v1.content.router import router as content_router
 from libs import ExceptionBase, settings
 
 
@@ -61,8 +61,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_headers=["*"],
-    allow_methods=["GET", "POST"],
-    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_credentials=True,
 )
 
 
@@ -74,4 +74,4 @@ async def http_exception_handler(_request, exc: ExceptionBase) -> ORJSONResponse
     )
 
 
-app.include_router(blog_router, prefix=settings.API_STR)
+app.include_router(content_router, prefix=settings.API_STR)

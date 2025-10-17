@@ -1,156 +1,144 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { FileText, Upload, Clock, CheckCircle2, ArrowRight, FolderOpen, BarChart3, Eye, TrendingUp, Users, Award } from 'lucide-react';
+import { FileText, Upload, CheckCircle2, ArrowRight, Eye, Loader2, BarChart3, Clock, XCircle, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { examApi, ExamListItem } from '@/lib/api';
+import { useAuthStore } from '@/lib/store';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { token } = useAuthStore();
 
-  // Mock statistics - bu kısım backend'den gelecek
-  const stats = {
-    totalExams: 12,
-    totalStudents: 45,
-    avgScore: 86.5,
-    completedToday: 8
+  const [exams, setExams] = useState<ExamListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (token) {
+      fetchExams();
+    }
+  }, [token]);
+
+  const fetchExams = async () => {
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await examApi.getAllExams(token);
+      setExams(response.exams);
+    } catch (err: any) {
+      console.error('Error fetching exams:', err);
+
+      // Check if it's a 401 Unauthorized error
+      if (err.message && err.message.includes('401')) {
+        // Token expired, redirect to login
+        localStorage.removeItem('auth-storage');
+        router.push('/login');
+        return;
+      }
+
+      setError(err.message || 'Sınavlar yüklenirken bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Dummy recent evaluations - bu kısım backend'den gelecek
-  const recentEvaluations = [
-    {
-      id: 1,
-      title: 'Biology Midterm Exam',
-      class: 'Class 10A',
-      students: 5,
-      avgScore: 87,
-      status: 'completed',
-      date: '2 hours ago',
-      color: 'emerald'
-    },
-    {
-      id: 2,
-      title: 'Physics Quiz',
-      class: 'Class 9B',
-      students: 8,
-      avgScore: 92,
-      status: 'completed',
-      date: '1 day ago',
-      color: 'blue'
-    },
-    {
-      id: 3,
-      title: 'Math Final Exam',
-      class: 'Class 11C',
-      students: 3,
-      avgScore: null,
-      status: 'processing',
-      date: '3 days ago',
-      color: 'amber'
-    },
-    {
-      id: 4,
-      title: 'Chemistry Lab Test',
-      class: 'Class 12A',
-      students: 12,
-      avgScore: 78,
-      status: 'completed',
-      date: '5 days ago',
-      color: 'blue'
-    },
-    {
-      id: 5,
-      title: 'English Literature Exam',
-      class: 'Class 10B',
-      students: 6,
-      avgScore: 85,
-      status: 'completed',
-      date: '1 week ago',
-      color: 'emerald'
-    },
-  ];
+  // Recent evaluations (limit to 5)
+  const recentEvaluations = exams.slice(0, 5);
+  const isEmpty = exams.length === 0;
 
-  const isEmpty = recentEvaluations.length === 0;
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Şimdi';
+    if (diffMins < 60) return `${diffMins} dk önce`;
+    if (diffHours < 24) return `${diffHours} saat önce`;
+    if (diffDays < 7) return `${diffDays} gün önce`;
+    return date.toLocaleDateString('tr-TR');
+  };
+
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return { text: 'Tamamlandı', color: 'emerald' };
+      case 'parsing':
+        return { text: 'İşleniyor', color: 'amber' };
+      case 'failed':
+        return { text: 'Başarısız', color: 'red' };
+      case 'pending':
+      default:
+        return { text: 'Bekliyor', color: 'gray' };
+    }
+  };
+
+  // Loading State
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Sınavlar yükleniyor...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error State
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center max-w-md">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Veriler Yüklenemedi</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <button
+              onClick={fetchExams}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <Upload className="w-5 h-5" />
+              Tekrar Dene
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div>
-        {/* Header */}
+          {/* Header */}
         <div className="mb-10">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                Welcome Back! 👋
+                Hoş Geldiniz! 👋
               </h1>
-              <p className="text-lg text-gray-600">Here's what's happening with your exams today.</p>
+              <p className="text-lg text-gray-600">Sınavlarınızı yönetin ve sonuçları inceleyin.</p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Today</p>
+              <p className="text-sm text-gray-500">Bugün</p>
               <p className="text-xl font-bold text-gray-900">
-                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <div className="group relative bg-white rounded-2xl shadow-md border border-gray-200 p-6 hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-100 transition-colors"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <FolderOpen className="w-7 h-7 text-white" />
-                </div>
-                <span className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-3 py-1 rounded-full">+3 this week</span>
-              </div>
-              <h3 className="text-4xl font-bold text-gray-900 mb-1">{stats.totalExams}</h3>
-              <p className="text-sm text-gray-600 font-medium">Total Exams</p>
-            </div>
-          </div>
-
-          <div className="group relative bg-white rounded-2xl shadow-md border border-gray-200 p-6 hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-indigo-100 transition-colors"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                  <Users className="w-7 h-7 text-white" />
-                </div>
-                <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-3 py-1 rounded-full">{stats.completedToday} today</span>
-              </div>
-              <h3 className="text-4xl font-bold text-gray-900 mb-1">{stats.totalStudents}</h3>
-              <p className="text-sm text-gray-600 font-medium">Students Evaluated</p>
-            </div>
-          </div>
-
-          <div className="group relative bg-white rounded-2xl shadow-md border border-gray-200 p-6 hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-100 transition-colors"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                  <Award className="w-7 h-7 text-white" />
-                </div>
-                <span className="text-xs text-emerald-600 font-semibold bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" />
-                  +2.5%
-                </span>
-              </div>
-              <h3 className="text-4xl font-bold text-gray-900 mb-1">{stats.avgScore}%</h3>
-              <p className="text-sm text-gray-600 font-medium">Average Score</p>
-            </div>
-          </div>
-
-          <div className="group relative bg-white rounded-2xl shadow-md border border-gray-200 p-6 hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-amber-100 transition-colors"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
-                  <Clock className="w-7 h-7 text-white" />
-                </div>
-                <span className="text-xs text-gray-500 font-semibold bg-gray-100 px-3 py-1 rounded-full">In progress</span>
-              </div>
-              <h3 className="text-4xl font-bold text-gray-900 mb-1">2</h3>
-              <p className="text-sm text-gray-600 font-medium">Processing Now</p>
             </div>
           </div>
         </div>
@@ -168,10 +156,10 @@ export default function DashboardPage() {
               <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all">
                 <Upload className="w-8 h-8" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Create New Exam</h2>
-              <p className="text-blue-100 mb-4 text-base leading-relaxed">Set up a new exam with answer key and add students for AI-powered evaluation</p>
+              <h2 className="text-2xl font-bold mb-2">Yeni Sınav Oluştur</h2>
+              <p className="text-blue-100 mb-4 text-base leading-relaxed">Cevap anahtarı ile yeni sınav oluşturun ve öğrencileri ekleyin</p>
               <div className="flex items-center gap-2 text-sm font-semibold bg-white/20 backdrop-blur-sm w-fit px-4 py-2 rounded-lg group-hover:bg-white/30 transition-colors">
-                <span>Get Started</span>
+                <span>Başla</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
               </div>
             </div>
@@ -187,10 +175,10 @@ export default function DashboardPage() {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-all shadow-lg shadow-blue-500/30">
                 <BarChart3 className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">View All Exams</h2>
-              <p className="text-gray-600 mb-4 text-base leading-relaxed">Browse through all exams and student evaluations with detailed analytics</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Tüm Sınavlar</h2>
+              <p className="text-gray-600 mb-4 text-base leading-relaxed">Tüm sınavları görüntüleyin ve detaylı analizlere göz atın</p>
               <div className="flex items-center gap-2 text-sm font-semibold text-blue-600 bg-blue-50 w-fit px-4 py-2 rounded-lg group-hover:bg-blue-100 transition-colors">
-                <span>Browse Exams</span>
+                <span>Sınavları Gör</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
               </div>
             </div>
@@ -206,37 +194,43 @@ export default function DashboardPage() {
                   <FileText className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Recent Evaluations</h2>
-                  <p className="text-sm text-gray-600">Your latest exam evaluations</p>
+                  <h2 className="text-xl font-bold text-gray-900">Son Değerlendirmeler</h2>
+                  <p className="text-sm text-gray-600">En son eklenen sınavlarınız</p>
                 </div>
               </div>
               <Link
                 href="/dashboard/exams"
                 className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 hover:gap-2 transition-all"
               >
-                View All
+                Tümünü Gör
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
 
           <div className="p-6">
-            {isEmpty ? (
+            {loading ? (
+              // Loading State
+              <div className="text-center py-16">
+                <Loader2 className="w-10 h-10 text-blue-600 animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">Sınavlar yükleniyor...</p>
+              </div>
+            ) : isEmpty ? (
               // Empty State
               <div className="text-center py-16">
                 <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FolderOpen className="w-10 h-10 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No evaluations yet</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Henüz değerlendirme yok</h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  Start by uploading your first exam files to see the magic of AI-powered grading
+                  İlk sınavınızı oluşturarak AI destekli değerlendirmeye başlayın
                 </p>
                 <Link
                   href="/dashboard/exams/new"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all"
                 >
                   <Upload className="w-4 h-4" />
-                  Create First Exam
+                  İlk Sınavı Oluştur
                 </Link>
               </div>
             ) : (
@@ -244,8 +238,8 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {recentEvaluations.map((evaluation) => (
                   <div
-                    key={evaluation.id}
-                    onClick={() => router.push(`/dashboard/exams/${evaluation.id}`)}
+                    key={evaluation.evaluation_id}
+                    onClick={() => router.push(`/dashboard/exams/${evaluation.evaluation_id}`)}
                     className="group flex items-center justify-between p-5 bg-gray-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl cursor-pointer transition-all border border-transparent hover:border-blue-200"
                   >
                     <div className="flex items-center gap-4 flex-1">
@@ -253,10 +247,16 @@ export default function DashboardPage() {
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                         evaluation.status === 'completed'
                           ? 'bg-emerald-100 text-emerald-600'
-                          : 'bg-amber-100 text-amber-600'
+                          : evaluation.status === 'failed'
+                          ? 'bg-red-100 text-red-600'
+                          : evaluation.status === 'parsing'
+                          ? 'bg-amber-100 text-amber-600'
+                          : 'bg-gray-100 text-gray-600'
                       }`}>
                         {evaluation.status === 'completed' ? (
                           <CheckCircle2 className="w-6 h-6" />
+                        ) : evaluation.status === 'failed' ? (
+                          <XCircle className="w-6 h-6" />
                         ) : (
                           <Clock className="w-6 h-6 animate-pulse" />
                         )}
@@ -265,20 +265,24 @@ export default function DashboardPage() {
                       {/* Info */}
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                          {evaluation.title}
+                          {evaluation.exam_title}
                         </h3>
                         <div className="flex items-center gap-4 text-sm text-gray-600">
                           <span className="flex items-center gap-1">
                             <FileText className="w-4 h-4" />
-                            {evaluation.class}
+                            {getStatusDisplay(evaluation.status).text}
                           </span>
-                          <span>•</span>
-                          <span>{evaluation.students} students</span>
-                          {evaluation.avgScore && (
+                          {evaluation.total_questions && evaluation.total_questions > 0 && (
                             <>
                               <span>•</span>
-                              <span className="font-medium text-emerald-600">
-                                Avg: {evaluation.avgScore}%
+                              <span>{evaluation.total_questions} soru</span>
+                            </>
+                          )}
+                          {evaluation.status === 'parsing' && evaluation.progress_percentage > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="font-medium text-blue-600">
+                                {Math.round(evaluation.progress_percentage)}%
                               </span>
                             </>
                           )}
@@ -287,7 +291,7 @@ export default function DashboardPage() {
 
                       {/* Date & Action */}
                       <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-500">{evaluation.date}</span>
+                        <span className="text-sm text-gray-500">{getRelativeTime(evaluation.created_at)}</span>
                         <button className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:border-blue-300 hover:bg-blue-50">
                           <Eye className="w-4 h-4 text-gray-600" />
                         </button>
@@ -309,24 +313,34 @@ export default function DashboardPage() {
                     <span className="text-gray-600">
                       <span className="font-semibold text-gray-900">
                         {recentEvaluations.filter(e => e.status === 'completed').length}
-                      </span> Completed
+                      </span> Tamamlandı
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
                     <span className="text-gray-600">
                       <span className="font-semibold text-gray-900">
-                        {recentEvaluations.filter(e => e.status === 'processing').length}
-                      </span> Processing
+                        {recentEvaluations.filter(e => e.status === 'parsing' || e.status === 'pending').length}
+                      </span> İşleniyor
                     </span>
                   </div>
+                  {recentEvaluations.filter(e => e.status === 'failed').length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                      <span className="text-gray-600">
+                        <span className="font-semibold text-gray-900">
+                          {recentEvaluations.filter(e => e.status === 'failed').length}
+                        </span> Başarısız
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <Link
-                  href="/dashboard/exams/new"
+                  href="/dashboard/exams"
                   className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                 >
-                  <Upload className="w-4 h-4" />
-                  New Exam
+                  Tüm {exams.length} sınavı gör
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>

@@ -19,7 +19,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     // Hydration tamamlandıktan sonra kontrol et
     if (_hasHydrated && !isAuthenticated) {
+      console.log('Redirecting to login - not authenticated');
       router.push('/login');
+    } else if (_hasHydrated && isAuthenticated) {
+      console.log('User authenticated, staying on dashboard');
     }
   }, [_hasHydrated, isAuthenticated, router]);
 

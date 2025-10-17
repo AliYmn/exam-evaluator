@@ -21,6 +21,10 @@ celery_app.conf.update(
     result_serializer="json",
     task_serializer="json",
     accept_content=["json"],
-    task_routes={},
+    task_routes={
+        "process_answer_key": {"queue": "content_queue"},
+        "process_student_answer": {"queue": "content_queue"},
+        "evaluate_student_responses": {"queue": "content_queue"},
+    },
     timezone="UTC",
 )

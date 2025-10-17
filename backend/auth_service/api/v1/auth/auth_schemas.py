@@ -51,6 +51,7 @@ class Token(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     email: EmailStr
+    user: Optional["UserResponse"] = None
 
 
 class UserCreate(BaseModel):
@@ -90,3 +91,7 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# Rebuild Token model to resolve forward reference
+Token.model_rebuild()

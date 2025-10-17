@@ -71,10 +71,7 @@ async def get_async_db_context() -> AsyncGenerator[AsyncSession, None]:
         AsyncSession: An asynchronous SQLAlchemy session
     """
     async with async_session_factory() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
+        yield session
 
 
 # Synchronous database session functions
@@ -102,11 +99,8 @@ def get_sync_db_context() -> Generator[Session, Any, None]:
     Yields:
         Session: A synchronous SQLAlchemy session
     """
-    db = sync_session_factory()
-    try:
+    with sync_session_factory() as db:
         yield db
-    finally:
-        db.close()
 
 
 # Unified interface
