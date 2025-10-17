@@ -33,8 +33,7 @@ export default function ExamsListPage() {
       setExams(response.exams);
       setError(null);
     } catch (err: any) {
-      console.error('Error fetching exams:', err);
-      setError(err.message || 'Failed to load exams');
+      setError(err.message || 'Sınavlar yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -58,13 +57,13 @@ export default function ExamsListPage() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'Completed';
+        return 'Tamamlandı';
       case 'parsing':
-        return 'Processing';
+        return 'İşleniyor';
       case 'pending':
-        return 'Pending';
+        return 'Bekliyor';
       case 'failed':
-        return 'Failed';
+        return 'Başarısız';
       default:
         return status;
     }
@@ -101,15 +100,15 @@ export default function ExamsListPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">All Exams</h1>
-            <p className="text-gray-600 mt-2">Manage and view all your exams</p>
+            <h1 className="text-3xl font-bold text-gray-900">Tüm Sınavlar</h1>
+            <p className="text-gray-600 mt-2">Sınavlarınızı yönetin ve görüntüleyin</p>
           </div>
           <Link
             href="/dashboard/exams/new"
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/30 font-medium"
           >
             <Plus className="w-5 h-5" />
-            Create New Exam
+            Yeni Sınav Oluştur
           </Link>
         </div>
 
@@ -119,7 +118,7 @@ export default function ExamsListPage() {
             <div className="flex items-start gap-3">
               <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
               <div>
-                <h3 className="text-sm font-semibold text-red-900 mb-1">Error</h3>
+                <h3 className="text-sm font-semibold text-red-900 mb-1">Hata</h3>
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             </div>
@@ -147,11 +146,11 @@ export default function ExamsListPage() {
                       </h3>
 
                       <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <span>Created: {new Date(exam.created_at).toLocaleDateString()}</span>
+                        <span>Oluşturulma: {new Date(exam.created_at).toLocaleDateString('tr-TR')}</span>
                         {exam.total_questions && (
                           <>
                             <span>•</span>
-                            <span>{exam.total_questions} Questions</span>
+                            <span>{exam.total_questions} Soru</span>
                           </>
                         )}
                       </div>
@@ -160,7 +159,7 @@ export default function ExamsListPage() {
                       {(exam.status === 'parsing' || exam.status === 'pending') && exam.progress_percentage > 0 && (
                         <div className="mt-3 w-full max-w-xs">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-gray-600">Processing</span>
+                            <span className="text-xs text-gray-600">İşleniyor</span>
                             <span className="text-xs font-semibold text-blue-600">
                               {Math.round(exam.progress_percentage)}%
                             </span>
@@ -192,16 +191,16 @@ export default function ExamsListPage() {
             <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <FileText className="w-8 h-8 text-blue-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No Exams Yet</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Henüz Sınav Yok</h3>
             <p className="text-gray-600 mb-6">
-              Create your first exam to get started with AI-powered evaluation
+              AI destekli değerlendirmeye başlamak için ilk sınavınızı oluşturun
             </p>
             <Link
               href="/dashboard/exams/new"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/30 font-medium"
             >
               <Plus className="w-5 h-5" />
-              Create Your First Exam
+              İlk Sınavınızı Oluşturun
             </Link>
           </div>
         )}

@@ -138,11 +138,11 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Creating account...</span>
+                  <span>Hesap oluşturuluyor...</span>
                 </>
               ) : (
                 <>
-                  <span>Create account</span>
+                  <span>Hesap Oluştur</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -152,12 +152,12 @@ export default function RegisterPage() {
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-100">
             <p className="text-center text-sm text-gray-600">
-              Already have an account?{' '}
+              Zaten hesabınız var mı?{' '}
               <Link
                 href="/login"
                 className="text-blue-600 hover:text-blue-700 font-medium hover:underline underline-offset-4 transition-colors"
               >
-                Sign in
+                Giriş Yap
               </Link>
             </p>
           </div>
@@ -165,7 +165,7 @@ export default function RegisterPage() {
 
         {/* Bottom hint */}
         <p className="text-center mt-6 text-xs text-gray-500 font-mono">
-          v1.0.0 • Secure authentication
+          v1.0.0 • Güvenli kimlik doğrulama
         </p>
       </div>
     </div>
