@@ -1,5 +1,4 @@
 from celery import Celery
-from celery.schedules import crontab
 
 from libs import settings
 
@@ -22,20 +21,6 @@ celery_app.conf.update(
     result_serializer="json",
     task_serializer="json",
     accept_content=["json"],
-    task_routes={
-        "generate_general_blog": {"queue": settings.CONTENT_QUEUE_NAME},
-        "generate_recipe_blog": {"queue": settings.CONTENT_QUEUE_NAME},
-    },
+    task_routes={},
     timezone="UTC",
 )
-
-celery_app.conf.beat_schedule = {
-    "generate_general_blog": {
-        "task": "generate_general_blog",
-        "schedule": crontab(hour=10, minute=0),
-    },
-    "generate_recipe_blog": {
-        "task": "generate_recipe_blog",
-        "schedule": crontab(hour=14, minute=0),
-    },
-}
