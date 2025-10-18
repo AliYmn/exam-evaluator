@@ -1,47 +1,48 @@
 # 🎓 Exam Evaluator - AI-Powered Assessment System
 
-Modern, agentic AI tabanlı sınav değerlendirme sistemi. LangGraph ve Google Gemini kullanarak otomatik puanlama, detaylı feedback ve performans analizi sunar.
+Modern, agentic AI-based exam evaluation system. Provides automatic scoring, detailed feedback, and performance analysis using LangGraph and Google Gemini.
 
 [![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.119-green.svg)](https://fastapi.tiangolo.com/)
 [![LangChain](https://img.shields.io/badge/LangChain-0.3.13-orange.svg)](https://www.langchain.com/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-0.2.56-red.svg)](https://langchain-ai.github.io/langgraph/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black.svg)](https://nextjs.org/)
 
 ---
 
-## 🚀 Özellikler
+## 🚀 Features
 
 ### 🤖 Agentic AI Architecture
-- **Multi-step Reasoning**: ReAct pattern ile iterative düşünce süreci
-- **Self-Correction**: Kalite kontrolü ile otomatik düzeltme (max 2 retry)
-- **Confidence Scores**: Her değerlendirmede güvenilirlik skoru (0-1)
-- **Tool Call Logging**: Tüm AI işlemlerinin detaylı kaydı
-- **Human Review Flagging**: Düşük güven → manuel kontrol önerisi
+- **Multi-step Reasoning**: Iterative thinking process with ReAct pattern
+- **Self-Correction**: Automatic correction with quality control (max 2 retries)
+- **Confidence Scores**: Reliability score (0-1) for each evaluation
+- **Tool Call Logging**: Detailed logging of all AI operations
+- **Human Review Flagging**: Low confidence → manual review recommendation
 
 ### 📄 Multi-Document Processing
-- **Answer Key Parsing**: PDF'den soru-cevap çıkarımı
-- **Student Answer Extraction**: Öğrenci cevaplarını otomatik okuma
-- **Structured Output**: Pydantic ile tip güvenli sonuçlar
+- **Answer Key Parsing**: Question-answer extraction from PDF
+- **Student Answer Extraction**: Automatic reading of student responses
+- **Structured Output**: Type-safe results with Pydantic
 
 ### 🎯 AI-Driven Evaluation
-- **Question-Level Scoring**: Her soru için ayrı puanlama (0-10)
-- **Turkish Feedback**: Detaylı Türkçe açıklamalar
-- **Strengths & Weaknesses**: Güçlü/zayıf yön analizi
-- **Reasoning Transparency**: AI'ın karar verme sürecini göster
+- **Question-Level Scoring**: Individual scoring for each question (0-10)
+- **Turkish Feedback**: Detailed explanations in Turkish
+- **Strengths & Weaknesses**: Analysis of strong/weak points
+- **Reasoning Transparency**: Show AI's decision-making process
 
 ### 💬 Follow-up Q&A
-- **Context-Aware Chat**: Öğrenci performansı hakkında sohbet
-- **Chat History**: Geçmiş konuşmaları hatırlama
-- **Multi-turn Conversations**: Doğal sohbet akışı
+- **Context-Aware Chat**: Conversation about student performance
+- **Chat History**: Remember past conversations
+- **Multi-turn Conversations**: Natural dialogue flow
 
 ### ⚡ Real-time Updates
-- **SSE Streaming**: Canlı ilerleme güncellemeleri
-- **Progress Tracking**: Detaylı yüzdelik göstergeler
-- **Async Processing**: Celery ile arka plan işlemleri
+- **SSE Streaming**: Live progress updates
+- **Progress Tracking**: Detailed percentage indicators
+- **Async Processing**: Background operations with Celery
 
 ---
 
-## 🏗️ Mimari
+## 🏗️ Architecture
 
 ### Backend Stack
 
@@ -49,27 +50,38 @@ Modern, agentic AI tabanlı sınav değerlendirme sistemi. LangGraph ve Google G
 FastAPI + Celery + PostgreSQL + Redis + RabbitMQ + LangGraph + Gemini
 ```
 
-**Modüler Yapı:**
+**Modular Structure:**
 ```
 backend/
-├── auth_service/           # Kimlik doğrulama servisi
+├── auth_service/           # Authentication service
 │   ├── api/v1/auth/        # Auth endpoints
 │   └── core/services/      # Auth business logic
 │
-├── content_service/        # Ana değerlendirme servisi
+├── content_service/        # Main evaluation service
 │   ├── api/v1/content/     # Content endpoints
+│   │   ├── router.py           # API routes (170 lines)
+│   │   ├── schemas.py          # Pydantic schemas
+│   │   ├── dependencies.py     # Auth & service injection
+│   │   └── sse_helpers.py      # SSE streaming utilities
+│   │
 │   ├── core/
 │   │   ├── agents/         # 🤖 Agentic AI (LangGraph)
 │   │   │   ├── exam_agent.py    # Main agent interface
 │   │   │   ├── models.py        # Pydantic schemas
 │   │   │   ├── state.py         # Agent state management
 │   │   │   ├── tools.py         # LangChain tools
-│   │   │   ├── nodes.py         # Agent nodes (reasoning, execution, quality check)
+│   │   │   ├── nodes.py         # Agent nodes (reasoning, execution, QC)
 │   │   │   └── workflow.py      # LangGraph workflow
+│   │   │
 │   │   ├── services/       # Business logic
+│   │   │   └── service.py       # Content service
+│   │   │
 │   │   └── worker/         # Celery tasks
+│   │       ├── tasks.py         # Background tasks
+│   │       ├── config.py        # Celery configuration
+│   │       └── helpers.py       # Task utilities
 │
-└── libs/                   # Paylaşılan kütüphaneler
+└── libs/                   # Shared libraries
     ├── models/             # SQLAlchemy models
     ├── cache/              # Redis utilities
     ├── db/                 # Database configuration
@@ -85,7 +97,7 @@ Next.js 15 + TypeScript + Tailwind CSS + Zustand
 
 ### Database Schema
 
-**Evaluations** (Sınavlar)
+**Evaluations** (Exams)
 ```sql
 - evaluation_id (PK)
 - exam_title
@@ -94,7 +106,7 @@ Next.js 15 + TypeScript + Tailwind CSS + Zustand
 - progress_percentage
 ```
 
-**StudentResponse** (Öğrenci Cevapları)
+**StudentResponse** (Student Answers)
 ```sql
 - id (PK)
 - evaluation_id (FK)
@@ -104,7 +116,7 @@ Next.js 15 + TypeScript + Tailwind CSS + Zustand
 - needs_review (bool)  # Low confidence flag
 ```
 
-**QuestionResponse** (Soru Bazlı)
+**QuestionResponse** (Question-level)
 ```sql
 - id (PK)
 - student_response_id (FK)
@@ -175,18 +187,18 @@ AgentState:
 
 ---
 
-## 🔧 Kurulum
+## 🔧 Installation
 
-### Gereksinimler
+### Requirements
 
 - Docker & Docker Compose
 - Python 3.13+
 - Node.js 18+
 - Google Gemini API Key
 
-### 1. Ortam Değişkenlerini Ayarla
+### 1. Environment Variables
 
-`.env` dosyası oluşturun:
+Create `.env` file:
 
 ```bash
 # Database
@@ -200,11 +212,19 @@ POSTGRES_PORT=5432
 REDIS_HOST=redis
 REDIS_PORT=6379
 REDIS_PASSWORD=redis_password_123
+REDIS_TTL=3600
+REDIS_PREFIX=exam_evaluator
+FERNET_KEY=your_fernet_encryption_key
 
 # RabbitMQ
 RABBITMQ_USER=rabbitmq
 RABBITMQ_PASS=rabbitmq_password_123
+RABBITMQ_HOST=rabbitmq
 RABBITMQ_PORT=5672
+
+# Celery Worker
+CONTENT_QUEUE_NAME=content_queue
+CONTENT_WORKER_NAME=content_worker
 
 # JWT
 JWT_SECRET_KEY=your-super-secret-jwt-key-change-in-production
@@ -217,12 +237,17 @@ GEMINI_API_KEY=your_gemini_api_key_here
 # Environment
 ENV_NAME=DEVELOPMENT
 DEBUG=true
+
+# Sentry (Optional)
+SENTRY_ENABLED=false
+SENTRY_DSN=
+SENTRY_ENVIRONMENT=development
 ```
 
-### 2. Docker ile Başlat
+### 2. Start with Docker
 
 ```bash
-# Build
+# Build all containers
 make build
 
 # Start all services
@@ -231,18 +256,21 @@ make up
 # View logs
 make logs
 
-# Stop
+# Stop services
 make down
 ```
 
-### 3. Migrations
+### 3. Run Migrations
 
 ```bash
-# Run migrations
+# Apply migrations
 make migrate
 
 # Create new migration
 make makemigrations
+
+# View migration history
+make showmigrations
 ```
 
 ### 4. Access Points
@@ -250,23 +278,35 @@ make makemigrations
 - **Frontend**: http://localhost:3000
 - **Content API**: http://localhost:8001
 - **Auth API**: http://localhost:8004
-- **RabbitMQ**: http://localhost:15672
-- **Flower (Celery)**: http://localhost:5555
+- **API Docs (Content)**: http://localhost:8001/docs
+- **API Docs (Auth)**: http://localhost:8004/docs
+- **RabbitMQ Management**: http://localhost:15672 (guest/guest)
+- **Flower (Celery Monitor)**: http://localhost:5555
 - **PgAdmin**: http://localhost:80
 
 ---
 
-## 📖 API Kullanımı
+## 📖 API Usage
 
-### 1. Kullanıcı Kaydı
+### 1. User Registration
 
 ```bash
 POST /api/v1/auth/register
+Content-Type: application/json
+
 {
   "email": "user@example.com",
   "password": "StrongPass123!",
-  "first_name": "Ali",
-  "last_name": "Yaman"
+  "first_name": "John",
+  "last_name": "Doe"
+}
+
+Response:
+{
+  "id": 1,
+  "email": "user@example.com",
+  "first_name": "John",
+  "last_name": "Doe"
 }
 ```
 
@@ -274,6 +314,8 @@ POST /api/v1/auth/register
 
 ```bash
 POST /api/v1/auth/login
+Content-Type: application/json
+
 {
   "email": "user@example.com",
   "password": "StrongPass123!"
@@ -281,116 +323,166 @@ POST /api/v1/auth/login
 
 Response:
 {
-  "access_token": "eyJ...",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "token_type": "bearer",
-  "user": {...}
+  "expires_in": 86400,
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "first_name": "John",
+    "last_name": "Doe"
+  }
 }
 ```
 
-### 3. Cevap Anahtarı Yükle
+### 3. Upload Answer Key
 
 ```bash
-POST /api/v1/exam/upload
-Headers: Authorization: Bearer {token}
+POST /api/v1/exam/upload-answer-key
+Headers:
+  Authorization: Bearer {token}
 Content-Type: multipart/form-data
 
 Form Data:
-- exam_title: "Biyoloji Vize"
-- answer_key_file: answer_key.pdf
-```
-
-### 4. Öğrenci Cevap Kağıdı Yükle
-
-```bash
-POST /api/v1/exam/{evaluation_id}/upload-student-sheet
-Headers: Authorization: Bearer {token}
-Content-Type: multipart/form-data
-
-Form Data:
-- student_name: "Ahmet Yılmaz"
-- student_sheet: student_answers.pdf
-```
-
-### 5. Sınav Detayları
-
-```bash
-GET /api/v1/exam/{evaluation_id}
-Headers: Authorization: Bearer {token}
+  exam_title: "Biology Midterm"
+  answer_key: answer_key.pdf
 
 Response:
 {
-  "evaluation_id": "eval_abc123",
-  "exam_title": "Biyoloji Vize",
-  "status": "completed",
-  "answer_key_data": {
-    "questions": [...],
-    "total_questions": 5,
-    "max_possible_score": 50
-  },
-  "total_students": 3,
-  "progress_percentage": 100
+  "evaluation_id": "eval_abc123def456",
+  "status": "pending",
+  "message": "Answer key uploaded successfully. Processing in background.",
+  "total_questions": null,
+  "max_possible_score": null
 }
 ```
 
-### 6. Öğrenci Listesi
+### 4. Upload Student Answer Sheet
+
+```bash
+POST /api/v1/exam/{evaluation_id}/upload-student-sheet
+Headers:
+  Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+Form Data:
+  student_name: "Alice Johnson"
+  student_sheet: student_answers.pdf
+
+Response:
+{
+  "student_response_id": 1,
+  "evaluation_id": "eval_abc123def456",
+  "student_name": "Alice Johnson",
+  "status": "pending",
+  "message": "Student answer sheet uploaded successfully. Processing in background."
+}
+```
+
+### 5. Get Exam Details
+
+```bash
+GET /api/v1/exam/{evaluation_id}
+Headers:
+  Authorization: Bearer {token}
+
+Response:
+{
+  "evaluation_id": "eval_abc123def456",
+  "exam_title": "Biology Midterm",
+  "status": "completed",
+  "progress_percentage": 100.0,
+  "current_message": "Answer key successfully processed! 5 questions found.",
+  "total_questions": 5,
+  "max_possible_score": 50.0,
+  "questions": [
+    {
+      "number": 1,
+      "question_text": "What is photosynthesis?",
+      "expected_answer": "Photosynthesis is the process...",
+      "max_score": 10.0,
+      "keywords": ["photosynthesis", "chlorophyll", "light energy"]
+    }
+  ],
+  "created_at": "2025-01-15T10:30:00",
+  "updated_at": "2025-01-15T10:32:00"
+}
+```
+
+### 6. Get Student List
 
 ```bash
 GET /api/v1/exam/{evaluation_id}/students
-Headers: Authorization: Bearer {token}
+Headers:
+  Authorization: Bearer {token}
 
 Response:
 [
   {
-    "id": 1,
-    "student_name": "Ahmet Yılmaz",
+    "student_response_id": 1,
+    "student_id": "student_a1b2c3d4",
+    "student_name": "Alice Johnson",
     "total_score": 42.5,
-    "max_score": 50,
+    "max_score": 50.0,
     "percentage": 85.0,
     "status": "completed",
     "has_questions": true,
-    "needs_review": false  # Low confidence flag
+    "created_at": "2025-01-15T11:00:00"
+  },
+  {
+    "student_response_id": 2,
+    "student_name": "Bob Smith",
+    "total_score": 0.0,
+    "max_score": 50.0,
+    "percentage": 0.0,
+    "status": "processing",
+    "has_questions": true,
+    "created_at": "2025-01-15T11:05:00"
   }
 ]
 ```
 
-### 7. Öğrenci Detayı
+### 7. Get Student Details
 
 ```bash
 GET /api/v1/exam/student/{student_response_id}
-Headers: Authorization: Bearer {token}
+Headers:
+  Authorization: Bearer {token}
 
 Response:
 {
-  "student_id": 1,
-  "student_name": "Ahmet Yılmaz",
+  "student_response_id": 1,
+  "student_id": "student_a1b2c3d4",
+  "student_name": "Alice Johnson",
   "total_score": 42.5,
-  "max_score": 50,
+  "max_score": 50.0,
   "percentage": 85.0,
-  "strengths": ["Detaylı açıklama yapıyor", "Örnekler veriyor"],
-  "weaknesses": ["Tarihsel bağlamı eksik"],
-  "needs_review": false,
-  "avg_confidence": 0.87,  # NEW!
+  "summary": null,
+  "strengths": [
+    "Provides detailed explanations",
+    "Uses relevant examples"
+  ],
+  "weaknesses": [
+    "Missing historical context",
+    "Brief answers in some questions"
+  ],
+  "topic_gaps": [],
   "questions": [
     {
       "question_number": 1,
-      "question_text": "Fotosentez nedir?",
-      "expected_answer": "...",
-      "student_answer": "...",
+      "question_text": "What is photosynthesis?",
+      "expected_answer": "Photosynthesis is the process by which green plants...",
+      "student_answer": "Photosynthesis converts light energy to chemical energy...",
       "score": 8.5,
-      "max_score": 10,
-      "feedback": "İyi açıklanmış...",
+      "max_score": 10.0,
+      "feedback": "Well explained. Key concepts are correct.",
       "is_correct": true,
-      "confidence": 0.9,      # NEW!
-      "reasoning": "Temel kavramları doğru"  # NEW!
+      "confidence": 0.9,
+      "reasoning": "Core concepts are accurate"
     }
   ],
-  "_agent_trace": {  # NEW! Transparency
-    "thoughts": ["Need to evaluate...", "Quality check passed"],
-    "observations": ["Evaluated 5 questions", "Avg confidence: 0.87"],
-    "tool_calls": [
-      {"tool": "evaluate_answer_tool", "duration": 2.3, "confidence": 0.9}
-    ]
-  }
+  "created_at": "2025-01-15T11:00:00",
+  "updated_at": "2025-01-15T11:03:00"
 }
 ```
 
@@ -398,39 +490,61 @@ Response:
 
 ```bash
 POST /api/v1/exam/student/{student_response_id}/chat
-Headers: Authorization: Bearer {token}
+Headers:
+  Authorization: Bearer {token}
+Content-Type: application/json
+
 {
-  "question": "Öğrencinin en büyük eksikliği nedir?",
+  "question": "What is the student's biggest weakness?",
   "chat_history": [
-    {"role": "user", "content": "Genel performansı nasıl?"},
-    {"role": "assistant", "content": "Oldukça iyi..."}
+    {"role": "user", "content": "How is the overall performance?"},
+    {"role": "assistant", "content": "Quite good. The student scored 85%..."}
   ]
 }
 
 Response:
 {
-  "answer": "Öğrencinin en büyük eksikliği tarihsel bağlamı göz ardı etmesi..."
+  "answer": "The student's biggest weakness is ignoring historical context in answers..."
 }
 ```
 
 ### 9. SSE Progress Stream
 
 ```javascript
-// Frontend - Real-time progress
+// Frontend - Real-time progress tracking
+const token = localStorage.getItem('token');
 const eventSource = new EventSource(
   `/api/v1/exam/${evaluationId}/progress-stream?token=${token}`
 );
 
 eventSource.onmessage = (event) => {
   const data = JSON.parse(event.data);
-  console.log(data.percentage, data.message);
-  // { percentage: 45, message: "Evaluating question 3/5", status: "processing" }
+  console.log(`Progress: ${data.percentage}% - ${data.message}`);
+
+  if (data.type === 'done') {
+    console.log('Processing completed!');
+    eventSource.close();
+  }
 };
+
+eventSource.onerror = (error) => {
+  console.error('SSE Error:', error);
+  eventSource.close();
+};
+
+// Example message:
+// {
+//   percentage: 45,
+//   message: "Evaluating question 3/5",
+//   status: "processing",
+//   total_questions: 5,
+//   evaluated_questions: 3
+// }
 ```
 
 ---
 
-## 🧪 Test
+## 🧪 Testing
 
 ### Unit Tests
 
@@ -440,15 +554,23 @@ docker-compose run --rm content-service pytest
 
 # With coverage
 docker-compose run --rm content-service pytest --cov=content_service
+
+# Specific test file
+docker-compose run --rm content-service pytest tests/test_agents.py
+
+# Verbose output
+docker-compose run --rm content-service pytest -v
 ```
 
-### Manual Testing
+### Manual Testing Flow
 
-1. **Upload Answer Key**: `POST /api/v1/exam/upload`
-2. **Check Progress**: SSE stream
-3. **Upload Student Sheet**: `POST /api/v1/exam/{id}/upload-student-sheet`
-4. **View Results**: `GET /api/v1/exam/student/{id}`
-5. **Chat**: `POST /api/v1/exam/student/{id}/chat`
+1. **Register User**: `POST /api/v1/auth/register`
+2. **Login**: `POST /api/v1/auth/login` → Get JWT token
+3. **Upload Answer Key**: `POST /api/v1/exam/upload-answer-key`
+4. **Monitor Progress**: SSE stream or poll `GET /api/v1/exam/{id}`
+5. **Upload Student Sheet**: `POST /api/v1/exam/{id}/upload-student-sheet`
+6. **View Results**: `GET /api/v1/exam/student/{id}`
+7. **Chat**: `POST /api/v1/exam/student/{id}/chat`
 
 ---
 
@@ -457,54 +579,93 @@ docker-compose run --rm content-service pytest --cov=content_service
 ### Makefile Commands
 
 ```bash
-# Docker
+# Docker Operations
 make build          # Build all containers
-make up             # Start services
-make down           # Stop and remove
-make restart        # Restart all
+make up             # Start all services in detached mode
+make down           # Stop and remove all containers
+make restart        # Restart all services
+make stop           # Stop services without removing
 make ps             # Show running containers
 
 # Logs
-make logs           # View all logs
-make log            # View specific service log
+make logs           # View logs from all services
+make log            # View logs from specific service (interactive)
 
 # Database
-make migrate        # Run migrations
+make migrate        # Run database migrations
 make makemigrations # Create new migration
 make showmigrations # Show migration history
-make downgrade      # Rollback migration
+make downgrade      # Rollback last migration
 
-# Shell
+# Development Tools
 make service-shell  # Open Python shell in service
 make bash           # Open bash in container
 
 # Cleanup
-make clean          # Clean up Docker resources
+make clean          # Clean up Docker resources (volumes, networks)
 ```
 
 ### Code Quality
 
 ```bash
-# Linting (ruff)
+# Linting with ruff
 ruff check backend/
 
-# Format
+# Auto-fix issues
+ruff check --fix backend/
+
+# Format code
 ruff format backend/
 
-# Type checking
+# Type checking with mypy
 mypy backend/
+
+# Pre-commit hooks
+pre-commit install
+pre-commit run --all-files
 ```
+
+### Project Structure Conventions
+
+- **API Layer**: Thin routes, delegate to services
+- **Service Layer**: Business logic, database operations
+- **Agent Layer**: AI operations, LangGraph workflows
+- **Worker Layer**: Background tasks, Celery jobs
+- **Models**: Database models (SQLAlchemy)
+- **Schemas**: API contracts (Pydantic)
 
 ---
 
-## 🔒 Güvenlik
+## 🔒 Security
 
-- **JWT Authentication**: Token-based auth
-- **Password Hashing**: Argon2 with salt
-- **Rate Limiting**: FastAPI Limiter (Redis)
-- **CORS**: Configured for frontend origin
-- **Input Validation**: Pydantic schemas
-- **SQL Injection**: SQLAlchemy ORM protection
+### Implemented Security Features
+
+- **JWT Authentication**: Token-based authentication with expiration
+- **Password Hashing**: Argon2 with salt (industry standard)
+- **Rate Limiting**: FastAPI Limiter with Redis backend
+- **CORS**: Configured for specific frontend origin
+- **Input Validation**: Pydantic schemas for all inputs
+- **SQL Injection Protection**: SQLAlchemy ORM (no raw SQL)
+- **File Upload Validation**: PDF-only with size limits
+- **Error Handling**: No sensitive data in error messages
+
+### Security Best Practices
+
+```python
+# JWT Token Example
+headers = {
+    'Authorization': f'Bearer {token}'
+}
+
+# Tokens expire after 24 hours (configurable)
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# Rate limiting (10 requests per minute per IP)
+@app.get("/api/protected")
+@limiter.limit("10/minute")
+async def protected_route():
+    ...
+```
 
 ---
 
@@ -512,18 +673,38 @@ mypy backend/
 
 ### Flower (Celery Monitor)
 
-http://localhost:5555
+**URL**: http://localhost:5555
 
-- Task status tracking
-- Worker health
-- Task history
+Features:
+- Real-time task monitoring
+- Worker health status
+- Task history and statistics
+- Retry and revoke tasks
+- Performance metrics
 
-### Sentry (Optional)
+### Application Logs
 
-```python
-# libs/settings.py
+```bash
+# View all logs
+make logs
+
+# View specific service
+docker-compose logs -f content-service
+
+# View last 100 lines
+docker-compose logs --tail=100 content-worker
+```
+
+### Sentry Integration (Optional)
+
+```bash
+# Enable in .env
 SENTRY_ENABLED=true
-SENTRY_DSN=your_sentry_dsn
+SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
+SENTRY_ENVIRONMENT=production
+
+# Automatic error tracking
+# All exceptions are automatically sent to Sentry
 ```
 
 ---
@@ -531,67 +712,108 @@ SENTRY_DSN=your_sentry_dsn
 ## 🚧 Roadmap
 
 ### Completed ✅
-- [x] Multi-document PDF parsing
-- [x] AI-driven evaluation with Gemini
-- [x] Agentic architecture (LangGraph)
-- [x] Self-correction mechanism
-- [x] Confidence scores
-- [x] Real-time SSE streaming
-- [x] Follow-up Q&A chat
+- [x] Multi-document PDF parsing (answer keys & student sheets)
+- [x] AI-driven evaluation with Google Gemini
+- [x] Agentic architecture with LangGraph
+- [x] Self-correction mechanism with quality checks
+- [x] Confidence scores for all evaluations
+- [x] Real-time SSE streaming for progress
+- [x] Follow-up Q&A chat with context
 - [x] Strengths/weaknesses analysis
-- [x] Tool call logging
+- [x] Tool call logging and transparency
+- [x] Modular codebase structure
+- [x] Comprehensive API documentation
+
+### In Progress 🔨
+- [ ] Unit and integration tests
+- [ ] Performance optimization (batch processing)
+- [ ] Enhanced error recovery
 
 ### Planned 🔜
-- [ ] Topic gaps implementation (model field exists)
-- [ ] Multi-agent collaboration (Evaluator + Reviewer)
-- [ ] Batch processing (parallel evaluation)
-- [ ] Comparative analytics (student rankings)
-- [ ] Image/diagram recognition
-- [ ] Handwriting recognition
-- [ ] Export to PDF/Excel
-- [ ] Email notifications
-- [ ] Admin dashboard
+- [ ] **Topic Gaps Implementation**: Identify missing knowledge areas (model field exists)
+- [ ] **Multi-Agent Collaboration**: Separate Evaluator and Reviewer agents
+- [ ] **Batch Processing**: Parallel evaluation of multiple students
+- [ ] **Comparative Analytics**: Student rankings, class averages, percentiles
+- [ ] **Image/Diagram Recognition**: OCR for diagrams and images in PDFs
+- [ ] **Handwriting Recognition**: Support for handwritten exams
+- [ ] **Export Features**: PDF reports, Excel spreadsheets
+- [ ] **Email Notifications**: Alerts for completed evaluations
+- [ ] **Admin Dashboard**: Teacher analytics and insights
+- [ ] **Multi-language Support**: Extend beyond Turkish feedback
+- [ ] **Custom Rubrics**: Teacher-defined scoring criteria
+- [ ] **Plagiarism Detection**: Compare student answers
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+We welcome contributions! Please follow these steps:
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### Contribution Guidelines
+
+- Follow existing code style (ruff format)
+- Add tests for new features
+- Update documentation (README, docstrings)
+- Keep commits atomic and well-described
+- Ensure all tests pass before PR
 
 ---
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 👥 Authors
 
-- **Ali Yaman** - *Initial work*
+- **Ali Yaman** - *Initial Development & Architecture*
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **LangChain** - Agentic framework
-- **LangGraph** - Stateful agent workflows
-- **Google Gemini** - LLM provider
-- **FastAPI** - Modern Python web framework
-- **Next.js** - React framework
+- **[LangChain](https://langchain.com/)** - Agentic framework and tools
+- **[LangGraph](https://langchain-ai.github.io/langgraph/)** - Stateful agent workflows
+- **[Google Gemini](https://ai.google.dev/)** - Large language model provider
+- **[FastAPI](https://fastapi.tiangolo.com/)** - Modern Python web framework
+- **[Next.js](https://nextjs.org/)** - React framework for frontend
+- **[Celery](https://docs.celeryproject.org/)** - Distributed task queue
+- **[PostgreSQL](https://www.postgresql.org/)** - Robust relational database
+- **[Redis](https://redis.io/)** - In-memory data store for caching
+- **[RabbitMQ](https://www.rabbitmq.com/)** - Message broker
 
 ---
 
-## 📧 İletişim
+## 📧 Contact
 
-Sorularınız için:
-- Email: your-email@example.com
-- GitHub Issues: [Create an issue](https://github.com/yourusername/exam-evaluator/issues)
+For questions, feedback, or support:
+
+- **Email**: your-email@example.com
+- **GitHub Issues**: [Create an issue](https://github.com/yourusername/exam-evaluator/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/exam-evaluator/discussions)
 
 ---
 
-**Made with ❤️ and 🤖 AI**
+## 📈 Project Stats
+
+- **Language**: Python (Backend), TypeScript (Frontend)
+- **Architecture**: Microservices (Auth + Content)
+- **AI Framework**: LangGraph + LangChain
+- **LLM**: Google Gemini 2.0 Flash
+- **Code Quality**: Ruff linting, Type hints
+- **Testing**: Pytest, Coverage
+- **Deployment**: Docker Compose
+- **Documentation**: Comprehensive README, API docs
+
+---
+
+**Built with ❤️ and 🤖 AI**
+
+*Revolutionizing exam evaluation with intelligent automation*
