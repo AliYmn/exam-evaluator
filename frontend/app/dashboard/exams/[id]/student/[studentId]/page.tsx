@@ -32,6 +32,32 @@ export default function StudentResultPage() {
   const [chatLoading, setChatLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
+  // Load chat history from localStorage on mount
+  useEffect(() => {
+    const chatKey = `chat_history_${studentId}`;
+    const savedChat = localStorage.getItem(chatKey);
+    if (savedChat) {
+      try {
+        const parsed = JSON.parse(savedChat);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setChatMessages(parsed);
+          console.log('💬 Loaded chat history from localStorage:', parsed.length, 'messages');
+        }
+      } catch (e) {
+        console.error('❌ Failed to parse saved chat:', e);
+      }
+    }
+  }, [studentId]);
+
+  // Save chat history to localStorage whenever it changes
+  useEffect(() => {
+    if (chatMessages.length > 1) { // More than just the welcome message
+      const chatKey = `chat_history_${studentId}`;
+      localStorage.setItem(chatKey, JSON.stringify(chatMessages));
+      console.log('💾 Saved chat history to localStorage:', chatMessages.length, 'messages');
+    }
+  }, [chatMessages, studentId]);
+
   useEffect(() => {
     console.log('🔍 Student detail page mounted:', { examId, studentId, hasToken: !!token, hasHydrated: _hasHydrated });
     if (_hasHydrated && token && studentId) {
@@ -137,6 +163,18 @@ export default function StudentResultPage() {
     } finally {
       setChatLoading(false);
     }
+  };
+
+  const clearChatHistory = () => {
+    const chatKey = `chat_history_${studentId}`;
+    localStorage.removeItem(chatKey);
+    setChatMessages([
+      {
+        role: 'ai',
+        message: 'Merhaba! Ben AI asistanınızım. Bu öğrencinin performansı, belirli sorular veya nasıl gelişebileceği hakkında her şeyi sorabilirsiniz.'
+      }
+    ]);
+    console.log('🗑️ Chat history cleared');
   };
 
   const getScoreColor = (percentage: number) => {
@@ -579,17 +617,13 @@ export default function StudentResultPage() {
                     )}
                   </div>
 
-                  {/* Feedback */}
+                  {/* AI Feedback - Enhanced */}
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <MessageSquare className="w-4 h-4 text-gray-600" />
-                      <h4 className="text-sm font-semibold text-gray-900">Geri Bildirim:</h4>
-                    </div>
                     {isPending ? (
-                      <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-300 rounded-lg p-5 shadow-md">
+                      <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-300 rounded-xl p-5 shadow-md">
                         <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
-                            <Loader2 className="w-5 h-5 text-white animate-spin" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                            <Loader2 className="w-6 h-6 text-white animate-spin" />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -614,8 +648,83 @@ export default function StudentResultPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{q.feedback}</p>
+                      <div className={`bg-gradient-to-br ${
+                        isCorrect ? 'from-emerald-50 via-green-50 to-teal-50 border-emerald-300' :
+                        isPartial ? 'from-yellow-50 via-amber-50 to-orange-50 border-yellow-300' :
+                        'from-red-50 via-rose-50 to-pink-50 border-red-300'
+                      } border-2 rounded-xl p-5 shadow-md hover:shadow-lg transition-all`}>
+                        <div className="flex items-start gap-4">
+                          {/* AI Icon with dynamic color */}
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${
+                            isCorrect ? 'bg-gradient-to-br from-emerald-500 to-green-600' :
+                            isPartial ? 'bg-gradient-to-br from-yellow-500 to-amber-600' :
+                            'bg-gradient-to-br from-red-500 to-rose-600'
+                          }`}>
+                            <MessageSquare className="w-6 h-6 text-white" />
+                          </div>
+
+                          <div className="flex-1">
+                            {/* Header */}
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <h4 className={`font-bold text-lg ${
+                                  isCorrect ? 'text-emerald-900' :
+                                  isPartial ? 'text-yellow-900' :
+                                  'text-red-900'
+                                }`}>
+                                  🤖 AI Geri Bildirimi
+                                </h4>
+                                <span className={`px-2.5 py-1 text-xs rounded-full font-semibold shadow-sm ${
+                                  isCorrect ? 'bg-emerald-200 text-emerald-800' :
+                                  isPartial ? 'bg-yellow-200 text-yellow-800' :
+                                  'bg-red-200 text-red-800'
+                                }`}>
+                                  {isCorrect ? '✓ Başarılı' : isPartial ? '◐ Kısmen' : '✗ Yetersiz'}
+                                </span>
+                              </div>
+
+                              {/* Confidence Score */}
+                              {q.confidence !== undefined && q.confidence !== null && (
+                                <div className="flex items-center gap-1.5 bg-white/80 px-3 py-1.5 rounded-lg shadow-sm border border-gray-200">
+                                  <div className="text-xs font-semibold text-gray-600">Güven:</div>
+                                  <div className={`text-sm font-bold ${
+                                    q.confidence >= 0.8 ? 'text-emerald-600' :
+                                    q.confidence >= 0.6 ? 'text-yellow-600' :
+                                    'text-red-600'
+                                  }`}>
+                                    {(q.confidence * 100).toFixed(0)}%
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Feedback Content */}
+                            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg border border-white/50 shadow-sm">
+                              <p className={`leading-relaxed whitespace-pre-wrap ${
+                                isCorrect ? 'text-emerald-900' :
+                                isPartial ? 'text-yellow-900' :
+                                'text-red-900'
+                              }`}>
+                                {q.feedback}
+                              </p>
+                            </div>
+
+                            {/* Reasoning (if available) */}
+                            {q.reasoning && (
+                              <div className="mt-3 bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-white/50">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                                    Değerlendirme Mantığı
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700 leading-relaxed italic">
+                                  {q.reasoning}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -638,9 +747,21 @@ export default function StudentResultPage() {
       {isChatOpen && (
         <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-white rounded-2xl shadow-2xl border-2 border-gray-200 flex flex-col z-50 animate-in slide-in-from-bottom">
           {/* Chat Header */}
-          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
-            <h3 className="font-bold text-gray-900">AI Asistan</h3>
-            <p className="text-sm text-gray-600">Bu öğrencinin performansı hakkında soru sorun</p>
+          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="font-bold text-gray-900">AI Asistan</h3>
+              <p className="text-sm text-gray-600">Bu öğrencinin performansı hakkında soru sorun</p>
+            </div>
+            {chatMessages.length > 1 && (
+              <button
+                onClick={clearChatHistory}
+                className="text-gray-500 hover:text-red-600 transition flex items-center gap-1 text-xs bg-white px-2 py-1 rounded-lg hover:bg-red-50 border border-gray-200"
+                title="Sohbet geçmişini temizle"
+              >
+                <X className="w-3 h-3" />
+                Temizle
+              </button>
+            )}
           </div>
 
           {/* Chat Messages */}

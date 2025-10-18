@@ -11,7 +11,7 @@ class Config(BaseSettings):
     # JWT Settings
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days (24h * 7 = 168h = 10080min)
 
     # POSTGRES
     POSTGRES_PASSWORD: str
