@@ -16,7 +16,7 @@ export default function StudentResultPage() {
   const router = useRouter();
   const examId = params.id as string;
   const studentId = parseInt(params.studentId as string);
-  const { token } = useAuthStore();
+  const { token, _hasHydrated } = useAuthStore();
 
   const [student, setStudent] = useState<StudentDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,11 +33,11 @@ export default function StudentResultPage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
-    console.log('🔍 Student detail page mounted:', { examId, studentId, hasToken: !!token });
-    if (token && studentId) {
+    console.log('🔍 Student detail page mounted:', { examId, studentId, hasToken: !!token, hasHydrated: _hasHydrated });
+    if (_hasHydrated && token && studentId) {
       fetchStudentDetail();
     }
-  }, [studentId, token]);
+  }, [studentId, token, _hasHydrated]);
 
   // Auto-refresh if student is still being processed
   useEffect(() => {
@@ -45,11 +45,14 @@ export default function StudentResultPage() {
 
     const isProcessing = student.total_score === 0 && student.questions.some(q => q.feedback === "Pending evaluation");
 
-    if (isProcessing) {
-      console.log('⏳ Student is processing, setting up auto-refresh...');
+    if (isProcessing && token && _hasHydrated) {
+      console.log('⏳ Student is processing, setting up silent auto-refresh...');
       const interval = setInterval(() => {
-        console.log('🔄 Auto-refreshing student detail...');
-        fetchStudentDetail();
+        console.log('🔄 Silent auto-refresh...');
+        // Silent refresh - don't show loading state
+        examApi.getStudentDetail(token, studentId)
+          .then(data => setStudent(data))
+          .catch(err => console.error('Silent refresh error:', err));
       }, 5000); // Refresh every 5 seconds
 
       return () => {
@@ -57,10 +60,15 @@ export default function StudentResultPage() {
         clearInterval(interval);
       };
     }
-  }, [student]);
+  }, [student, token, _hasHydrated]);
 
   const fetchStudentDetail = async () => {
     console.log('📡 Fetching student detail for ID:', studentId);
+
+    // Wait for hydration before checking token
+    if (!_hasHydrated) {
+      return;
+    }
 
     if (!token) {
       console.error('❌ No token found, redirecting to login');
@@ -208,22 +216,58 @@ export default function StudentResultPage() {
   const totalQuestions = student.questions.length;
 
   // Check if student is still being evaluated
-  const isProcessing = student.total_score === 0 && student.questions.some(q => q.feedback === "Pending evaluation");
-  const evaluatedCount = student.questions.filter(q => q.feedback !== "Pending evaluation").length;
+  const isProcessing = student.total_score === 0 && (
+    student.questions.some(q => q.feedback === "Pending evaluation") ||
+    student.questions.some(q => q.feedback === "Değerlendirme bekleniyor...") ||
+    student.questions.some(q => q.student_answer === "[Cevap çıkarılıyor...]")
+  );
+
+  const evaluatedCount = student.questions.filter(q =>
+    q.feedback !== "Pending evaluation" &&
+    q.feedback !== "Değerlendirme bekleniyor..." &&
+    q.student_answer !== "[Cevap çıkarılıyor...]"
+  ).length;
 
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Processing Banner */}
         {isProcessing && (
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-xl p-6 mb-6 shadow-lg">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+              </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-blue-900">Değerlendirme Devam Ediyor</h3>
-                <p className="text-sm text-blue-700">
-                  {evaluatedCount}/{totalQuestions} soru değerlendirildi. Bu sayfa otomatik olarak güncellenecektir.
+                <h3 className="font-bold text-blue-900 text-lg mb-2 flex items-center gap-2">
+                  ⚡ AI Değerlendirme Devam Ediyor
+                  <span className="px-2 py-1 bg-blue-200 text-blue-700 text-xs rounded-full font-semibold">
+                    CANLI
+                  </span>
+                </h3>
+                <p className="text-blue-800 mb-3">
+                  <strong>{evaluatedCount}/{totalQuestions}</strong> soru değerlendirildi.
+                  Geriye <strong>{totalQuestions - evaluatedCount}</strong> soru kaldı.
                 </p>
+
+                {/* Progress Bar */}
+                <div className="mb-3">
+                  <div className="flex items-center justify-between text-xs text-blue-700 mb-1">
+                    <span>İlerleme</span>
+                    <span className="font-bold">{Math.round((evaluatedCount / totalQuestions) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500"
+                      style={{ width: `${(evaluatedCount / totalQuestions) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-blue-700 text-sm bg-white/60 rounded-lg p-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Sayfa her 5 saniyede otomatik güncelleniyor</span>
+                </div>
               </div>
             </div>
           </div>
@@ -376,17 +420,19 @@ export default function StudentResultPage() {
           </h2>
 
           {student.questions.map((q) => {
-            const isPending = q.feedback === "Pending evaluation";
+            const isExtractingAnswer = q.student_answer === "[Cevap çıkarılıyor...]";
+            const isPending = q.feedback === "Pending evaluation" || q.feedback === "Değerlendirme bekleniyor...";
             const percentage = isPending ? 0 : (q.score / q.max_score) * 100;
             const isCorrect = !isPending && percentage >= 80;
             const isPartial = !isPending && percentage >= 50 && percentage < 80;
 
             return (
               <div key={q.question_number} className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden hover:shadow-md transition ${
-                isPending ? 'border-gray-300 opacity-60' : 'border-gray-200'
+                isExtractingAnswer ? 'border-blue-300 opacity-80' : isPending ? 'border-gray-300 opacity-60' : 'border-gray-200'
               }`}>
                 {/* Question Header */}
                 <div className={`px-6 py-4 flex items-center justify-between ${
+                  isExtractingAnswer ? 'bg-blue-50' :
                   isPending ? 'bg-gray-50' :
                   isCorrect ? 'bg-emerald-50' :
                   isPartial ? 'bg-yellow-50' :
@@ -394,6 +440,7 @@ export default function StudentResultPage() {
                 }`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                      isExtractingAnswer ? 'bg-blue-200 text-blue-900' :
                       isPending ? 'bg-gray-200 text-gray-600' :
                       isCorrect ? 'bg-emerald-200 text-emerald-900' :
                       isPartial ? 'bg-yellow-200 text-yellow-900' :
@@ -404,10 +451,19 @@ export default function StudentResultPage() {
                     <div>
                       <h3 className="font-bold text-gray-900">Soru {q.question_number}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        {isPending ? (
+                        {isExtractingAnswer ? (
                           <>
-                            <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
-                            <span className="text-sm text-gray-600 font-medium">Değerlendiriliyor...</span>
+                            <div className="px-2 py-1 bg-blue-100 border border-blue-300 rounded-md flex items-center gap-1.5">
+                              <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+                              <span className="text-xs text-blue-700 font-semibold">PDF İşleniyor</span>
+                            </div>
+                          </>
+                        ) : isPending ? (
+                          <>
+                            <div className="px-2 py-1 bg-amber-100 border border-amber-300 rounded-md flex items-center gap-1.5">
+                              <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+                              <span className="text-xs text-amber-700 font-semibold">AI Puanlıyor</span>
+                            </div>
                           </>
                         ) : isCorrect ? (
                           <>
@@ -429,8 +485,20 @@ export default function StudentResultPage() {
                     </div>
                   </div>
                   <div className={`text-right`}>
-                    {isPending ? (
-                      <div className="text-sm text-gray-500 font-medium">Bekliyor...</div>
+                    {isExtractingAnswer ? (
+                      <div className="flex flex-col items-end">
+                        <div className="px-3 py-1.5 bg-blue-100 rounded-lg border border-blue-200 mb-1">
+                          <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                        </div>
+                        <div className="text-xs text-gray-500">/ {q.max_score}</div>
+                      </div>
+                    ) : isPending ? (
+                      <div className="flex flex-col items-end">
+                        <div className="px-3 py-1.5 bg-amber-100 rounded-lg border border-amber-200 mb-1">
+                          <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
+                        </div>
+                        <div className="text-xs text-gray-500">/ {q.max_score}</div>
+                      </div>
                     ) : (
                       <>
                         <div className={`text-3xl font-bold ${
@@ -478,7 +546,34 @@ export default function StudentResultPage() {
                       <FileText className="w-4 h-4 text-blue-600" />
                       <h4 className="text-sm font-semibold text-blue-700">Öğrenci Cevabı:</h4>
                     </div>
-                    {q.student_answer === "[No answer provided]" || !q.student_answer ? (
+                    {q.student_answer === "[Cevap çıkarılıyor...]" ? (
+                      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-lg p-5 shadow-sm">
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <Loader2 className="w-5 h-5 text-white animate-spin" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-bold text-blue-900">📄 PDF İşleniyor</h4>
+                              <span className="px-2 py-0.5 bg-blue-200 text-blue-800 text-xs rounded-full font-semibold animate-pulse">
+                                ÇIKARILIYOR
+                              </span>
+                            </div>
+                            <p className="text-blue-800 text-sm mb-2">
+                              Öğrencinin PDF dosyası işleniyor ve cevaplar otomatik olarak çıkarılıyor.
+                            </p>
+                            <div className="flex items-center gap-2 text-blue-700 text-xs bg-white/60 rounded px-2 py-1">
+                              <div className="flex gap-1">
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                              </div>
+                              <span>PDF metni okunuyor ve parse ediliyor...</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : q.student_answer === "[No answer provided]" || !q.student_answer ? (
                       <div className="text-gray-500 italic bg-gray-100 p-4 rounded-lg border border-gray-300">
                         Cevap bulunamadı veya boş bırakılmış
                       </div>
@@ -496,11 +591,32 @@ export default function StudentResultPage() {
                       <h4 className="text-sm font-semibold text-gray-900">Geri Bildirim:</h4>
                     </div>
                     {isPending ? (
-                      <div className="flex items-center gap-3 bg-amber-50 p-4 rounded-lg border border-amber-200">
-                        <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
-                        <span className="text-amber-700 font-medium">
-                          Bu soru şu anda AI tarafından değerlendiriliyor... Lütfen bekleyin.
-                        </span>
+                      <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-300 rounded-lg p-5 shadow-md">
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <Loader2 className="w-5 h-5 text-white animate-spin" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-bold text-amber-900">🤖 AI Değerlendirme Yapılıyor</h4>
+                              <span className="px-2 py-0.5 bg-amber-200 text-amber-800 text-xs rounded-full font-semibold animate-pulse">
+                                İŞLENİYOR
+                              </span>
+                            </div>
+                            <p className="text-amber-800 text-sm mb-2">
+                              Bu soru şu anda yapay zeka tarafından analiz ediliyor.
+                              Detaylı geri bildirim ve puan hesaplaması birazdan hazır olacak.
+                            </p>
+                            <div className="flex items-center gap-2 text-amber-700 text-xs bg-white/60 rounded px-2 py-1">
+                              <div className="flex gap-1">
+                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                              </div>
+                              <span>Cevap analiz ediliyor ve puanlanıyor...</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">

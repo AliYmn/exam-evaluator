@@ -411,6 +411,10 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
             max_possible = sum(qr.max_score for qr in question_responses)
             percentage = (total_score / max_possible * 100) if max_possible > 0 else 0
 
+            # Update max_score and percentage fields
+            student_response.max_score = max_possible
+            student_response.percentage = round(percentage, 2)
+
             student_response.performance_summary = {
                 "total_score": total_score,
                 "max_possible_score": max_possible,

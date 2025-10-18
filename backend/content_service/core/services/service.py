@@ -265,6 +265,13 @@ class ContentService:
 
             student_list = []
             for student in students:
+                # Check if there are any question responses
+                qr_result = await self.db.execute(
+                    select(QuestionResponse).where(QuestionResponse.student_response_id == student.id)
+                )
+                questions = qr_result.scalars().all()
+                has_questions = len(questions) > 0
+
                 # Check if evaluation is completed
                 if student.total_score > 0 or student.summary:
                     status = "completed"
@@ -276,12 +283,6 @@ class ContentService:
                     )
 
                     if time_since_creation > timedelta(minutes=10):
-                        # Check if there are any question responses
-                        qr_count = await self.db.execute(
-                            select(QuestionResponse).where(QuestionResponse.student_response_id == student.id)
-                        )
-                        questions = qr_count.scalars().all()
-
                         # If no questions or all have "Pending evaluation", it's failed
                         if not questions or all(q.feedback == "Pending evaluation" for q in questions):
                             status = "failed"
@@ -299,6 +300,7 @@ class ContentService:
                         "max_score": student.max_score,
                         "percentage": student.percentage,
                         "status": status,
+                        "has_questions": has_questions,
                         "created_at": student.created_date.isoformat() if student.created_date else "",
                     }
                 )
@@ -327,10 +329,12 @@ class ContentService:
         """
         try:
             from libs.models.exam import QuestionResponse
+            from sqlalchemy.orm import selectinload
 
-            # Get student response with evaluation for authorization
+            # Get student response with evaluation for authorization (eager load evaluation)
             result = await self.db.execute(
                 select(StudentResponse)
+                .options(selectinload(StudentResponse.evaluation))
                 .join(Evaluation, StudentResponse.evaluation_id == Evaluation.id)
                 .where(StudentResponse.id == student_response_id, Evaluation.user_id == user_id)
             )
@@ -338,6 +342,9 @@ class ContentService:
 
             if not student:
                 raise ExceptionBase(ErrorCode.NOT_FOUND)
+
+            # Get evaluation separately to avoid lazy loading issues
+            evaluation = student.evaluation
 
             # Get all question responses
             result = await self.db.execute(
@@ -347,24 +354,42 @@ class ContentService:
             )
             question_responses = result.scalars().all()
 
-            # Build question details
-            questions = []
-            for qr in question_responses:
-                # Extract additional data if available
-                additional_data = qr.additional_data or {}
+            # If no question responses yet, create placeholders from answer key
+            if not question_responses and evaluation.answer_key_data:
+                answer_key_questions = evaluation.answer_key_data.get("questions", [])
+                questions = []
+                for q in answer_key_questions:
+                    questions.append(
+                        {
+                            "question_number": q.get("number", 0),
+                            "question_text": q.get("question_text", ""),
+                            "expected_answer": q.get("expected_answer", ""),
+                            "student_answer": "[Cevap çıkarılıyor...]",
+                            "score": 0.0,
+                            "max_score": q.get("max_score", 10),
+                            "feedback": "Değerlendirme bekleniyor...",
+                            "is_correct": False,
+                        }
+                    )
+            else:
+                # Build question details from existing responses
+                questions = []
+                for qr in question_responses:
+                    # Extract additional data if available
+                    additional_data = qr.additional_data or {}
 
-                questions.append(
-                    {
-                        "question_number": qr.question_number,
-                        "question_text": additional_data.get("question_text", ""),
-                        "expected_answer": qr.expected_answer,
-                        "student_answer": qr.student_answer,
-                        "score": qr.score,
-                        "max_score": qr.max_score,
-                        "feedback": qr.feedback,
-                        "is_correct": additional_data.get("is_correct", False),
-                    }
-                )
+                    questions.append(
+                        {
+                            "question_number": qr.question_number,
+                            "question_text": additional_data.get("question_text", ""),
+                            "expected_answer": qr.expected_answer,
+                            "student_answer": qr.student_answer,
+                            "score": qr.score,
+                            "max_score": qr.max_score,
+                            "feedback": qr.feedback,
+                            "is_correct": additional_data.get("is_correct", False),
+                        }
+                    )
 
             return {
                 "student_response_id": student.id,

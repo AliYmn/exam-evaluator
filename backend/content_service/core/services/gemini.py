@@ -7,6 +7,7 @@ import json
 from typing import Dict, Any, List
 import google.generativeai as genai
 from libs.settings import settings
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 
 class GeminiService:
@@ -97,11 +98,37 @@ NOW PARSE THIS ANSWER KEY - Extract ONLY question number, question text, and ans
 RETURN ONLY THE JSON. NO EXPLANATIONS. NO EXTRA FIELDS."""
 
         try:
+            # Safety settings - allow educational content
+            safety_settings = {
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            }
+
             # Generate response
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(prompt, safety_settings=safety_settings)
+
+            # Check if response is valid
+            if not response.candidates:
+                raise ValueError("No response candidates returned from Gemini")
+
+            candidate = response.candidates[0]
+
+            # Check finish reason
+            if candidate.finish_reason == 2:  # SAFETY
+                raise ValueError(
+                    "Content was blocked by safety filters. Please try with different content or contact support."
+                )
+
+            # Extract text from response
+            if not hasattr(candidate.content, "parts") or not candidate.content.parts:
+                raise ValueError("No content parts in response")
+
+            result_text = candidate.content.parts[0].text
 
             # Parse JSON from response
-            result = json.loads(response.text)
+            result = json.loads(result_text)
 
             # Validate structure
             if "questions" not in result or not isinstance(result["questions"], list):
@@ -183,11 +210,37 @@ NOW PARSE THIS STUDENT ANSWER SHEET - Extract ONLY question numbers and student 
 RETURN ONLY THE JSON. NO EXPLANATIONS. ENSURE {question_count} answers."""
 
         try:
+            # Safety settings - allow educational content
+            safety_settings = {
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            }
+
             # Generate response
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(prompt, safety_settings=safety_settings)
+
+            # Check if response is valid
+            if not response.candidates:
+                raise ValueError("No response candidates returned from Gemini")
+
+            candidate = response.candidates[0]
+
+            # Check finish reason
+            if candidate.finish_reason == 2:  # SAFETY
+                raise ValueError(
+                    "Content was blocked by safety filters. Please try with different content or contact support."
+                )
+
+            # Extract text from response
+            if not hasattr(candidate.content, "parts") or not candidate.content.parts:
+                raise ValueError("No content parts in response")
+
+            result_text = candidate.content.parts[0].text
 
             # Parse JSON from response
-            result = json.loads(response.text)
+            result = json.loads(result_text)
 
             # Validate structure
             if "answers" not in result or not isinstance(result["answers"], list):
@@ -266,8 +319,32 @@ ADİL ve YAPICI ol. Eğer öğrenci cevabı "[No answer provided]" ise, 0 puan v
 SADECE JSON DÖNDÜR. FEEDBACK MUTLAKA TÜRKÇE OLMALIDIR."""
 
         try:
-            response = self.model.generate_content(prompt)
-            result = json.loads(response.text)
+            # Safety settings
+            safety_settings = {
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            }
+
+            response = self.model.generate_content(prompt, safety_settings=safety_settings)
+
+            # Check if response is valid
+            if not response.candidates:
+                raise ValueError("No response candidates returned from Gemini")
+
+            candidate = response.candidates[0]
+
+            # Check finish reason
+            if candidate.finish_reason == 2:  # SAFETY
+                raise ValueError("Content was blocked by safety filters")
+
+            # Extract text from response
+            if not hasattr(candidate.content, "parts") or not candidate.content.parts:
+                raise ValueError("No content parts in response")
+
+            result_text = candidate.content.parts[0].text
+            result = json.loads(result_text)
 
             # Validate structure
             if "score" not in result or "feedback" not in result:
@@ -484,8 +561,31 @@ KURALLARI belirle.
 SADECE JSON DÖNDÜR. HİÇBİR AÇIKLAMA EKLEME."""
 
         try:
-            response = self.model.generate_content(context)
-            result_text = response.candidates[0].content.parts[0].text.strip()
+            # Safety settings
+            safety_settings = {
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            }
+
+            response = self.model.generate_content(context, safety_settings=safety_settings)
+
+            # Check if response is valid
+            if not response.candidates:
+                raise ValueError("No response candidates returned from Gemini")
+
+            candidate = response.candidates[0]
+
+            # Check finish reason
+            if candidate.finish_reason == 2:  # SAFETY
+                raise ValueError("Content was blocked by safety filters")
+
+            # Extract text from response
+            if not hasattr(candidate.content, "parts") or not candidate.content.parts:
+                raise ValueError("No content parts in response")
+
+            result_text = candidate.content.parts[0].text.strip()
 
             # Parse JSON response
             result = json.loads(result_text)

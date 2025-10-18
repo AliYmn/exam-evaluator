@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   Upload, FileText, ArrowLeft, CheckCircle2, Clock, AlertCircle,
-  Loader2, RefreshCw, CheckCircle, XCircle, User, TrendingUp, Radio
+  Loader2, RefreshCw, CheckCircle, XCircle, User, TrendingUp, Radio, ChevronDown, Award
 } from 'lucide-react';
 import Link from 'next/link';
 import { examApi, ExamDetail, StudentListItem } from '@/lib/api';
@@ -16,7 +16,7 @@ export default function ExamDetailPage() {
   const params = useParams();
   const router = useRouter();
   const examId = params.id as string;
-  const { token } = useAuthStore();
+  const { token, _hasHydrated } = useAuthStore();
 
   const [exam, setExam] = useState<ExamDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +33,9 @@ export default function ExamDetailPage() {
   // Students list state
   const [students, setStudents] = useState<StudentListItem[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
+
+  // Accordion state for questions
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<number>>(new Set());
 
   // SSE Progress streaming (only if exam is being processed)
   const shouldStreamProgress = exam?.status === 'parsing' || exam?.status === 'pending';
@@ -62,6 +65,11 @@ export default function ExamDetailPage() {
   }, [sseProgress]);
 
   const fetchExamDetails = async () => {
+    // Wait for hydration before checking token
+    if (!_hasHydrated) {
+      return;
+    }
+
     if (!token) {
       router.push('/login');
       return;
@@ -95,9 +103,11 @@ export default function ExamDetailPage() {
   };
 
   useEffect(() => {
-    fetchExamDetails();
-    fetchStudents();
-  }, [examId, token]);
+    if (_hasHydrated) {
+      fetchExamDetails();
+      fetchStudents();
+    }
+  }, [examId, token, _hasHydrated]);
 
   // Auto-refresh while parsing or while students are processing
   useEffect(() => {
@@ -106,18 +116,39 @@ export default function ExamDetailPage() {
 
     if (shouldAutoRefresh) {
       const interval = setInterval(() => {
-        fetchExamDetails();
-        fetchStudents();
-      }, 3000); // Refresh every 3 seconds
+        // Silent refresh - don't show loading states
+        if (token && _hasHydrated) {
+          // Fetch quietly without setting loading states
+          examApi.getExamDetails(token, examId)
+            .then(data => setExam(data))
+            .catch(err => console.error('Silent refresh error:', err));
+
+          examApi.getExamStudents(token, examId)
+            .then(data => setStudents(data))
+            .catch(err => console.error('Silent students refresh error:', err));
+        }
+      }, 5000); // Refresh every 5 seconds (increased from 3)
 
       return () => clearInterval(interval);
     }
-  }, [exam?.status, students]);
+  }, [exam?.status, students, token, _hasHydrated]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     fetchExamDetails();
     fetchStudents();
+  };
+
+  const toggleQuestion = (questionNumber: number) => {
+    setExpandedQuestions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(questionNumber)) {
+        newSet.delete(questionNumber);
+      } else {
+        newSet.add(questionNumber);
+      }
+      return newSet;
+    });
   };
 
   const handleStudentUpload = async (e: React.FormEvent) => {
@@ -442,7 +473,11 @@ export default function ExamDetailPage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {students.map((student) => (
+                      {students.map((student) => {
+                        // All students except failed can be clicked
+                        const canNavigate = student.status !== 'failed';
+
+                        return (
                         <div
                           key={student.student_response_id}
                           className={`flex items-center justify-between p-4 border rounded-lg transition ${
@@ -450,23 +485,11 @@ export default function ExamDetailPage() {
                               ? 'border-red-300 bg-red-50 opacity-60'
                               : student.status === 'completed'
                               ? 'border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
-                              : student.status === 'processing'
-                              ? 'border-blue-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer bg-blue-50'
-                              : 'border-gray-200 bg-gray-50'
+                              : 'border-blue-200 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 cursor-pointer'
                           }`}
                           onClick={() => {
-                            console.log('Student clicked:', {
-                              name: student.student_name,
-                              status: student.status,
-                              id: student.student_response_id
-                            });
-                            // Allow navigation for both completed and processing students
-                            if (student.status === 'completed' || student.status === 'processing') {
-                              const url = `/dashboard/exams/${examId}/student/${student.student_response_id}`;
-                              console.log('Navigating to:', url);
-                              router.push(url);
-                            } else {
-                              console.log('Cannot navigate - student status is:', student.status);
+                            if (canNavigate) {
+                              router.push(`/dashboard/exams/${examId}/student/${student.student_response_id}`);
                             }
                           }}
                         >
@@ -485,6 +508,8 @@ export default function ExamDetailPage() {
                                   ? `Puan: ${student.total_score.toFixed(1)}/${student.max_score.toFixed(1)} (${student.percentage.toFixed(1)}%)`
                                   : student.status === 'failed'
                                   ? 'Değerlendirme başarısız oldu'
+                                  : student.status === 'processing' && !student.has_questions
+                                  ? 'Başlatıldı... (PDF işleniyor)'
                                   : 'İşleniyor...'}
                               </p>
                             </div>
@@ -499,10 +524,15 @@ export default function ExamDetailPage() {
                                 </div>
                                 <CheckCircle className="w-5 h-5 text-emerald-600" />
                               </>
-                            ) : student.status === 'processing' ? (
+                            ) : student.status === 'processing' && student.has_questions ? (
                               <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg">
                                 <Loader2 className="w-4 h-4 animate-spin" />
                                 <span className="text-sm font-medium">İşleniyor</span>
+                              </div>
+                            ) : student.status === 'processing' && !student.has_questions ? (
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg">
+                                <Clock className="w-4 h-4 animate-pulse" />
+                                <span className="text-xs font-medium">Başlatılıyor</span>
                               </div>
                             ) : student.status === 'failed' ? (
                               <div className="flex items-center gap-2 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg">
@@ -517,7 +547,8 @@ export default function ExamDetailPage() {
                             )}
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -528,53 +559,144 @@ export default function ExamDetailPage() {
 
         {/* Questions List */}
         {exam.status === 'completed' && exam.questions && exam.questions.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900">Answer Key Questions</h2>
-                <span className="text-sm text-gray-600">
-                  {exam.questions.length} question{exam.questions.length !== 1 ? 's' : ''}
-                </span>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-white" />
+                  </div>
+                  Cevap Anahtarı Soruları
+                </h2>
+                <p className="text-sm text-gray-600 mt-1 ml-13">
+                  Bu sınavda toplam {exam.questions.length} soru bulunmaktadır
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-lg border border-indigo-200">
+                <span className="text-2xl font-bold text-indigo-600">{exam.questions.length}</span>
+                <span className="text-sm text-indigo-700">Soru</span>
               </div>
             </div>
 
-            <div className="divide-y divide-gray-200">
-              {exam.questions.map((question, index) => (
-                <div key={index} className="p-6 hover:bg-gray-50 transition">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">{question.number}</span>
-                    </div>
+            <div className="grid grid-cols-1 gap-3">
+              {exam.questions.map((question, index) => {
+                const isExpanded = expandedQuestions.has(question.number);
 
-                    <div className="flex-1 space-y-3">
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-900 mb-2">Question:</h3>
-                        <p className="text-gray-800 leading-relaxed">{question.question_text}</p>
-                      </div>
-
-                      <div>
-                        <h4 className="text-sm font-semibold text-emerald-700 mb-2">Expected Answer:</h4>
-                        <p className="text-gray-700 leading-relaxed bg-emerald-50 p-3 rounded-lg border border-emerald-100">
-                          {question.expected_answer}
-                        </p>
-                      </div>
-
-                      {question.keywords && question.keywords.length > 0 && (
-                        <div className="flex flex-wrap gap-2 pt-2">
-                          {question.keywords.map((keyword, idx) => (
-                            <span
-                              key={idx}
-                              className="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
-                            >
-                              {keyword}
-                            </span>
-                          ))}
+                return (
+                  <div
+                    key={index}
+                    className={`bg-white rounded-xl border-2 transition-all duration-200 overflow-hidden ${
+                      isExpanded
+                        ? 'border-indigo-300 shadow-lg shadow-indigo-100'
+                        : 'border-gray-200 hover:border-indigo-200 hover:shadow-md'
+                    }`}
+                  >
+                    {/* Question Header - Always Visible */}
+                    <div
+                      className={`p-5 cursor-pointer flex items-center justify-between transition-colors ${
+                        isExpanded ? 'bg-gradient-to-r from-indigo-50 to-purple-50' : 'bg-white hover:bg-gray-50'
+                      }`}
+                      onClick={() => toggleQuestion(question.number)}
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                          isExpanded
+                            ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg'
+                            : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                        }`}>
+                          <span className="text-white font-bold text-lg">{question.number}</span>
                         </div>
-                      )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-base font-bold text-gray-900 mb-1.5">Soru {question.number}</h3>
+                          <p className="text-sm text-gray-600 line-clamp-2">{question.question_text}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                          isExpanded
+                            ? 'bg-indigo-100 text-indigo-700'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {question.max_score} puan
+                        </div>
+                        <ChevronDown
+                          className={`w-5 h-5 transition-all ${
+                            isExpanded
+                              ? 'text-indigo-600 rotate-180'
+                              : 'text-gray-400'
+                          }`}
+                        />
+                      </div>
                     </div>
+
+                    {/* Question Details - Collapsible */}
+                    {isExpanded && (
+                      <div className="px-6 pb-6 pt-4 bg-gradient-to-br from-gray-50 to-indigo-50/30">
+                        <div className="space-y-4">
+                          {/* Question Text */}
+                          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-6 h-6 bg-indigo-100 rounded-md flex items-center justify-center">
+                                <FileText className="w-3.5 h-3.5 text-indigo-600" />
+                              </div>
+                              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">Soru Metni</h4>
+                            </div>
+                            <p className="text-gray-800 leading-relaxed text-sm">
+                              {question.question_text}
+                            </p>
+                          </div>
+
+                          {/* Expected Answer */}
+                          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg p-4 border border-emerald-200 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-6 h-6 bg-emerald-100 rounded-md flex items-center justify-center">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              </div>
+                              <h4 className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Beklenen Cevap</h4>
+                            </div>
+                            <p className="text-emerald-900 leading-relaxed text-sm font-medium">
+                              {question.expected_answer}
+                            </p>
+                          </div>
+
+                          {/* Keywords */}
+                          {question.keywords && question.keywords.length > 0 && (
+                            <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-6 h-6 bg-blue-100 rounded-md flex items-center justify-center">
+                                  <span className="text-blue-600 text-xs font-bold">#</span>
+                                </div>
+                                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">Anahtar Kelimeler</h4>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {question.keywords.map((keyword, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold rounded-full shadow-sm hover:shadow-md transition-shadow"
+                                  >
+                                    {keyword}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Score Info */}
+                          <div className="flex items-center justify-between bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-4 text-white shadow-md">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                                <Award className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-medium">Maksimum Puan</span>
+                            </div>
+                            <span className="text-2xl font-bold">{question.max_score}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
