@@ -13,16 +13,16 @@ RUN apt-get update && apt-get install -y \
 # Install uv for faster package installation
 RUN pip install --no-cache-dir uv
 
-# Copy requirements
-COPY requirements.txt .
+# Copy requirements (from backend folder)
+COPY backend/requirements.txt .
 
 # Install Python dependencies using uv
 RUN uv pip install --system --no-cache -r requirements.txt
 
-# Copy application code
-COPY auth_service ./auth_service
-COPY content_service ./content_service
-COPY libs ./libs
+# Copy application code (from backend folder)
+COPY backend/auth_service ./auth_service
+COPY backend/content_service ./content_service
+COPY backend/libs ./libs
 
 # Create uploads directory
 RUN mkdir -p /app/uploads

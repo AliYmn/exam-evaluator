@@ -5,19 +5,23 @@ FROM node:18-alpine AS base
 FROM base AS deps
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy package files (from frontend folder)
+COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY frontend/. .
 
 # Next.js collects anonymous telemetry data about general usage.
 # Disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Set production API URLs
+ENV NEXT_PUBLIC_AUTH_API_URL=https://exam-evaluator-backend.fly.dev/api/v1
+ENV NEXT_PUBLIC_CONTENT_API_URL=https://exam-evaluator-backend.fly.dev/api/v1
 
 # Build Next.js
 RUN npm run build

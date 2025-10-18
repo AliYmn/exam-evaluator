@@ -110,3 +110,48 @@ ps:
 clean:
 	docker compose down -v
 	docker system prune -f
+
+#-----------------------------------------------
+# ☁️ Fly.io Deployment Commands
+#-----------------------------------------------
+
+# 🚀 Deploy backend to Fly.io
+deploy-backend:
+	flyctl deploy -a exam-evaluator-backend \
+		--config backend/fly.toml \
+		--dockerfile backend/Dockerfile.fly \
+		--remote-only
+
+# 🌐 Deploy frontend to Fly.io
+deploy-frontend:
+	flyctl deploy -a exam-evaluator-frontend \
+		--config frontend/fly.toml \
+		--dockerfile frontend/Dockerfile.fly \
+		--remote-only
+
+# 🚢 Deploy both backend and frontend
+deploy-all: deploy-backend deploy-frontend
+
+# 📊 Check backend status
+status-backend:
+	flyctl status -a exam-evaluator-backend
+
+# 📊 Check frontend status
+status-frontend:
+	flyctl status -a exam-evaluator-frontend
+
+# 📝 View backend logs
+logs-backend:
+	flyctl logs -a exam-evaluator-backend
+
+# 📝 View frontend logs
+logs-frontend:
+	flyctl logs -a exam-evaluator-frontend
+
+# 🔄 Restart backend on Fly.io
+restart-backend:
+	flyctl apps restart exam-evaluator-backend
+
+# 🔄 Restart frontend on Fly.io
+restart-frontend:
+	flyctl apps restart exam-evaluator-frontend
