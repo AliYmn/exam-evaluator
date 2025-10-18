@@ -474,11 +474,11 @@ class ContentService:
                     }
                 )
 
-            # Call Gemini for chat
-            from content_service.core.services.gemini import GeminiService
+            # Call Agent for chat
+            from content_service.core.agents import ExamEvaluationAgent
 
-            gemini = GeminiService()
-            ai_response = gemini.chat_about_student(
+            agent = ExamEvaluationAgent()
+            ai_response = agent.chat_about_student(
                 question=question,
                 student_name=student.student_name or "Unknown",
                 total_score=student.total_score,

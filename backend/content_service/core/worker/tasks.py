@@ -2,7 +2,7 @@ import base64
 import io
 from pypdf import PdfReader
 from content_service.core.worker.config import celery_app
-from content_service.core.services.gemini import GeminiService
+from content_service.core.agents import ExamEvaluationAgent, evaluate_answer_tool
 from libs.db.db import get_db_session_sync
 from libs.models.exam import Evaluation, EvaluationStatus, StudentResponse, QuestionResponse
 from libs.cache.progress_tracker import ProgressTracker
@@ -96,8 +96,8 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
                 status="processing",
             )
 
-            gemini_service = GeminiService()
-            parsed_data = gemini_service.parse_answer_key(pdf_text)
+            agent = ExamEvaluationAgent()
+            parsed_data = agent.parse_answer_key(pdf_text)
 
             evaluation.current_message = "Veriler kaydediliyor..."
             evaluation.progress_percentage = 85.0
@@ -242,9 +242,9 @@ def process_student_answer_task(self, student_response_id: int, evaluation_id: s
             pdf_text = extract_text_from_pdf_bytes(pdf_bytes)
 
             # Step 2: Parse student answers with Gemini
-            gemini_service = GeminiService()
+            agent = ExamEvaluationAgent()
             total_questions = evaluation.answer_key_data.get("total_questions", 0)
-            student_answers = gemini_service.parse_student_answer(pdf_text, total_questions)
+            student_answers = agent.parse_student_answer(pdf_text, total_questions)
 
             # Step 3: Create QuestionResponse records for each question
             answer_key_questions = evaluation.answer_key_data.get("questions", [])
@@ -350,7 +350,7 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
             answer_key_map = {q.get("number"): q for q in answer_key_questions}
 
             # Initialize Gemini service
-            gemini_service = GeminiService()
+            agent = ExamEvaluationAgent()
             total_score = 0.0
             total_questions = len(question_responses)
 
@@ -372,14 +372,16 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
                 if not answer_key:
                     continue
 
-                # Evaluate with Gemini
-                evaluation_result = gemini_service.evaluate_answer(
-                    question_number=qr.question_number,
-                    question_text=answer_key.get("question_text", ""),
-                    expected_answer=qr.expected_answer,
-                    student_answer=qr.student_answer,
-                    max_score=qr.max_score,
-                    keywords=answer_key.get("keywords", []),
+                # Evaluate with Agent Tool
+                evaluation_result = evaluate_answer_tool.invoke(
+                    {
+                        "question_number": qr.question_number,
+                        "question_text": answer_key.get("question_text", ""),
+                        "expected_answer": qr.expected_answer,
+                        "student_answer": qr.student_answer,
+                        "max_score": qr.max_score,
+                        "keywords": ", ".join(answer_key.get("keywords", [])),
+                    }
                 )
 
                 # Update QuestionResponse
@@ -451,7 +453,7 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
                     }
                 )
 
-            performance_analysis = gemini_service.analyze_student_performance(
+            performance_analysis = agent.analyze_student_performance(
                 student_name=student_response.student_name or "Öğrenci",
                 total_score=total_score,
                 max_score=max_possible,

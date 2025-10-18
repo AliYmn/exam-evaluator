@@ -1,5 +1,5 @@
 fastapi[all]==0.119.0
-uvicorn[standard]==0.37.0
+uvicorn[standard]==0.38.0
 aiohttp[speedups]==3.13.1
 SQLAlchemy==2.0.44
 celery==5.5.3
@@ -22,10 +22,13 @@ aiosmtplib==4.0.2
 Jinja2==3.1.6
 redis==6.4.0
 requests==2.32.5
-openai==2.5.0
-anthropic==0.42.0
 google-generativeai==0.8.3
+langchain==0.3.13
+langchain-google-genai==2.0.5
+langchain-core==0.3.28
+langgraph==0.2.56
+langchain-community==0.3.13
 fastapi-limiter==0.1.6
 boto3==1.40.55
 sentry-sdk==2.42.0
-pypdf==5.1.0
+pypdf==6.1.1
