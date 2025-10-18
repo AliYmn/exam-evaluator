@@ -426,3 +426,82 @@ YANIT KURALLARI:
             print(f"Chat error: {str(e)}")
             # Return user-friendly error instead of raising
             return "Üzgünüm, şu anda yanıt veremiyorum. Lütfen daha sonra tekrar deneyin."
+
+    def analyze_student_performance(
+        self,
+        student_name: str,
+        total_score: float,
+        max_score: float,
+        percentage: float,
+        questions_data: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """
+        Öğrencinin genel performansını analiz eder ve güçlü/zayıf yönlerini belirler.
+
+        Returns:
+            {
+                "strengths": ["Güçlü yön 1", "Güçlü yön 2", ...],
+                "weaknesses": ["Zayıf yön 1", "Zayıf yön 2", ...]
+            }
+        """
+        # Prepare questions summary
+        questions_summary = []
+        for q in questions_data:
+            q_summary = f"""
+Soru {q["question_number"]}: {q["score"]:.1f}/{q["max_score"]:.1f} - {"Doğru" if q.get("is_correct") else "Yanlış"}
+Beklenen: {q["expected_answer"][:100]}...
+Öğrenci: {q["student_answer"][:100]}...
+Feedback: {q["feedback"][:150]}...
+"""
+            questions_summary.append(q_summary)
+
+        context = f"""ÖĞRENCİ ANALİZİ:
+Öğrenci: {student_name}
+Toplam Puan: {total_score:.1f}/{max_score:.1f} (%{percentage:.1f})
+
+SORULAR VE CEVAPLAR:
+{"".join(questions_summary[:10])}
+
+GÖREV:
+Yukarıdaki sınav performansını analiz ederek öğrencinin:
+1. GÜÇLÜ YÖNLERİNİ (strengths) - Ne yapıyor iyi? Hangi becerileri güçlü?
+2. ZAYIF YÖNLERİNİ (weaknesses) - Nerelerde zorlanıyor? Hangi eksiklikleri var?
+
+KURALLARI belirle.
+
+ÖNEMLİ KURALLAR:
+- Her liste için 2-4 madde yaz
+- Kısa ve net cümleler kullan (maksimum 10-15 kelime)
+- Türkçe yaz
+- Spesifik ol (örneğin: "Genel olarak iyi" değil, "Tarihsel olayları kronolojik sıraya koyuyor")
+- SADECE aşağıdaki JSON formatında yanıt ver, başka hiçbir şey yazma:
+
+{{
+    "strengths": ["Güçlü yön 1", "Güçlü yön 2", "Güçlü yön 3"],
+    "weaknesses": ["Zayıf yön 1", "Zayıf yön 2", "Zayıf yön 3"]
+}}
+
+SADECE JSON DÖNDÜR. HİÇBİR AÇIKLAMA EKLEME."""
+
+        try:
+            response = self.model.generate_content(context)
+            result_text = response.candidates[0].content.parts[0].text.strip()
+
+            # Parse JSON response
+            result = json.loads(result_text)
+
+            # Validate structure
+            if not isinstance(result.get("strengths"), list):
+                result["strengths"] = []
+            if not isinstance(result.get("weaknesses"), list):
+                result["weaknesses"] = []
+
+            return result
+
+        except Exception as e:
+            print(f"Error analyzing student performance: {str(e)}")
+            # Return default structure
+            return {
+                "strengths": ["Bazı sorulara doğru yanıt verdi"],
+                "weaknesses": ["Genel performans düşük, daha fazla çalışma gerekiyor"],
+            }

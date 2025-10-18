@@ -374,6 +374,8 @@ class ContentService:
                 "max_score": student.max_score,
                 "percentage": student.percentage,
                 "summary": student.summary,
+                "strengths": student.strengths or [],
+                "weaknesses": student.weaknesses or [],
                 "topic_gaps": student.topic_gaps or [],
                 "questions": questions,
                 "created_at": student.created_date.isoformat() if student.created_date else "",

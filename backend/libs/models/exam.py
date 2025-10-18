@@ -97,6 +97,10 @@ class StudentResponse(BaseModel):
     # AI-Generated Summary
     summary = Column(Text, nullable=True)  # Overall strengths, weaknesses, recommendations
 
+    # Strengths and Weaknesses (JSON arrays)
+    strengths = Column(JSON, nullable=True)  # ["Detaylı açıklama yapıyor", "Örnekler veriyor", ...]
+    weaknesses = Column(JSON, nullable=True)  # ["Tarihsel bağlamı göz ardı ediyor", "Kısa cevaplar", ...]
+
     # Topic Gaps (JSON array)
     # Format: ["DNA structure", "Cell division", ...]
     topic_gaps = Column(JSON, nullable=True)

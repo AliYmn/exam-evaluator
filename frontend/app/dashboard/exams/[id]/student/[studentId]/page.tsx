@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   ArrowLeft, CheckCircle2, XCircle, AlertCircle,
-  MessageSquare, Send, X, Loader2, FileText, Award, Target
+  MessageSquare, Send, X, Loader2, FileText, Award, Target, TrendingUp, AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { examApi, StudentDetailResponse } from '@/lib/api';
@@ -33,24 +33,50 @@ export default function StudentResultPage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 Student detail page mounted:', { examId, studentId, hasToken: !!token });
     if (token && studentId) {
       fetchStudentDetail();
     }
   }, [studentId, token]);
 
+  // Auto-refresh if student is still being processed
+  useEffect(() => {
+    if (!student) return;
+
+    const isProcessing = student.total_score === 0 && student.questions.some(q => q.feedback === "Pending evaluation");
+
+    if (isProcessing) {
+      console.log('⏳ Student is processing, setting up auto-refresh...');
+      const interval = setInterval(() => {
+        console.log('🔄 Auto-refreshing student detail...');
+        fetchStudentDetail();
+      }, 5000); // Refresh every 5 seconds
+
+      return () => {
+        console.log('🛑 Clearing auto-refresh interval');
+        clearInterval(interval);
+      };
+    }
+  }, [student]);
+
   const fetchStudentDetail = async () => {
+    console.log('📡 Fetching student detail for ID:', studentId);
+
     if (!token) {
+      console.error('❌ No token found, redirecting to login');
       router.push('/login');
       return;
     }
 
     try {
+      console.log('🚀 Calling examApi.getStudentDetail...');
       const data = await examApi.getStudentDetail(token, studentId);
+      console.log('✅ Student detail received:', data);
       setStudent(data);
       setError(null);
     } catch (err: any) {
-      console.error('Error fetching student detail:', err);
-      setError(err.message || 'Failed to load student details');
+      console.error('❌ Error fetching student detail:', err);
+      setError(err.message || 'Öğrenci detayları yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -181,9 +207,28 @@ export default function StudentResultPage() {
   const correctCount = student.questions.filter(q => q.is_correct).length;
   const totalQuestions = student.questions.length;
 
+  // Check if student is still being evaluated
+  const isProcessing = student.total_score === 0 && student.questions.some(q => q.feedback === "Pending evaluation");
+  const evaluatedCount = student.questions.filter(q => q.feedback !== "Pending evaluation").length;
+
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Processing Banner */}
+        {isProcessing && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-900">Değerlendirme Devam Ediyor</h3>
+                <p className="text-sm text-blue-700">
+                  {evaluatedCount}/{totalQuestions} soru değerlendirildi. Bu sayfa otomatik olarak güncellenecektir.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Back Button */}
         <Link
           href={`/dashboard/exams/${examId}`}
@@ -256,6 +301,51 @@ export default function StudentResultPage() {
           </div>
         )}
 
+        {/* Strengths and Weaknesses Grid */}
+        {((student.strengths && student.strengths.length > 0) || (student.weaknesses && student.weaknesses.length > 0)) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Strengths */}
+            {student.strengths && student.strengths.length > 0 && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="font-bold text-emerald-900 text-lg">Güçlü Yönler</h3>
+                </div>
+                <ul className="space-y-2">
+                  {student.strengths.map((strength, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-emerald-900 leading-relaxed">{strength}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Weaknesses */}
+            {student.weaknesses && student.weaknesses.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="font-bold text-red-900 text-lg">Zayıf Yönler</h3>
+                </div>
+                <ul className="space-y-2">
+                  {student.weaknesses.map((weakness, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-red-900 leading-relaxed">{weakness}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Topic Gaps */}
         {student.topic_gaps && student.topic_gaps.length > 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6">
@@ -286,20 +376,25 @@ export default function StudentResultPage() {
           </h2>
 
           {student.questions.map((q) => {
-            const percentage = (q.score / q.max_score) * 100;
-            const isCorrect = percentage >= 80;
-            const isPartial = percentage >= 50 && percentage < 80;
+            const isPending = q.feedback === "Pending evaluation";
+            const percentage = isPending ? 0 : (q.score / q.max_score) * 100;
+            const isCorrect = !isPending && percentage >= 80;
+            const isPartial = !isPending && percentage >= 50 && percentage < 80;
 
             return (
-              <div key={q.question_number} className="bg-white rounded-xl shadow-sm border-2 border-gray-200 overflow-hidden hover:shadow-md transition">
+              <div key={q.question_number} className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden hover:shadow-md transition ${
+                isPending ? 'border-gray-300 opacity-60' : 'border-gray-200'
+              }`}>
                 {/* Question Header */}
                 <div className={`px-6 py-4 flex items-center justify-between ${
+                  isPending ? 'bg-gray-50' :
                   isCorrect ? 'bg-emerald-50' :
                   isPartial ? 'bg-yellow-50' :
                   'bg-red-50'
                 }`}>
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                      isPending ? 'bg-gray-200 text-gray-600' :
                       isCorrect ? 'bg-emerald-200 text-emerald-900' :
                       isPartial ? 'bg-yellow-200 text-yellow-900' :
                       'bg-red-200 text-red-900'
@@ -309,7 +404,12 @@ export default function StudentResultPage() {
                     <div>
                       <h3 className="font-bold text-gray-900">Soru {q.question_number}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        {isCorrect ? (
+                        {isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 text-gray-500 animate-spin" />
+                            <span className="text-sm text-gray-600 font-medium">Değerlendiriliyor...</span>
+                          </>
+                        ) : isCorrect ? (
                           <>
                             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                             <span className="text-sm text-emerald-700 font-medium">Doğru</span>
@@ -329,19 +429,38 @@ export default function StudentResultPage() {
                     </div>
                   </div>
                   <div className={`text-right`}>
-                    <div className={`text-3xl font-bold ${
-                      isCorrect ? 'text-emerald-600' :
-                      isPartial ? 'text-yellow-600' :
-                      'text-red-600'
-                    }`}>
-                      {q.score.toFixed(1)}
-                    </div>
-                    <div className="text-sm text-gray-600">/ {q.max_score}</div>
+                    {isPending ? (
+                      <div className="text-sm text-gray-500 font-medium">Bekliyor...</div>
+                    ) : (
+                      <>
+                        <div className={`text-3xl font-bold ${
+                          isCorrect ? 'text-emerald-600' :
+                          isPartial ? 'text-yellow-600' :
+                          'text-red-600'
+                        }`}>
+                          {q.score.toFixed(1)}
+                        </div>
+                        <div className="text-sm text-gray-600">/ {q.max_score}</div>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 {/* Question Content */}
                 <div className="p-6 space-y-4">
+                  {/* Question Text (if available) */}
+                  {q.question_text && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="w-4 h-4 text-gray-600" />
+                        <h4 className="text-sm font-semibold text-gray-700">Soru:</h4>
+                      </div>
+                      <p className="text-gray-800 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        {q.question_text}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Expected Answer */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -359,9 +478,15 @@ export default function StudentResultPage() {
                       <FileText className="w-4 h-4 text-blue-600" />
                       <h4 className="text-sm font-semibold text-blue-700">Öğrenci Cevabı:</h4>
                     </div>
-                    <p className="text-gray-800 leading-relaxed bg-blue-50/50 p-4 rounded-lg border border-blue-100">
-                      {q.student_answer}
-                    </p>
+                    {q.student_answer === "[No answer provided]" || !q.student_answer ? (
+                      <div className="text-gray-500 italic bg-gray-100 p-4 rounded-lg border border-gray-300">
+                        Cevap bulunamadı veya boş bırakılmış
+                      </div>
+                    ) : (
+                      <p className="text-gray-800 leading-relaxed bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                        {q.student_answer}
+                      </p>
+                    )}
                   </div>
 
                   {/* Feedback */}
@@ -370,9 +495,18 @@ export default function StudentResultPage() {
                       <MessageSquare className="w-4 h-4 text-gray-600" />
                       <h4 className="text-sm font-semibold text-gray-900">Geri Bildirim:</h4>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{q.feedback}</p>
-                    </div>
+                    {isPending ? (
+                      <div className="flex items-center gap-3 bg-amber-50 p-4 rounded-lg border border-amber-200">
+                        <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
+                        <span className="text-amber-700 font-medium">
+                          Bu soru şu anda AI tarafından değerlendiriliyor... Lütfen bekleyin.
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{q.feedback}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

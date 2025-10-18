@@ -1,5 +1,8 @@
 from typing import Annotated
+import asyncio
+import json
 from fastapi import APIRouter, Depends, Header, UploadFile, File, Form
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from content_service.api.v1.content.schemas import (
@@ -15,6 +18,7 @@ from content_service.api.v1.content.schemas import (
 from content_service.core.services.service import ContentService
 from libs.db.db import get_async_db
 from libs.service.auth import AuthService
+from libs.cache.progress_tracker import ProgressTracker
 from libs import ExceptionBase, ErrorCode
 
 router = APIRouter(tags=["Exam Evaluation"], prefix="/exam")
@@ -212,3 +216,151 @@ async def chat_about_student(
     )
 
     return ChatResponse(answer=answer)
+
+
+@router.get("/{evaluation_id}/progress-stream")
+async def stream_evaluation_progress(
+    evaluation_id: str,
+    token: str,  # Query parameter instead of header (EventSource limitation)
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """
+    Server-Sent Events (SSE) endpoint for real-time evaluation progress.
+
+    Streams progress updates as the evaluation is being processed.
+    Client should use EventSource to connect to this endpoint.
+
+    Note: Token is passed as query parameter because EventSource doesn't support custom headers.
+
+    Returns:
+        SSE stream with progress updates
+    """
+    # Verify token from query parameter
+    if not token:
+        raise ExceptionBase(ErrorCode.INVALID_TOKEN)
+
+    # Add "Bearer " prefix if not present
+    auth_token = token if token.startswith("Bearer ") else f"Bearer {token}"
+    await auth_service.get_user_from_token(auth_token)
+
+    async def event_generator():
+        """Generate SSE events with progress updates."""
+        try:
+            # Send initial connection message
+            yield f"data: {json.dumps({'type': 'connected', 'message': 'Connected to progress stream'})}\n\n"
+
+            # Poll Redis for progress updates
+            last_progress = None
+            max_iterations = 300  # 5 minutes max (300 * 1 second)
+            iteration = 0
+
+            while iteration < max_iterations:
+                # Get current progress from Redis
+                progress_data = ProgressTracker.get_progress("evaluation", evaluation_id)
+
+                if progress_data:
+                    # Only send if progress changed
+                    if progress_data != last_progress:
+                        yield f"data: {json.dumps(progress_data)}\n\n"
+                        last_progress = progress_data
+
+                    # If completed or failed, send final message and close
+                    if progress_data.get("status") in ["completed", "failed"]:
+                        yield f"data: {json.dumps({'type': 'done', 'status': progress_data.get('status')})}\n\n"
+                        break
+
+                # Wait before next poll
+                await asyncio.sleep(1)
+                iteration += 1
+
+            # If max iterations reached, send timeout message
+            if iteration >= max_iterations:
+                yield f"data: {json.dumps({'type': 'timeout', 'message': 'Stream timeout'})}\n\n"
+
+        except Exception as e:
+            print(f"SSE stream error: {str(e)}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )
+
+
+@router.get("/student/{student_response_id}/progress-stream")
+async def stream_student_progress(
+    student_response_id: int,
+    token: str,  # Query parameter instead of header (EventSource limitation)
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    """
+    Server-Sent Events (SSE) endpoint for real-time student evaluation progress.
+
+    Streams progress updates as the student's answers are being evaluated.
+    Client should use EventSource to connect to this endpoint.
+
+    Note: Token is passed as query parameter because EventSource doesn't support custom headers.
+
+    Returns:
+        SSE stream with progress updates
+    """
+    # Verify token from query parameter
+    if not token:
+        raise ExceptionBase(ErrorCode.INVALID_TOKEN)
+
+    # Add "Bearer " prefix if not present
+    auth_token = token if token.startswith("Bearer ") else f"Bearer {token}"
+    await auth_service.get_user_from_token(auth_token)
+
+    async def event_generator():
+        """Generate SSE events with progress updates."""
+        try:
+            # Send initial connection message
+            yield f"data: {json.dumps({'type': 'connected', 'message': 'Connected to student progress stream'})}\n\n"
+
+            # Poll Redis for progress updates
+            last_progress = None
+            max_iterations = 600  # 10 minutes max (600 * 1 second)
+            iteration = 0
+
+            while iteration < max_iterations:
+                # Get current progress from Redis
+                progress_data = ProgressTracker.get_progress("student_response", str(student_response_id))
+
+                if progress_data:
+                    # Only send if progress changed
+                    if progress_data != last_progress:
+                        yield f"data: {json.dumps(progress_data)}\n\n"
+                        last_progress = progress_data
+
+                    # If completed or failed, send final message and close
+                    if progress_data.get("status") in ["completed", "failed"]:
+                        yield f"data: {json.dumps({'type': 'done', 'status': progress_data.get('status')})}\n\n"
+                        break
+
+                # Wait before next poll
+                await asyncio.sleep(1)
+                iteration += 1
+
+            # If max iterations reached, send timeout message
+            if iteration >= max_iterations:
+                yield f"data: {json.dumps({'type': 'timeout', 'message': 'Stream timeout'})}\n\n"
+
+        except Exception as e:
+            print(f"SSE stream error: {str(e)}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )

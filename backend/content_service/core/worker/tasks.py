@@ -5,6 +5,7 @@ from content_service.core.worker.config import celery_app
 from content_service.core.services.gemini import GeminiService
 from libs.db.db import get_db_session_sync
 from libs.models.exam import Evaluation, EvaluationStatus, StudentResponse, QuestionResponse
+from libs.cache.progress_tracker import ProgressTracker
 from sqlalchemy import select
 
 
@@ -31,33 +32,117 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
                 raise ValueError(f"Evaluation {evaluation_id} not found")
 
             evaluation.status = EvaluationStatus.PARSING
-            evaluation.current_message = "Extracting text from PDF..."
-            evaluation.progress_percentage = 10.0
+            evaluation.current_message = "Başlıyor..."
+            evaluation.progress_percentage = 5.0
             db.commit()
 
-            # Step 1: Decode base64 and extract text from PDF bytes
+            # Stream progress to Redis - Step 1
+            ProgressTracker.set_evaluation_progress(
+                evaluation_id=evaluation_id,
+                percentage=5.0,
+                message="Cevap anahtarı işleniyor...",
+                status="processing",
+            )
+
+            # Step 1: Decode base64
+            evaluation.current_message = "PDF dosyası okunuyor..."
+            evaluation.progress_percentage = 15.0
+            db.commit()
+
+            ProgressTracker.set_evaluation_progress(
+                evaluation_id=evaluation_id,
+                percentage=15.0,
+                message="PDF dosyası okunuyor...",
+                status="processing",
+            )
+
             pdf_bytes = base64.b64decode(pdf_base64)
+
+            # Step 2: Extract text
+            evaluation.current_message = "PDF'den metin çıkarılıyor..."
+            evaluation.progress_percentage = 25.0
+            db.commit()
+
+            ProgressTracker.set_evaluation_progress(
+                evaluation_id=evaluation_id,
+                percentage=25.0,
+                message="PDF'den metin çıkarılıyor...",
+                status="processing",
+            )
+
             pdf_text = extract_text_from_pdf_bytes(pdf_bytes)
 
-            evaluation.current_message = "Parsing questions with AI..."
+            # Step 3: Preparing AI
+            evaluation.current_message = "AI ile soru analizi başlıyor..."
             evaluation.progress_percentage = 40.0
             db.commit()
 
-            # Step 2: Parse with Gemini
+            ProgressTracker.set_evaluation_progress(
+                evaluation_id=evaluation_id,
+                percentage=40.0,
+                message="AI ile soru analizi başlıyor...",
+                status="processing",
+            )
+
+            # Step 4: Parse with Gemini
+            evaluation.current_message = "Sorular AI tarafından ayrıştırılıyor..."
+            evaluation.progress_percentage = 60.0
+            db.commit()
+
+            ProgressTracker.set_evaluation_progress(
+                evaluation_id=evaluation_id,
+                percentage=60.0,
+                message="Sorular AI tarafından ayrıştırılıyor...",
+                status="processing",
+            )
+
             gemini_service = GeminiService()
             parsed_data = gemini_service.parse_answer_key(pdf_text)
 
-            evaluation.current_message = "Saving parsed data..."
-            evaluation.progress_percentage = 80.0
+            evaluation.current_message = "Veriler kaydediliyor..."
+            evaluation.progress_percentage = 85.0
             db.commit()
 
-            # Step 3: Update DB with parsed data
+            # Stream progress to Redis
+            ProgressTracker.set_evaluation_progress(
+                evaluation_id=evaluation_id,
+                percentage=85.0,
+                message="Veriler kaydediliyor...",
+                status="processing",
+                total_questions=parsed_data.get("total_questions", 0),
+            )
+
+            # Step 5: Update DB with parsed data
             evaluation.answer_key_data = parsed_data
             evaluation.max_possible_score = parsed_data.get("max_possible_score", 0)
+
+            evaluation.current_message = "Sorular veritabanına kaydedildi!"
+            evaluation.progress_percentage = 95.0
+            db.commit()
+
+            ProgressTracker.set_evaluation_progress(
+                evaluation_id=evaluation_id,
+                percentage=95.0,
+                message="Sorular veritabanına kaydedildi!",
+                status="processing",
+                total_questions=parsed_data.get("total_questions", 0),
+            )
+
             evaluation.status = EvaluationStatus.COMPLETED
-            evaluation.current_message = "Answer key parsed successfully!"
+            evaluation.current_message = (
+                f"Cevap anahtarı başarıyla işlendi! {parsed_data.get('total_questions', 0)} soru bulundu."
+            )
             evaluation.progress_percentage = 100.0
             db.commit()
+
+            # Stream final progress to Redis
+            ProgressTracker.set_evaluation_progress(
+                evaluation_id=evaluation_id,
+                percentage=100.0,
+                message=f"Cevap anahtarı başarıyla işlendi! {parsed_data.get('total_questions', 0)} soru bulundu.",
+                status="completed",
+                total_questions=parsed_data.get("total_questions", 0),
+            )
 
             return {
                 "status": "success",
@@ -77,6 +162,14 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
                 evaluation.error_message = str(e)
                 evaluation.current_message = "Failed to parse answer key"
                 db.commit()
+
+            # Stream error to Redis
+            ProgressTracker.set_evaluation_progress(
+                evaluation_id=evaluation_id,
+                percentage=0.0,
+                message=f"Failed to parse answer key: {str(e)}",
+                status="failed",
+            )
 
             raise Exception(f"Failed to process answer key: {str(e)}")
 
@@ -259,9 +352,21 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
             # Initialize Gemini service
             gemini_service = GeminiService()
             total_score = 0.0
+            total_questions = len(question_responses)
+
+            # Initial progress
+            ProgressTracker.set_student_progress(
+                student_response_id=student_response_id,
+                evaluation_id=evaluation_id,
+                percentage=0.0,
+                message=f"Starting evaluation of {total_questions} questions...",
+                status="processing",
+                total_questions=total_questions,
+                evaluated_questions=0,
+            )
 
             # Evaluate each question
-            for qr in question_responses:
+            for idx, qr in enumerate(question_responses, 1):
                 # Get answer key for this question
                 answer_key = answer_key_map.get(qr.question_number)
                 if not answer_key:
@@ -286,6 +391,18 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
 
                 total_score += evaluation_result["score"]
 
+                # Update progress after each question (0-70% range for questions)
+                question_progress = (idx / total_questions) * 70.0
+                ProgressTracker.set_student_progress(
+                    student_response_id=student_response_id,
+                    evaluation_id=evaluation_id,
+                    percentage=question_progress,
+                    message=f"Evaluated question {idx}/{total_questions}",
+                    status="processing",
+                    total_questions=total_questions,
+                    evaluated_questions=idx,
+                )
+
             # Update student response with final score
             student_response.total_score = total_score
             # Status is "completed" when total_score > 0 and summary exists
@@ -304,7 +421,55 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
                 ),
             }
 
+            # Progress: Analyzing performance (70-90%)
+            ProgressTracker.set_student_progress(
+                student_response_id=student_response_id,
+                evaluation_id=evaluation_id,
+                percentage=75.0,
+                message="Analyzing strengths and weaknesses...",
+                status="processing",
+                total_questions=total_questions,
+                evaluated_questions=total_questions,
+            )
+
+            # Analyze strengths and weaknesses
+            questions_data = []
+            for qr in question_responses:
+                questions_data.append(
+                    {
+                        "question_number": qr.question_number,
+                        "score": qr.score,
+                        "max_score": qr.max_score,
+                        "expected_answer": qr.expected_answer,
+                        "student_answer": qr.student_answer,
+                        "feedback": qr.feedback,
+                        "is_correct": qr.additional_data.get("is_correct", False) if qr.additional_data else False,
+                    }
+                )
+
+            performance_analysis = gemini_service.analyze_student_performance(
+                student_name=student_response.student_name or "Öğrenci",
+                total_score=total_score,
+                max_score=max_possible,
+                percentage=percentage,
+                questions_data=questions_data,
+            )
+
+            student_response.strengths = performance_analysis.get("strengths", [])
+            student_response.weaknesses = performance_analysis.get("weaknesses", [])
+
             db.commit()
+
+            # Final progress: Completed (100%)
+            ProgressTracker.set_student_progress(
+                student_response_id=student_response_id,
+                evaluation_id=evaluation_id,
+                percentage=100.0,
+                message="Evaluation completed successfully!",
+                status="completed",
+                total_questions=total_questions,
+                evaluated_questions=total_questions,
+            )
 
             return {
                 "status": "success",
@@ -319,6 +484,15 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
             student_response = db.execute(
                 select(StudentResponse).where(StudentResponse.id == student_response_id)
             ).scalar_one_or_none()
+
+            # Stream error to Redis
+            ProgressTracker.set_student_progress(
+                student_response_id=student_response_id,
+                evaluation_id=evaluation_id,
+                percentage=0.0,
+                message=f"Evaluation failed: {str(e)}",
+                status="failed",
+            )
 
             # Mark as failed by leaving it with incomplete data
             print(f"Error in evaluate_student_responses_task: {str(e)}")

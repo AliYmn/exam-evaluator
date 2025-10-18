@@ -5,11 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   Upload, FileText, ArrowLeft, CheckCircle2, Clock, AlertCircle,
-  Loader2, RefreshCw, CheckCircle, XCircle, User, TrendingUp
+  Loader2, RefreshCw, CheckCircle, XCircle, User, TrendingUp, Radio
 } from 'lucide-react';
 import Link from 'next/link';
 import { examApi, ExamDetail, StudentListItem } from '@/lib/api';
 import { useAuthStore } from '@/lib/store';
+import { useProgressStream } from '@/hooks/useProgressStream';
 
 export default function ExamDetailPage() {
   const params = useParams();
@@ -32,6 +33,33 @@ export default function ExamDetailPage() {
   // Students list state
   const [students, setStudents] = useState<StudentListItem[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
+
+  // SSE Progress streaming (only if exam is being processed)
+  const shouldStreamProgress = exam?.status === 'parsing' || exam?.status === 'pending';
+  const { progress: sseProgress, isConnected: sseConnected } = useProgressStream(
+    'evaluation',
+    examId,
+    token,
+    shouldStreamProgress
+  );
+
+  // Update exam data from SSE progress
+  useEffect(() => {
+    if (sseProgress && exam) {
+      setExam(prev => prev ? {
+        ...prev,
+        progress_percentage: sseProgress.percentage,
+        current_message: sseProgress.message,
+        status: sseProgress.status === 'completed' ? 'completed' :
+                sseProgress.status === 'failed' ? 'failed' : 'parsing',
+      } : null);
+
+      // If completed or failed, fetch full details
+      if (sseProgress.status === 'completed' || sseProgress.status === 'failed') {
+        fetchExamDetails();
+      }
+    }
+  }, [sseProgress]);
 
   const fetchExamDetails = async () => {
     if (!token) {
@@ -259,6 +287,13 @@ export default function ExamDetailPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                {/* SSE Connection Indicator */}
+                {sseConnected && (
+                  <div className="flex items-center gap-2 text-xs text-emerald-600">
+                    <Radio className="w-4 h-4 animate-pulse" />
+                    <span>Canlı Güncelleme</span>
+                  </div>
+                )}
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">Processing Answer Key</h3>
                   <p className="text-xs text-gray-600 mt-0.5">{exam.current_message}</p>
@@ -415,11 +450,23 @@ export default function ExamDetailPage() {
                               ? 'border-red-300 bg-red-50 opacity-60'
                               : student.status === 'completed'
                               ? 'border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+                              : student.status === 'processing'
+                              ? 'border-blue-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer bg-blue-50'
                               : 'border-gray-200 bg-gray-50'
                           }`}
                           onClick={() => {
-                            if (student.status === 'completed') {
-                              router.push(`/dashboard/exams/${examId}/student/${student.student_response_id}`);
+                            console.log('Student clicked:', {
+                              name: student.student_name,
+                              status: student.status,
+                              id: student.student_response_id
+                            });
+                            // Allow navigation for both completed and processing students
+                            if (student.status === 'completed' || student.status === 'processing') {
+                              const url = `/dashboard/exams/${examId}/student/${student.student_response_id}`;
+                              console.log('Navigating to:', url);
+                              router.push(url);
+                            } else {
+                              console.log('Cannot navigate - student status is:', student.status);
                             }
                           }}
                         >

@@ -134,6 +134,8 @@ class StudentDetailResponse(BaseModel):
     max_score: float
     percentage: float
     summary: Optional[str] = None
+    strengths: Optional[list[str]] = None
+    weaknesses: Optional[list[str]] = None
     topic_gaps: Optional[list[str]] = None
     questions: list[QuestionResponseDetail]
     created_at: str
