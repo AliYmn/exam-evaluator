@@ -220,7 +220,9 @@ class ExamEvaluationAgent:
             model="gemini-2.0-flash-exp",
             google_api_key=settings.GEMINI_API_KEY,
             temperature=0.7,
-            max_output_tokens=1024,
+            max_output_tokens=512,  # Shorter responses (was 1024)
+            timeout=15,  # 15 second timeout
+            max_retries=2,  # Max 2 retries
             safety_settings={
                 HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
                 HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
@@ -229,30 +231,32 @@ class ExamEvaluationAgent:
             },
         )
 
-        # Build context
+        # Build context - KEEP IT SHORT to avoid rate limits
         context_parts = [
             f"ÖĞRENCİ: {student_name}",
             f"PUAN: {total_score:.1f}/{max_score:.1f} (%{percentage:.1f})",
-            f"ÖZET: {summary[:200] if summary else 'Yok'}",
-            f"\nSORULAR (toplam {len(questions_data)}):",
         ]
 
-        # Add question summaries (first 3)
-        for q in questions_data[:3]:
-            context_parts.append(
-                f"Q{q['number']}: Puan {q['score']:.1f}/{q['max_score']:.1f} - "
-                f"{'Doğru' if q['is_correct'] else 'Yanlış'}\n"
-                f"Feedback: {q['feedback'][:100]}..."
-            )
+        # Add condensed question info (max 5 questions)
+        if questions_data:
+            context_parts.append(f"\nSORULAR ({len(questions_data)} adet):")
+            for q in questions_data[:5]:  # Max 5 questions
+                context_parts.append(
+                    f"S{q['number']}: {q['score']:.1f}/{q['max_score']:.1f} - "
+                    f"{'✓' if q.get('is_correct') else '✗'} | "
+                    f"{q.get('feedback', '')[:80]}..."  # Shorter feedback
+                )
 
         context = "\n".join(context_parts)
 
-        # Build chat history
+        # Build chat history - Keep last 3 only (shorter context)
         history_messages = []
         if chat_history:
-            for msg in chat_history[-5:]:
+            for msg in chat_history[-3:]:  # Only last 3 messages
                 role = "user" if msg["role"] == "user" else "assistant"
-                history_messages.append((role, msg["content"]))
+                # Truncate long messages
+                content = msg["content"][:200] if len(msg["content"]) > 200 else msg["content"]
+                history_messages.append((role, content))
 
         # Create prompt
         prompt = ChatPromptTemplate.from_messages(
@@ -283,14 +287,15 @@ BAĞLAM:
         chain = prompt | llm | StrOutputParser()
 
         try:
+            print(f"💬 Chat request for {student_name}: '{question[:50]}...'")
             result = chain.invoke({"context": context, "question": question})
 
             # Check if accidentally returned JSON
-            if result.startswith("{") or result.startswith("["):
+            if result and (result.startswith("{") or result.startswith("[")):
                 try:
                     data = json.loads(result)
                     if isinstance(data, dict):
-                        return (
+                        result = (
                             data.get("durumu")
                             or data.get("yanit")
                             or " ".join(str(v) for v in data.values() if isinstance(v, str))
@@ -298,10 +303,24 @@ BAĞLAM:
                 except (json.JSONDecodeError, KeyError, ValueError):
                     pass
 
-            return result.strip()
-        except Exception as e:
-            print(f"❌ Chat error: {str(e)}")
-            import traceback
+            final_result = result.strip() if result else "Yanıt alınamadı."
+            print(f"✅ Chat response: {len(final_result)} chars")
+            return final_result
 
-            traceback.print_exc()
-            return "Üzgünüm, şu anda yanıt veremiyorum. Lütfen daha sonra tekrar deneyin."
+        except TimeoutError:
+            print(f"⏱️ Chat timeout for {student_name}")
+            return "Yanıt süresi aşıldı. Lütfen sorunuzu daha kısa tutun ve tekrar deneyin."
+        except Exception as e:
+            error_msg = str(e)
+            print(f"❌ Chat error for {student_name}: {error_msg}")
+
+            # More specific error messages
+            if "rate_limit" in error_msg.lower() or "quota" in error_msg.lower():
+                return "Sistem yoğun. Lütfen birkaç saniye bekleyip tekrar deneyin."
+            elif "safety" in error_msg.lower() or "blocked" in error_msg.lower():
+                return "Bu soru için yanıt üretilemedi. Lütfen farklı bir şekilde sorun."
+            else:
+                import traceback
+
+                traceback.print_exc()
+                return "Üzgünüm, şu anda yanıt veremiyorum. Lütfen daha sonra tekrar deneyin."
