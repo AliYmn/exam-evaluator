@@ -71,7 +71,12 @@ RETURN ONLY JSON.""",
         # Rate limiting for free tier (10 requests/min)
         time.sleep(7)
 
-        result = chain.invoke(pdf_text)
+        # Clean PDF text to avoid JSON parsing issues
+        cleaned_text = pdf_text.replace("\r\n", "\n").replace("\r", "\n")
+        # Remove null bytes and other problematic characters
+        cleaned_text = cleaned_text.replace("\x00", "").replace("\ufffd", "")
+
+        result = chain.invoke(cleaned_text)
 
         print(f"✅ Gemini response received: {result}")
 
@@ -157,9 +162,18 @@ RETURN ONLY JSON.""",
         # Rate limiting for free tier (10 requests/min)
         time.sleep(7)
 
-        result = chain.invoke({"pdf_text": pdf_text, "question_count": question_count})
+        # Clean PDF text to avoid JSON parsing issues
+        cleaned_text = pdf_text.replace("\r\n", "\n").replace("\r", "\n")
+        # Remove null bytes and other problematic characters
+        cleaned_text = cleaned_text.replace("\x00", "").replace("\ufffd", "")
+
+        result = chain.invoke({"pdf_text": cleaned_text, "question_count": question_count})
         return result.get("answers", [])
-    except Exception:
+    except Exception as e:
+        print(f"❌ ERROR in parse_student_answer_tool: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
         return [{"number": i + 1, "student_answer": "[Error parsing]"} for i in range(question_count)]
 
 
@@ -280,11 +294,17 @@ MAKSİMUM PUAN: {max_score}
                 # Always wait to respect free tier limits (10 req/min)
                 time.sleep(base_delay)
 
+            # Clean text inputs to avoid JSON parsing issues
+            def clean_text(text):
+                if not isinstance(text, str):
+                    return text
+                return text.replace("\r\n", "\n").replace("\r", "\n").replace("\x00", "").replace("\ufffd", "")
+
             input_data = {
                 "question_number": question_number,
-                "question_text": question_text,
-                "expected_answer": expected_answer,
-                "student_answer": student_answer,
+                "question_text": clean_text(question_text),
+                "expected_answer": clean_text(expected_answer),
+                "student_answer": clean_text(student_answer),
                 "keywords": keywords,
                 "max_score": max_score,
             }
