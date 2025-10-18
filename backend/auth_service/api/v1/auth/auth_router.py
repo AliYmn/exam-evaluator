@@ -24,9 +24,18 @@ async def get_auth_service(db: AsyncSession = Depends(get_async_db)) -> AuthServ
 
 
 # User registration endpoint - Limit to 5 registrations per IP address in 5 minutes
-@auth_router.post("/register", status_code=204, dependencies=[Depends(RateLimiter(times=5, seconds=300))])
+@auth_router.post("/register", status_code=201, dependencies=[Depends(RateLimiter(times=5, seconds=300))])
 async def register_user(user_data: UserCreate, auth_service: AuthService = Depends(get_auth_service)):
-    await auth_service.create_user(user_data)
+    user = await auth_service.create_user(user_data)
+    return {
+        "message": "User registered successfully",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        },
+    }
 
 
 # Login endpoint - Limit to 10 login attempts per IP address in 1 minute

@@ -20,11 +20,11 @@ class Config(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PORT: int
 
-    # RabbitMQ
-    RABBITMQ_PASS: str
-    RABBITMQ_USER: str
-    RABBITMQ_HOST: str
-    RABBITMQ_PORT: int
+    # RabbitMQ (Optional - falls back to Redis if not provided)
+    RABBITMQ_PASS: str = ""
+    RABBITMQ_USER: str = ""
+    RABBITMQ_HOST: str = ""
+    RABBITMQ_PORT: int = 5672
 
     # REDIS
     REDIS_PORT: int
@@ -34,15 +34,15 @@ class Config(BaseSettings):
     REDIS_PREFIX: str
     FERNET_KEY: str
 
-    # Celery Worker
-    CONTENT_QUEUE_NAME: str
-    CONTENT_WORKER_NAME: str
+    # Celery Worker (Optional - uses defaults if not provided)
+    CONTENT_QUEUE_NAME: str = "content_queue"
+    CONTENT_WORKER_NAME: str = "content_worker"
 
     # GEMINI (Google)
     GEMINI_API_KEY: str
 
-    # Sentry
-    SENTRY_DSN: str
+    # Sentry (Optional)
+    SENTRY_DSN: str = ""
     SENTRY_ENVIRONMENT: str = "development"
     SENTRY_ENABLED: bool = False
     ENV_NAME: str = "development"

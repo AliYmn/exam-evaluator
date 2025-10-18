@@ -796,8 +796,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 For questions, feedback, or support:
 
 - **Email**: your-email@example.com
-- **GitHub Issues**: [Create an issue](https://github.com/yourusername/exam-evaluator/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/exam-evaluator/discussions)
+- **GitHub Issues**: [Create an issue](https://github.com/AliYmn/exam-evaluator/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/AliYmn/exam-evaluator/discussions)
 
 ---
 

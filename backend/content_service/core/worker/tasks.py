@@ -72,6 +72,10 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
 
             pdf_text = extract_text_from_pdf_bytes(pdf_bytes)
 
+            # DEBUG: Log extracted text length
+            print(f"📄 PDF Text extracted: {len(pdf_text)} characters")
+            print(f"📄 First 500 chars: {pdf_text[:500]}")
+
             # Step 3: Preparing AI
             evaluation.current_message = "AI ile soru analizi başlıyor..."
             evaluation.progress_percentage = 40.0
@@ -98,6 +102,12 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
 
             agent = ExamEvaluationAgent()
             parsed_data = agent.parse_answer_key(pdf_text)
+
+            # DEBUG: Log parsed result
+            print(f"📊 Parsed data: {parsed_data}")
+            if "error" in parsed_data:
+                print(f"❌ Error in parsed data: {parsed_data['error']}")
+            print(f"📝 Total questions found: {parsed_data.get('total_questions', 0)}")
 
             evaluation.current_message = "Veriler kaydediliyor..."
             evaluation.progress_percentage = 85.0

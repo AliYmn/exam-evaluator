@@ -2,9 +2,16 @@ from celery import Celery
 
 from libs import settings
 
-broker_url = (
-    f"amqp://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_HOST}:{settings.RABBITMQ_PORT}//"
-)
+# Use Redis as broker if RabbitMQ not configured (for Fly.io deployment)
+if hasattr(settings, "RABBITMQ_HOST") and settings.RABBITMQ_HOST:
+    broker_url = (
+        f"amqp://{settings.RABBITMQ_USER}:{settings.RABBITMQ_PASS}@{settings.RABBITMQ_HOST}:{settings.RABBITMQ_PORT}//"
+    )
+else:
+    # Fallback to Redis broker (simpler for deployment)
+    redis_password = f":{settings.REDIS_PASSWORD}@" if settings.REDIS_PASSWORD else ""
+    broker_url = f"redis://{redis_password}{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
+
 backend_url = f"db+postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}/{settings.POSTGRES_DB}"
 
 celery_app = Celery(

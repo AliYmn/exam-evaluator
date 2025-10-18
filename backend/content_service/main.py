@@ -74,4 +74,10 @@ async def http_exception_handler(_request, exc: ExceptionBase) -> ORJSONResponse
     )
 
 
+# Health check endpoint for Fly.io
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "content-service"}
+
+
 app.include_router(content_router, prefix=settings.API_STR)

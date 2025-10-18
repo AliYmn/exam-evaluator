@@ -263,11 +263,6 @@ export default function StudentResultPage() {
                     ></div>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 text-blue-700 text-sm bg-white/60 rounded-lg p-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span>Sayfa her 5 saniyede otomatik güncelleniyor</span>
-                </div>
               </div>
             </div>
           </div>

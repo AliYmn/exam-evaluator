@@ -112,7 +112,7 @@ export default function Home() {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
             </Link>
             <a
-              href="https://github.com/yourusername/exam-evaluator"
+              href="https://github.com/AliYmn/exam-evaluator"
           target="_blank"
           rel="noopener noreferrer"
               className="px-8 py-4 bg-white text-gray-700 rounded-xl font-semibold text-lg border-2 border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all flex items-center gap-3"

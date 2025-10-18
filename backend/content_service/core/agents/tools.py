@@ -3,6 +3,7 @@ LangChain tools for exam evaluation agent
 """
 
 from typing import Dict, Any, List
+import time
 from langchain_core.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -36,36 +37,21 @@ def parse_answer_key_tool(pdf_text: str) -> Dict[str, Any]:
         [
             (
                 "system",
-                """You are a TEXT EXTRACTION tool, NOT an AI assistant. Your ONLY job is EXACT VERBATIM COPY.
+                """You are a precise PDF text extractor. Extract questions and answers EXACTLY as written.
 
-🚨 CRITICAL - READ CAREFULLY:
-You are FORBIDDEN from:
-❌ Paraphrasing or rewording ANY text
-❌ Summarizing or condensing content
-❌ "Improving" or "clarifying" text
-❌ Translating or changing language
-❌ Adding your own interpretations
-❌ Fixing grammar or typos in the original
-❌ Omitting ANY words, sentences, or details
+CRITICAL RULES:
+- Copy text WORD-FOR-WORD (verbatim)
+- Do NOT paraphrase, summarize, or rewrite
+- Preserve ALL punctuation and formatting
+- Include question numbers exactly as shown
 
-You MUST:
-✅ Copy EVERY SINGLE WORD exactly as written
-✅ Preserve ALL punctuation marks (commas, periods, etc.)
-✅ Keep ALL formatting (line breaks, bullet points, numbering)
-✅ Include ALL examples, formulas, and explanations
-✅ Maintain exact spelling (even if it has typos)
-✅ Copy question numbers EXACTLY as shown (1, 2, 3 or a, b, c, etc.)
-
-EXAMPLE:
-Original: "Fotosentez nedir? Bitkilerin güneş ışığını kullanarak glikoz üretme sürecidir."
-❌ WRONG: "Fotosentez, bitkilerin ışığı kullanarak şeker üretmesidir."
-✅ CORRECT: "Fotosentez nedir? Bitkilerin güneş ışığını kullanarak glikoz üretme sürecidir."
-
-Think of yourself as a COPY-PASTE function, NOT a writer.
+HOW TO SEPARATE:
+- question_text: Everything that ASKS (including context, ends with ?)
+- expected_answer: The RESPONSE/EXPLANATION (starts after blank line)
 
 {format_instructions}
 
-RETURN ONLY THE JSON. ZERO INTERPRETATION.""",
+RETURN ONLY JSON.""",
             ),
             ("user", "Extract the following text VERBATIM (word-for-word):\n\n{pdf_text}"),
         ]
@@ -79,7 +65,15 @@ RETURN ONLY THE JSON. ZERO INTERPRETATION.""",
     )
 
     try:
+        print("🤖 Calling Gemini for answer key parsing...")
+        print(f"📄 Input text length: {len(pdf_text)} chars")
+
+        # Rate limiting for free tier (10 requests/min)
+        time.sleep(7)
+
         result = chain.invoke(pdf_text)
+
+        print(f"✅ Gemini response received: {result}")
 
         # Ensure all questions have required fields
         for q in result["questions"]:
@@ -94,8 +88,13 @@ RETURN ONLY THE JSON. ZERO INTERPRETATION.""",
         if "max_possible_score" not in result:
             result["max_possible_score"] = sum(q.get("max_score", 10) for q in result["questions"])
 
+        print(f"📊 Final result: {result['total_questions']} questions, {result['max_possible_score']} max score")
         return result
     except Exception as e:
+        print(f"❌ ERROR in parse_answer_key_tool: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
         return {"error": str(e), "questions": [], "total_questions": 0, "max_possible_score": 0}
 
 
@@ -124,38 +123,20 @@ def parse_student_answer_tool(pdf_text: str, question_count: int) -> List[Dict[s
         [
             (
                 "system",
-                """You are a TEXT EXTRACTION tool, NOT an AI assistant. Your ONLY job is EXACT VERBATIM COPY of student answers.
+                """You are a precise student answer extractor. Extract answers EXACTLY as written.
 
-🚨 CRITICAL - READ CAREFULLY:
-You are FORBIDDEN from:
-❌ Paraphrasing or rewording ANY text
-❌ Summarizing student answers
-❌ "Improving" or "clarifying" student text
-❌ Fixing student's grammar or spelling errors
-❌ Adding your own interpretations
-❌ Omitting ANY words or sentences
+CRITICAL RULES:
+- Copy WORD-FOR-WORD (verbatim) including spelling errors
+- Do NOT correct grammar or spelling
+- Do NOT paraphrase or improve text
+- Preserve ALL punctuation and formatting
+- If no answer: "[No answer provided]"
 
-You MUST:
-✅ Copy EVERY SINGLE WORD the student wrote
-✅ Preserve ALL punctuation marks
-✅ Keep ALL formatting (line breaks, bullet points)
-✅ Include ALL examples and explanations student provided
-✅ Maintain exact spelling (even student's mistakes)
-✅ Copy question numbers EXACTLY as shown
-✅ If question has NO answer, write: "[No answer provided]"
-
-EXAMPLE:
-Student wrote: "Fotosentes bitkinin gunes ile gida yapmasidir."
-❌ WRONG: "Fotosentez, bitkilerin güneş ile gıda yapmasıdır." (you corrected it!)
-✅ CORRECT: "Fotosentes bitkinin gunes ile gida yapmasidir." (exact copy with student's mistakes)
-
-Think of yourself as a COPY-PASTE function, NOT a grader or writer.
-
-EXPECTED NUMBER OF QUESTIONS: {question_count}
+EXPECTED QUESTIONS: {question_count}
 
 {format_instructions}
 
-RETURN ONLY THE JSON. ZERO INTERPRETATION. EXACT COPY ONLY.""",
+RETURN ONLY JSON.""",
             ),
             ("user", "Extract the student's answers VERBATIM (word-for-word):\n\n{pdf_text}"),
         ]
@@ -173,6 +154,9 @@ RETURN ONLY THE JSON. ZERO INTERPRETATION. EXACT COPY ONLY.""",
     )
 
     try:
+        # Rate limiting for free tier (10 requests/min)
+        time.sleep(7)
+
         result = chain.invoke({"pdf_text": pdf_text, "question_count": question_count})
         return result.get("answers", [])
     except Exception:
@@ -281,37 +265,72 @@ MAKSİMUM PUAN: {max_score}
         | parser
     )
 
-    try:
-        input_data = {
-            "question_number": question_number,
-            "question_text": question_text,
-            "expected_answer": expected_answer,
-            "student_answer": student_answer,
-            "keywords": keywords,
-            "max_score": max_score,
-        }
-        result = chain.invoke(input_data)
+    # Retry logic with exponential backoff for rate limits
+    max_retries = 3
+    base_delay = 7  # Free tier: 10 requests/min = 6 seconds + buffer
 
-        # Ensure score is within bounds
-        result["score"] = min(max(result["score"], 0), max_score)
+    for attempt in range(max_retries):
+        try:
+            # Rate limiting: Wait between requests to avoid quota exceeded
+            if attempt > 0:
+                wait_time = base_delay * (2**attempt)  # Exponential backoff
+                print(f"⏳ Rate limit retry {attempt}/{max_retries}, waiting {wait_time}s...")
+                time.sleep(wait_time)
+            else:
+                # Always wait to respect free tier limits (10 req/min)
+                time.sleep(base_delay)
 
-        # Ensure required fields
-        if "is_correct" not in result:
-            result["is_correct"] = result["score"] >= (max_score * 0.7)
-        if "confidence" not in result:
-            result["confidence"] = 0.8  # Default confidence
-        if "reasoning" not in result:
-            result["reasoning"] = "Standart değerlendirme"
+            input_data = {
+                "question_number": question_number,
+                "question_text": question_text,
+                "expected_answer": expected_answer,
+                "student_answer": student_answer,
+                "keywords": keywords,
+                "max_score": max_score,
+            }
+            result = chain.invoke(input_data)
 
-        return result
-    except Exception as e:
-        return {
-            "score": 0,
-            "feedback": f"Değerlendirme hatası: {str(e)}",
-            "is_correct": False,
-            "confidence": 0.0,
-            "reasoning": "Hata oluştu",
-        }
+            # Ensure score is within bounds
+            result["score"] = min(max(result["score"], 0), max_score)
+
+            # Ensure required fields
+            if "is_correct" not in result:
+                result["is_correct"] = result["score"] >= (max_score * 0.7)
+            if "confidence" not in result:
+                result["confidence"] = 0.8  # Default confidence
+            if "reasoning" not in result:
+                result["reasoning"] = "Standart değerlendirme"
+
+            return result
+
+        except Exception as e:
+            error_msg = str(e)
+
+            # Check if it's a rate limit error
+            if "429" in error_msg or "quota" in error_msg.lower():
+                if attempt < max_retries - 1:
+                    print(f"⚠️ Rate limit hit (attempt {attempt + 1}/{max_retries})")
+                    continue  # Retry with exponential backoff
+                else:
+                    print(f"❌ Rate limit exceeded after {max_retries} attempts")
+
+            # If not rate limit or final attempt, return error
+            return {
+                "score": 0,
+                "feedback": "Değerlendirme hatası: API limiti aşıldı. Lütfen birkaç dakika bekleyin veya API planınızı yükseltin.",
+                "is_correct": False,
+                "confidence": 0.0,
+                "reasoning": "API rate limit",
+            }
+
+    # Fallback (should never reach here)
+    return {
+        "score": 0,
+        "feedback": "Değerlendirme tamamlanamadı",
+        "is_correct": False,
+        "confidence": 0.0,
+        "reasoning": "Bilinmeyen hata",
+    }
 
 
 @tool
@@ -477,6 +496,9 @@ belirle.""",
     )
 
     try:
+        # Rate limiting for free tier (10 requests/min)
+        time.sleep(7)
+
         result = chain.invoke(
             {
                 "student_name": student_name,
