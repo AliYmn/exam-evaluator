@@ -210,60 +210,60 @@ make ps            # Show running containers
 ### Agent Workflow (LangGraph State Machine)
 
 ```
-                    [ ENTRY ]
-                        │
-                        ▼
-            ┌───────────────────────┐
-            │   REASONING NODE      │
-            │                       │
-            │  • Analyze task       │
-            │  • Choose tool        │
-            │  • Plan action        │
-            └───────────┬───────────┘
-                        │
-                        ▼
-            ┌───────────────────────┐
-            │  TOOL EXECUTION NODE  │
-            │                       │
-            │  • parse_answer_key   │
-            │  • parse_student_ans  │
-            │  • evaluate_answer    │
-            │  • analyze_performance│
-            └───────────┬───────────┘
-                        │
-                        ▼
-                 ┌──────────┐
-                 │ Is task  │
-                 │ evaluate?│
-                 └────┬─────┘
-                      │
-            ┌─────────┴─────────┐
-            NO                 YES
-            │                   │
-            ▼                   ▼
-        [ END ]     ┌───────────────────────┐
-                    │  QUALITY CHECK NODE   │
-                    │                       │
-                    │  • Review scoring     │
-                    │  • Check consistency  │
-                    │  • Validate feedback  │
-                    └───────────┬───────────┘
-                                │
-                         ┌──────┴──────┐
-                         │ Issues?     │
-                         └──────┬──────┘
-                                │
-                    ┌───────────┴───────────┐
-                    │                       │
-                    ▼                       ▼
-            Issues Found?              No Issues?
-            & retry < 2                     │
-                    │                       │
-                    │                       ▼
-                    │                   [ END ]
+                 [ ENTRY ]
+                     │
+                     ▼
+         ┌───────────────────────┐
+         │   REASONING NODE      │
+         │                       │
+         │  • Analyze task       │
+         │  • Choose tool        │
+         │  • Plan action        │
+         └──────────┬────────────┘
                     │
-                    └─────► Back to REASONING
-                            (Retry evaluation)
+                    ▼
+         ┌───────────────────────┐
+         │  TOOL EXECUTION NODE  │
+         │                       │
+         │  • parse_answer_key   │
+         │  • parse_student_ans  │
+         │  • evaluate_answer    │
+         │  • analyze_performance│
+         └──────────┬────────────┘
+                    │
+                    ▼
+              ┌──────────┐
+              │ Is task  │
+              │evaluate? │
+              └─────┬────┘
+                    │
+         ┌──────────┴──────────┐
+        NO                    YES
+         │                     │
+         ▼                     ▼
+     [ END ]      ┌───────────────────────┐
+                  │  QUALITY CHECK NODE   │
+                  │                       │
+                  │  • Review scoring     │
+                  │  • Check consistency  │
+                  │  • Validate feedback  │
+                  └──────────┬────────────┘
+                             │
+                      ┌──────┴──────┐
+                      │   Issues?   │
+                      └──────┬──────┘
+                             │
+                 ┌───────────┴───────────┐
+                 │                       │
+                 ▼                       ▼
+         Issues Found?            No Issues?
+         & retry < 2                    │
+                 │                      │
+                 │                      ▼
+                 │                  [ END ]
+                 │
+                 └──► Back to REASONING
+                      (Retry evaluation)
 ```
 
 ### Modular Code Structure
