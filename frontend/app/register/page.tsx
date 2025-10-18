@@ -37,25 +37,31 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 relative overflow-hidden">
           {/* Subtle gradient accent */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
 
-          {/* Header */}
+          {/* Header - Enhanced */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <Terminal className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-3 mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg blur-md opacity-50"></div>
+                <div className="relative w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Terminal className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <span className="text-sm font-mono text-gray-500">exam-evaluator</span>
+              <span className="text-sm font-mono text-gray-500 font-medium">exam-evaluator</span>
             </div>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-              Hesap Oluştur
-            </h1>
-            <p className="text-gray-600 text-sm">AI ile sınav değerlendirmeye başlayın</p>
+            <div className="space-y-2 mb-4">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Hesap Oluştur
+              </h1>
+              <p className="text-gray-600">AI ile sınav değerlendirmeye başlayın</p>
+            </div>
+            <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
           </div>
 
           {/* Form */}
@@ -133,17 +139,19 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 group mt-6"
+              className="group relative w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-blue-500/40 flex items-center justify-center gap-2 mt-6 overflow-hidden"
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>Hesap oluşturuluyor...</span>
                 </>
               ) : (
                 <>
+                  <Sparkles className="w-5 h-5" />
                   <span>Hesap Oluştur</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>

@@ -214,10 +214,19 @@ class ExamEvaluationAgent:
         """
         Chat about student using simple LLM (not agent, as this is simpler task).
         """
+        from google.generativeai.types import HarmCategory, HarmBlockThreshold
+
         llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-pro-latest",
+            model="gemini-2.0-flash-exp",
             google_api_key=settings.GEMINI_API_KEY,
-            temperature=0.5,
+            temperature=0.7,
+            max_output_tokens=1024,
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+            },
         )
 
         # Build context
@@ -290,5 +299,9 @@ BAĞLAM:
                     pass
 
             return result.strip()
-        except Exception:
+        except Exception as e:
+            print(f"❌ Chat error: {str(e)}")
+            import traceback
+
+            traceback.print_exc()
             return "Üzgünüm, şu anda yanıt veremiyorum. Lütfen daha sonra tekrar deneyin."

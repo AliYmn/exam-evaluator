@@ -26,7 +26,7 @@ def parse_answer_key_tool(pdf_text: str) -> Dict[str, Any]:
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-exp",
         google_api_key=settings.GEMINI_API_KEY,
-        temperature=0.1,
+        temperature=0.0,  # ZERO creativity - exact copying only
         max_output_tokens=8192,
     )
 
@@ -36,20 +36,38 @@ def parse_answer_key_tool(pdf_text: str) -> Dict[str, Any]:
         [
             (
                 "system",
-                """You are a precise exam answer key parser. Your ONLY job is to extract questions and answers EXACTLY as they appear in the document.
+                """You are a TEXT EXTRACTION tool, NOT an AI assistant. Your ONLY job is EXACT VERBATIM COPY.
 
-CRITICAL RULES:
-1. DO NOT interpret, summarize, or rephrase
-2. Extract WORD-FOR-WORD from the document
-3. Keep ALL original text including examples, formulas, bullet points
-4. Maintain exact question numbering (1, 2, 3... or a, b, c... as shown)
-5. DO NOT add scores, keywords, or any extra fields - ONLY question and answer
+🚨 CRITICAL - READ CAREFULLY:
+You are FORBIDDEN from:
+❌ Paraphrasing or rewording ANY text
+❌ Summarizing or condensing content
+❌ "Improving" or "clarifying" text
+❌ Translating or changing language
+❌ Adding your own interpretations
+❌ Fixing grammar or typos in the original
+❌ Omitting ANY words, sentences, or details
+
+You MUST:
+✅ Copy EVERY SINGLE WORD exactly as written
+✅ Preserve ALL punctuation marks (commas, periods, etc.)
+✅ Keep ALL formatting (line breaks, bullet points, numbering)
+✅ Include ALL examples, formulas, and explanations
+✅ Maintain exact spelling (even if it has typos)
+✅ Copy question numbers EXACTLY as shown (1, 2, 3 or a, b, c, etc.)
+
+EXAMPLE:
+Original: "Fotosentez nedir? Bitkilerin güneş ışığını kullanarak glikoz üretme sürecidir."
+❌ WRONG: "Fotosentez, bitkilerin ışığı kullanarak şeker üretmesidir."
+✅ CORRECT: "Fotosentez nedir? Bitkilerin güneş ışığını kullanarak glikoz üretme sürecidir."
+
+Think of yourself as a COPY-PASTE function, NOT a writer.
 
 {format_instructions}
 
-RETURN ONLY THE JSON. NO EXPLANATIONS.""",
+RETURN ONLY THE JSON. ZERO INTERPRETATION.""",
             ),
-            ("user", "{pdf_text}"),
+            ("user", "Extract the following text VERBATIM (word-for-word):\n\n{pdf_text}"),
         ]
     )
 
@@ -96,7 +114,7 @@ def parse_student_answer_tool(pdf_text: str, question_count: int) -> List[Dict[s
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-exp",
         google_api_key=settings.GEMINI_API_KEY,
-        temperature=0.1,
+        temperature=0.0,  # ZERO creativity - exact copying only
         max_output_tokens=8192,
     )
 
@@ -106,22 +124,40 @@ def parse_student_answer_tool(pdf_text: str, question_count: int) -> List[Dict[s
         [
             (
                 "system",
-                """You are a precise student answer sheet parser. Your ONLY job is to extract student answers EXACTLY as they appear.
+                """You are a TEXT EXTRACTION tool, NOT an AI assistant. Your ONLY job is EXACT VERBATIM COPY of student answers.
 
-CRITICAL RULES:
-1. DO NOT interpret, summarize, or rephrase
-2. Extract WORD-FOR-WORD from the document
-3. Keep ALL original text including examples, formulas, diagrams descriptions
-4. Maintain exact question numbering (1, 2, 3... or a, b, c... as shown)
-5. If a question has no answer, use "[No answer provided]"
+🚨 CRITICAL - READ CAREFULLY:
+You are FORBIDDEN from:
+❌ Paraphrasing or rewording ANY text
+❌ Summarizing student answers
+❌ "Improving" or "clarifying" student text
+❌ Fixing student's grammar or spelling errors
+❌ Adding your own interpretations
+❌ Omitting ANY words or sentences
+
+You MUST:
+✅ Copy EVERY SINGLE WORD the student wrote
+✅ Preserve ALL punctuation marks
+✅ Keep ALL formatting (line breaks, bullet points)
+✅ Include ALL examples and explanations student provided
+✅ Maintain exact spelling (even student's mistakes)
+✅ Copy question numbers EXACTLY as shown
+✅ If question has NO answer, write: "[No answer provided]"
+
+EXAMPLE:
+Student wrote: "Fotosentes bitkinin gunes ile gida yapmasidir."
+❌ WRONG: "Fotosentez, bitkilerin güneş ile gıda yapmasıdır." (you corrected it!)
+✅ CORRECT: "Fotosentes bitkinin gunes ile gida yapmasidir." (exact copy with student's mistakes)
+
+Think of yourself as a COPY-PASTE function, NOT a grader or writer.
 
 EXPECTED NUMBER OF QUESTIONS: {question_count}
 
 {format_instructions}
 
-RETURN ONLY THE JSON. NO EXPLANATIONS. ENSURE {question_count} answers.""",
+RETURN ONLY THE JSON. ZERO INTERPRETATION. EXACT COPY ONLY.""",
             ),
-            ("user", "{pdf_text}"),
+            ("user", "Extract the student's answers VERBATIM (word-for-word):\n\n{pdf_text}"),
         ]
     )
 

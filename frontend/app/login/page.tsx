@@ -13,8 +13,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: 'demo@demo.com',
+    password: 'demo12345!',
   });
 
   // Redirect to dashboard if already logged in
@@ -45,7 +45,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 relative overflow-hidden">
@@ -96,6 +96,31 @@ export default function LoginPage() {
               />
             </div>
 
+            {/* Demo Account Info */}
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-amber-400 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-lg">🎯</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-900 text-sm mb-1">Demo Hesap</h3>
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    Test için hazır kullanıcı bilgileri otomatik dolduruldu. Hemen giriş yapabilirsiniz!
+                  </p>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center gap-2 text-xs font-mono text-amber-900">
+                      <span className="font-semibold">Email:</span>
+                      <code className="bg-amber-100 px-2 py-0.5 rounded">demo@demo.com</code>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs font-mono text-amber-900">
+                      <span className="font-semibold">Şifre:</span>
+                      <code className="bg-amber-100 px-2 py-0.5 rounded">demo12345!</code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
@@ -106,17 +131,18 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 group mt-6"
+              className="group relative w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-blue-500/40 flex items-center justify-center gap-2 mt-6 overflow-hidden"
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>Giriş yapılıyor...</span>
                 </>
               ) : (
                 <>
                   <span>Giriş Yap</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
