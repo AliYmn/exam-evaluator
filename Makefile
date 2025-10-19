@@ -115,43 +115,119 @@ clean:
 # ☁️ Fly.io Deployment Commands
 #-----------------------------------------------
 
-# 🚀 Deploy backend to Fly.io
-deploy-backend:
-	flyctl deploy -a exam-evaluator-backend \
-		--config backend/fly.toml \
-		--dockerfile backend/Dockerfile.fly \
-		--remote-only
+# 🚀 Deploy all services to Fly.io
+deploy-all:
+	@echo "🚀 Deploying all services to Fly.io..."
+	flyctl deploy -c fly-auth.toml
+	flyctl deploy -c fly-content.toml
+	flyctl deploy -c fly-worker.toml
+	flyctl deploy -c fly-frontend.toml
+	@echo "✅ All services deployed successfully!"
 
-# 🌐 Deploy frontend to Fly.io
+# 🔐 Deploy Auth Service
+deploy-auth:
+	flyctl deploy -c fly-auth.toml
+
+# 📝 Deploy Content Service
+deploy-content:
+	flyctl deploy -c fly-content.toml
+
+# 👷 Deploy Content Worker
+deploy-worker:
+	flyctl deploy -c fly-worker.toml
+
+# 🌐 Deploy Frontend
 deploy-frontend:
-	flyctl deploy -a exam-evaluator-frontend \
-		--config frontend/fly.toml \
-		--dockerfile frontend/Dockerfile.fly \
-		--remote-only
+	flyctl deploy -c fly-frontend.toml
 
-# 🚢 Deploy both backend and frontend
-deploy-all: deploy-backend deploy-frontend
+# 📊 Check all services status
+status-all:
+	@echo "📊 Checking all services status..."
+	flyctl status -a exam-evaluator-auth
+	flyctl status -a exam-evaluator-content
+	flyctl status -a exam-evaluator-worker
+	flyctl status -a exam-evaluator-frontend
 
-# 📊 Check backend status
-status-backend:
-	flyctl status -a exam-evaluator-backend
+# 📊 Check Auth Service status
+status-auth:
+	flyctl status -a exam-evaluator-auth
 
-# 📊 Check frontend status
+# 📊 Check Content Service status
+status-content:
+	flyctl status -a exam-evaluator-content
+
+# 📊 Check Worker status
+status-worker:
+	flyctl status -a exam-evaluator-worker
+
+# 📊 Check Frontend status
 status-frontend:
 	flyctl status -a exam-evaluator-frontend
 
-# 📝 View backend logs
-logs-backend:
-	flyctl logs -a exam-evaluator-backend
+# 📝 View all services logs
+logs-all:
+	@echo "📝 Viewing all services logs..."
+	flyctl logs -a exam-evaluator-auth
+	flyctl logs -a exam-evaluator-content
+	flyctl logs -a exam-evaluator-worker
+	flyctl logs -a exam-evaluator-frontend
 
-# 📝 View frontend logs
+# 📝 View Auth Service logs
+logs-auth:
+	flyctl logs -a exam-evaluator-auth
+
+# 📝 View Content Service logs
+logs-content:
+	flyctl logs -a exam-evaluator-content
+
+# 📝 View Worker logs
+logs-worker:
+	flyctl logs -a exam-evaluator-worker
+
+# 📝 View Frontend logs
 logs-frontend:
 	flyctl logs -a exam-evaluator-frontend
 
-# 🔄 Restart backend on Fly.io
-restart-backend:
-	flyctl apps restart exam-evaluator-backend
+# 🔄 Restart all services
+restart-all:
+	@echo "🔄 Restarting all services..."
+	flyctl apps restart exam-evaluator-auth
+	flyctl apps restart exam-evaluator-content
+	flyctl apps restart exam-evaluator-worker
+	flyctl apps restart exam-evaluator-frontend
+	@echo "✅ All services restarted!"
 
-# 🔄 Restart frontend on Fly.io
+# 🔄 Restart Auth Service
+restart-auth:
+	flyctl apps restart exam-evaluator-auth
+
+# 🔄 Restart Content Service
+restart-content:
+	flyctl apps restart exam-evaluator-content
+
+# 🔄 Restart Worker
+restart-worker:
+	flyctl apps restart exam-evaluator-worker
+
+# 🔄 Restart Frontend
 restart-frontend:
 	flyctl apps restart exam-evaluator-frontend
+
+# 🗄️ Run database migrations
+migrate-fly:
+	@echo "🗄️ Running database migrations..."
+	flyctl ssh console -a exam-evaluator-content -C "cd /app && alembic -c /app/libs/alembic.ini upgrade heads"
+
+# 🔧 Set secrets for all services
+set-secrets:
+	@echo "🔧 Setting secrets for all services..."
+	@echo "Please run the following commands manually:"
+	@echo "flyctl secrets set -a exam-evaluator-auth JWT_SECRET_KEY=your_jwt_secret"
+	@echo "flyctl secrets set -a exam-evaluator-auth JWT_ALGORITHM=HS256"
+	@echo "flyctl secrets set -a exam-evaluator-auth GEMINI_API_KEY=your_gemini_key"
+	@echo "flyctl secrets set -a exam-evaluator-content JWT_SECRET_KEY=your_jwt_secret"
+	@echo "flyctl secrets set -a exam-evaluator-content JWT_ALGORITHM=HS256"
+	@echo "flyctl secrets set -a exam-evaluator-content GEMINI_API_KEY=your_gemini_key"
+	@echo "flyctl secrets set -a exam-evaluator-worker GEMINI_API_KEY=your_gemini_key"
+	@echo "flyctl secrets set -a exam-evaluator-worker CONTENT_QUEUE_NAME=content_queue"
+	@echo "flyctl secrets set -a exam-evaluator-worker CONTENT_WORKER_NAME=content_worker"
