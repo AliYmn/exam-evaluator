@@ -30,7 +30,7 @@ export default function StudentResultPage() {
   ]);
   const [newMessage, setNewMessage] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(true);  // Chat açık gelsin
 
   // Load chat history from localStorage on mount
   useEffect(() => {
