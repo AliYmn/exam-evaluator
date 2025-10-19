@@ -21,8 +21,10 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
     4. Update DB with parsed Q&A data
     5. Update status to COMPLETED or FAILED
     """
+    print(f"🚀 TASK STARTED: process_answer_key for evaluation_id={evaluation_id}, filename={filename}")
     with get_db_session_sync() as db:
         try:
+            print(f"📊 DB session opened for {evaluation_id}")
             # Update status to PARSING
             evaluation = db.execute(
                 select(Evaluation).where(Evaluation.evaluation_id == evaluation_id)

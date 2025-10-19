@@ -1,0 +1,31 @@
+# Fly.io configuration for Auth Service
+app = "exam-evaluator-auth"
+primary_region = "iad"
+
+[build]
+  dockerfile = "backend/auth_service/compose/production/Dockerfile"
+
+[env]
+  PORT = "8004"
+  PYTHONUNBUFFERED = "1"
+  PYTHONPATH = "/app"
+
+[http_service]
+  internal_port = 8004
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[http_service.checks]]
+  interval = "15s"
+  timeout = "10s"
+  grace_period = "30s"
+  method = "GET"
+  path = "/api/v1/health"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

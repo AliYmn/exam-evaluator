@@ -12,7 +12,17 @@ else:
     redis_password = f":{settings.REDIS_PASSWORD}@" if settings.REDIS_PASSWORD else ""
     broker_url = f"redis://{redis_password}{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
 
-backend_url = f"db+postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}/{settings.POSTGRES_DB}"
+# Configure backend URL - prioritize DATABASE_URL if available (for Fly.io managed Postgres)
+if settings.DATABASE_URL:
+    # Use DATABASE_URL if provided
+    base_url = settings.DATABASE_URL.replace("postgres://", "postgresql://")
+    # Remove sslmode query parameter if present (Celery backend doesn't need it)
+    if "?" in base_url:
+        base_url = base_url.split("?")[0]
+    backend_url = f"db+{base_url}"
+else:
+    # Build from individual variables
+    backend_url = f"db+postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}/{settings.POSTGRES_DB}"
 
 celery_app = Celery(
     settings.CONTENT_WORKER_NAME,

@@ -1,0 +1,19 @@
+# Fly.io configuration for Content Worker (Celery)
+app = "exam-evaluator-worker"
+primary_region = "iad"
+
+[build]
+  dockerfile = "fly/content-worker/Dockerfile"
+
+[env]
+  PYTHONUNBUFFERED = "1"
+  PYTHONPATH = "/app"
+
+# No HTTP service for workers - they just process tasks
+[[vm]]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 2
+
+[processes]
+  worker = "celery -A content_service.core.worker.celery worker --loglevel=info"

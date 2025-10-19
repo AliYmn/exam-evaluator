@@ -1,0 +1,31 @@
+# Fly.io configuration for Redis
+app = "exam-evaluator-redis"
+primary_region = "iad"
+
+[build]
+  image = "redis:7.2.4-alpine"
+
+[env]
+  REDIS_ARGS = ""
+
+[mounts]
+  source = "redis_data"
+  destination = "/data"
+  initial_size = "3gb"
+
+[[services]]
+  internal_port = 6379
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 6379
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 1000
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

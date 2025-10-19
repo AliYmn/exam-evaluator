@@ -1,0 +1,37 @@
+# Fly.io configuration for Content Service
+app = "exam-evaluator-content"
+primary_region = "iad"
+
+[build]
+  dockerfile = "fly/content-service/Dockerfile"
+
+[env]
+  PORT = "8001"
+  PYTHONUNBUFFERED = "1"
+  PYTHONPATH = "/app"
+
+[mounts]
+  source = "content_uploads"
+  destination = "/app/uploads"
+  initial_size = "10gb"
+
+[http_service]
+  internal_port = 8001
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+# Health check geçici olarak disabled - endpoint eklenene kadar
+# [[http_service.checks]]
+#   interval = "15s"
+#   timeout = "10s"
+#   grace_period = "30s"
+#   method = "GET"
+#   path = "/"
+
+[[vm]]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 2

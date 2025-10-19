@@ -1,0 +1,36 @@
+# Fly.io configuration for RabbitMQ
+app = "exam-evaluator-rabbitmq"
+primary_region = "iad"
+
+[build]
+  image = "rabbitmq:3.13.0-management-alpine"
+
+[mounts]
+  source = "rabbitmq_data"
+  destination = "/var/lib/rabbitmq/mnesia"
+  initial_size = "5gb"
+
+[[services]]
+  internal_port = 5672
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 5672
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 1000
+
+# Management interface (optional, internal only)
+[[services]]
+  internal_port = 15672
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 15672
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

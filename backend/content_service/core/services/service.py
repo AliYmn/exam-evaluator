@@ -66,8 +66,12 @@ class ContentService:
                 message="Answer key uploaded successfully. Processing in background.",
             )
 
-        except Exception:
+        except Exception as e:
             await self.db.rollback()
+            import traceback
+
+            print(f"ERROR in upload_answer_key: {e}")
+            print(traceback.format_exc())
             raise ExceptionBase(ErrorCode.INTERNAL_SERVER_ERROR)
 
     async def get_exam_detail(self, evaluation_id: str, user_id: int) -> ExamDetailResponse:

@@ -12,36 +12,52 @@ from libs import settings
 Base = declarative_base()
 
 # Database URL configurations
-ASYNC_DATABASE_URL = (
-    f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
-    f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
-)
+if settings.DATABASE_URL:
+    # Use DATABASE_URL if provided (e.g., from Fly.io managed Postgres)
+    # Replace 'postgres://' with 'postgresql+asyncpg://' for async
+    # Remove sslmode parameter as asyncpg uses 'ssl' instead
+    base_url = settings.DATABASE_URL.replace("postgres://", "postgresql://")
+    # Remove sslmode query parameter if present (asyncpg doesn't support it)
+    if "sslmode=" in base_url:
+        base_url = base_url.split("?")[0]  # Remove all query parameters for now
+    ASYNC_DATABASE_URL = base_url.replace("postgresql://", "postgresql+asyncpg://")
+    SYNC_DATABASE_URL = base_url
+else:
+    # Build from individual variables
+    ASYNC_DATABASE_URL = (
+        f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
+        f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+    )
 
-SYNC_DATABASE_URL = (
-    f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
-    f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
-)
+    SYNC_DATABASE_URL = (
+        f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"
+        f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+    )
 
 # Engine configurations
 async_engine = create_async_engine(
     ASYNC_DATABASE_URL,
-    pool_size=5,
-    max_overflow=100,
-    pool_timeout=60,
-    pool_recycle=3600,
+    pool_size=2,  # Reduced from 5 to 2
+    max_overflow=5,  # Reduced from 100 to 5
+    pool_timeout=30,  # Reduced from 60 to 30
+    pool_recycle=1800,  # Reduced from 3600 to 1800 (30 minutes)
+    pool_pre_ping=True,  # Test connections before using them
     echo=False,
     echo_pool=False,
     future=True,
+    connect_args={"ssl": False},  # Disable SSL for asyncpg
 )
 
 sync_engine = create_engine(
     SYNC_DATABASE_URL,
-    pool_size=5,
-    max_overflow=100,
-    pool_timeout=60,
-    pool_recycle=3600,
+    pool_size=2,  # Reduced from 5 to 2
+    max_overflow=5,  # Reduced from 100 to 5
+    pool_timeout=30,  # Reduced from 60 to 30
+    pool_recycle=1800,  # Reduced from 3600 to 1800 (30 minutes)
+    pool_pre_ping=True,  # Test connections before using them
     echo=False,
     echo_pool=False,
+    connect_args={"sslmode": "disable"},  # Disable SSL for psycopg2
 )
 
 # Session factories

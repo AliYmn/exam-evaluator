@@ -1,0 +1,24 @@
+# Fly.io ignore file - only include necessary files
+
+# Include backend
+!backend/
+
+# Exclude unnecessary files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.Python
+**/.pytest_cache/
+**/.coverage
+**/htmlcov/
+**/dist/
+**/build/
+**/*.egg-info/
+
+# Exclude frontend and other non-backend files
+frontend/
+data/
+.git/
+.github/
+*.md

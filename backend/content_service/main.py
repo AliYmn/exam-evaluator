@@ -61,7 +61,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_headers=["*"],
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_credentials=True,
 )
 
@@ -71,6 +71,18 @@ async def http_exception_handler(_request, exc: ExceptionBase) -> ORJSONResponse
     return ORJSONResponse(
         status_code=exc.status_code,
         content=exc.to_dict(),
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(_request, exc: Exception) -> ORJSONResponse:
+    import traceback
+
+    print(f"UNHANDLED EXCEPTION: {exc}")
+    print(traceback.format_exc())
+    return ORJSONResponse(
+        status_code=500,
+        content={"detail": f"Internal server error: {str(exc)}"},
     )
 
 

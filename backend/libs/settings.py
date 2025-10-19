@@ -13,12 +13,13 @@ class Config(BaseSettings):
     JWT_ALGORITHM: str
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days (24h * 7 = 168h = 10080min)
 
-    # POSTGRES
-    POSTGRES_PASSWORD: str
-    POSTGRES_HOST: str
-    POSTGRES_DB: str
-    POSTGRES_USER: str
-    POSTGRES_PORT: int
+    # POSTGRES (can use DATABASE_URL or individual variables)
+    DATABASE_URL: str = ""  # Optional - if provided, overrides individual variables
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_HOST: str = ""
+    POSTGRES_DB: str = ""
+    POSTGRES_USER: str = ""
+    POSTGRES_PORT: int = 5432
 
     # RabbitMQ (Optional - falls back to Redis if not provided)
     RABBITMQ_PASS: str = ""

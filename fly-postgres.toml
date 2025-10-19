@@ -1,0 +1,34 @@
+# Fly.io configuration for PostgreSQL
+app = "exam-evaluator-postgres"
+primary_region = "iad"
+
+[build]
+  dockerfile = "fly/postgres/Dockerfile"
+
+[env]
+  POSTGRES_DB = "exam_evaluator"
+  POSTGRES_USER = "postgres"
+  POSTGRES_HOST_AUTH_METHOD = "scram-sha-256"
+  PGDATA = "/data/pgdata"
+
+[mounts]
+  source = "postgres_data"
+  destination = "/data"
+  initial_size = "10gb"
+
+[[services]]
+  internal_port = 5432
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 5432
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 1000
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

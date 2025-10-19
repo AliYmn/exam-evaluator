@@ -1,0 +1,31 @@
+# Fly.io configuration for Frontend (Next.js)
+app = "exam-evaluator-frontend"
+primary_region = "iad"
+
+[build]
+  dockerfile = "./fly/frontend/Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  NEXT_PUBLIC_API_URL = "https://exam-evaluator-auth.fly.dev/api/v1"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[[http_service.checks]]
+  interval = "15s"
+  timeout = "10s"
+  grace_period = "30s"
+  method = "GET"
+  path = "/"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
