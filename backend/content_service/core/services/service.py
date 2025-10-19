@@ -66,12 +66,8 @@ class ContentService:
                 message="Answer key uploaded successfully. Processing in background.",
             )
 
-        except Exception as e:
+        except Exception:
             await self.db.rollback()
-            import traceback
-
-            print(f"ERROR in upload_answer_key: {e}")
-            print(traceback.format_exc())
             raise ExceptionBase(ErrorCode.INTERNAL_SERVER_ERROR)
 
     async def get_exam_detail(self, evaluation_id: str, user_id: int) -> ExamDetailResponse:
@@ -151,12 +147,7 @@ class ContentService:
 
         except ExceptionBase:
             raise
-        except Exception as e:
-            # Log the actual error for debugging
-            print(f"Error in get_all_exams: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
+        except Exception:
             raise ExceptionBase(ErrorCode.INTERNAL_SERVER_ERROR)
 
     async def upload_student_sheet(
@@ -226,12 +217,8 @@ class ContentService:
 
         except ExceptionBase:
             raise
-        except Exception as e:
+        except Exception:
             await self.db.rollback()
-            print(f"Error in upload_student_sheet: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
             raise ExceptionBase(ErrorCode.INTERNAL_SERVER_ERROR)
 
     async def get_exam_students(self, evaluation_id: str, user_id: int):
@@ -313,11 +300,7 @@ class ContentService:
 
         except ExceptionBase:
             raise
-        except Exception as e:
-            print(f"Error in get_exam_students: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
+        except Exception:
             raise ExceptionBase(ErrorCode.INTERNAL_SERVER_ERROR)
 
     async def get_student_detail(self, student_response_id: int, user_id: int):
@@ -413,11 +396,7 @@ class ContentService:
 
         except ExceptionBase:
             raise
-        except Exception as e:
-            print(f"Error in get_student_detail: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
+        except Exception:
             raise ExceptionBase(ErrorCode.INTERNAL_SERVER_ERROR)
 
     async def chat_with_student_context(
@@ -514,9 +493,5 @@ class ContentService:
 
         except ExceptionBase:
             raise
-        except Exception as e:
-            print(f"Error in chat_with_student_context: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
+        except Exception:
             raise ExceptionBase(ErrorCode.INTERNAL_SERVER_ERROR)

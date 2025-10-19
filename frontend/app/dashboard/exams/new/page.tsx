@@ -20,38 +20,47 @@ export default function NewExamPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent multiple submissions - HEMEN kontrol et
+    if (loading) {
+      return;
+    }
+
+    // HEMEN loading'i true yap
+    setLoading(true);
     setError(null);
     setSuccess(false);
 
     // Validation
     if (!examName || !answerKey) {
       setError('Please fill in all fields');
+      setLoading(false);
       return;
     }
 
     if (examName.length < 3) {
       setError('Exam name must be at least 3 characters');
+      setLoading(false);
       return;
     }
 
     if (!answerKey.name.toLowerCase().endsWith('.pdf')) {
       setError('Answer key must be a PDF file');
+      setLoading(false);
       return;
     }
 
     if (!token) {
       setError('You must be logged in to create an exam');
+      setLoading(false);
       router.push('/login');
       return;
     }
-
-    setLoading(true);
 
     try {
       // Call API to upload answer key
       const response = await examApi.uploadAnswerKey(token, examName, answerKey);
 
-      console.log('Upload response:', response);
       setSuccess(true);
 
       // Show success message briefly, then redirect
@@ -60,7 +69,6 @@ export default function NewExamPage() {
       }, 1500);
 
     } catch (err: any) {
-      console.error('Upload error:', err);
       setError(err.message || 'Failed to create exam. Please try again.');
     } finally {
       setLoading(false);
@@ -91,7 +99,7 @@ export default function NewExamPage() {
           <div className="absolute -bottom-2 left-0 w-32 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {/* Exam Name */}
           <div className="group bg-white rounded-2xl shadow-sm p-6 border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
@@ -228,8 +236,8 @@ export default function NewExamPage() {
           {/* Submit Button - Enhanced */}
           <button
             type="submit"
-            disabled={loading || !examName || !answerKey}
-            className="group relative w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-5 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl shadow-blue-500/40 hover:shadow-3xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 overflow-hidden"
+            disabled={loading || !examName || !answerKey || success}
+            className="group relative w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-5 rounded-2xl font-semibold text-lg hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-2xl shadow-blue-500/40 hover:shadow-3xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             {loading ? (
