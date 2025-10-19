@@ -130,24 +130,6 @@ services:
     networks:
       - exam-network
 
-  # Content Beat (Celery Scheduler)
-  content-beat:
-    build:
-      context: ./backend
-      dockerfile: content_service/compose/local/DockerfileBeat
-    volumes:
-      - ./backend/content_service:/app/content_service
-      - ./backend/libs:/app/libs
-      - ./backend/requirements.txt:/app/requirements.txt
-      - uv-cache:/root/.cache/uv
-    env_file:
-      - .env
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - exam-network
-
   # Authentication Service
   auth-service:
     build:
