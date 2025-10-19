@@ -76,10 +76,6 @@ async def http_exception_handler(_request, exc: ExceptionBase) -> ORJSONResponse
 
 @app.exception_handler(Exception)
 async def general_exception_handler(_request, exc: Exception) -> ORJSONResponse:
-    import traceback
-
-    print(f"UNHANDLED EXCEPTION: {exc}")
-    print(traceback.format_exc())
     return ORJSONResponse(
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"},

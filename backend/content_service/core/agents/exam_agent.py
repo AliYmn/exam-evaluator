@@ -287,7 +287,6 @@ BAĞLAM:
         chain = prompt | llm | StrOutputParser()
 
         try:
-            print(f"💬 Chat request for {student_name}: '{question[:50]}...'")
             result = chain.invoke({"context": context, "question": question})
 
             # Check if accidentally returned JSON
@@ -304,15 +303,12 @@ BAĞLAM:
                     pass
 
             final_result = result.strip() if result else "Yanıt alınamadı."
-            print(f"✅ Chat response: {len(final_result)} chars")
             return final_result
 
         except TimeoutError:
-            print(f"⏱️ Chat timeout for {student_name}")
             return "Yanıt süresi aşıldı. Lütfen sorunuzu daha kısa tutun ve tekrar deneyin."
         except Exception as e:
             error_msg = str(e)
-            print(f"❌ Chat error for {student_name}: {error_msg}")
 
             # More specific error messages
             if "rate_limit" in error_msg.lower() or "quota" in error_msg.lower():
@@ -320,7 +316,4 @@ BAĞLAM:
             elif "safety" in error_msg.lower() or "blocked" in error_msg.lower():
                 return "Bu soru için yanıt üretilemedi. Lütfen farklı bir şekilde sorun."
             else:
-                import traceback
-
-                traceback.print_exc()
                 return "Üzgünüm, şu anda yanıt veremiyorum. Lütfen daha sonra tekrar deneyin."

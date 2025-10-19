@@ -138,7 +138,5 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # Continue with normal flow
             return await call_next(request)
 
-        except Exception as e:
-            # Skip rate limit check in case of Redis connection errors, etc.
-            print(f"Rate limit error: {str(e)}")
+        except Exception:
             return await call_next(request)

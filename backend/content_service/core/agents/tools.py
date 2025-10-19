@@ -65,9 +65,6 @@ RETURN ONLY JSON.""",
     )
 
     try:
-        print("🤖 Calling Gemini for answer key parsing...")
-        print(f"📄 Input text length: {len(pdf_text)} chars")
-
         # Rate limiting for free tier (10 requests/min)
         time.sleep(7)
 
@@ -77,8 +74,6 @@ RETURN ONLY JSON.""",
         cleaned_text = cleaned_text.replace("\x00", "").replace("\ufffd", "")
 
         result = chain.invoke(cleaned_text)
-
-        print(f"✅ Gemini response received: {result}")
 
         # Ensure all questions have required fields
         for q in result["questions"]:
@@ -93,14 +88,9 @@ RETURN ONLY JSON.""",
         if "max_possible_score" not in result:
             result["max_possible_score"] = sum(q.get("max_score", 10) for q in result["questions"])
 
-        print(f"📊 Final result: {result['total_questions']} questions, {result['max_possible_score']} max score")
         return result
-    except Exception as e:
-        print(f"❌ ERROR in parse_answer_key_tool: {str(e)}")
-        import traceback
-
-        traceback.print_exc()
-        return {"error": str(e), "questions": [], "total_questions": 0, "max_possible_score": 0}
+    except Exception:
+        return {"error": "An error occurred", "questions": [], "total_questions": 0, "max_possible_score": 0}
 
 
 @tool
@@ -169,11 +159,7 @@ RETURN ONLY JSON.""",
 
         result = chain.invoke({"pdf_text": cleaned_text, "question_count": question_count})
         return result.get("answers", [])
-    except Exception as e:
-        print(f"❌ ERROR in parse_student_answer_tool: {str(e)}")
-        import traceback
-
-        traceback.print_exc()
+    except Exception:
         return [{"number": i + 1, "student_answer": "[Error parsing]"} for i in range(question_count)]
 
 
@@ -288,7 +274,6 @@ MAKSİMUM PUAN: {max_score}
             # Rate limiting: Wait between requests to avoid quota exceeded
             if attempt > 0:
                 wait_time = base_delay * (2**attempt)  # Exponential backoff
-                print(f"⏳ Rate limit retry {attempt}/{max_retries}, waiting {wait_time}s...")
                 time.sleep(wait_time)
             else:
                 # Always wait to respect free tier limits (10 req/min)
@@ -329,7 +314,6 @@ MAKSİMUM PUAN: {max_score}
             # Check if it's a rate limit error
             if "429" in error_msg or "quota" in error_msg.lower():
                 if attempt < max_retries - 1:
-                    print(f"⚠️ Rate limit hit (attempt {attempt + 1}/{max_retries})")
                     continue  # Retry with exponential backoff
                 else:
                     print(f"❌ Rate limit exceeded after {max_retries} attempts")

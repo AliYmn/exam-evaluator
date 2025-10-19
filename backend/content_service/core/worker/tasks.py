@@ -9,7 +9,12 @@ from libs.cache.progress_tracker import ProgressTracker
 from sqlalchemy import select
 
 
-@celery_app.task(name="process_answer_key", bind=True)
+@celery_app.task(
+    name="process_answer_key",
+    bind=True,
+    max_retries=3,
+    default_retry_delay=30,
+)
 def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename: str):
     """
     Background task to process answer key PDF.
@@ -21,10 +26,8 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
     4. Update DB with parsed Q&A data
     5. Update status to COMPLETED or FAILED
     """
-    print(f"🚀 TASK STARTED: process_answer_key for evaluation_id={evaluation_id}, filename={filename}")
     with get_db_session_sync() as db:
         try:
-            print(f"📊 DB session opened for {evaluation_id}")
             # Update status to PARSING
             evaluation = db.execute(
                 select(Evaluation).where(Evaluation.evaluation_id == evaluation_id)
@@ -74,10 +77,6 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
 
             pdf_text = extract_text_from_pdf_bytes(pdf_bytes)
 
-            # DEBUG: Log extracted text length
-            print(f"📄 PDF Text extracted: {len(pdf_text)} characters")
-            print(f"📄 First 500 chars: {pdf_text[:500]}")
-
             # Step 3: Preparing AI
             evaluation.current_message = "AI ile soru analizi başlıyor..."
             evaluation.progress_percentage = 40.0
@@ -104,12 +103,6 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
 
             agent = ExamEvaluationAgent()
             parsed_data = agent.parse_answer_key(pdf_text)
-
-            # DEBUG: Log parsed result
-            print(f"📊 Parsed data: {parsed_data}")
-            if "error" in parsed_data:
-                print(f"❌ Error in parsed data: {parsed_data['error']}")
-            print(f"📝 Total questions found: {parsed_data.get('total_questions', 0)}")
 
             evaluation.current_message = "Veriler kaydediliyor..."
             evaluation.progress_percentage = 85.0
@@ -163,7 +156,7 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
                 "max_score": parsed_data.get("max_possible_score", 0),
             }
 
-        except Exception as e:
+        except Exception as error:
             # Re-query evaluation in case of error
             evaluation = db.execute(
                 select(Evaluation).where(Evaluation.evaluation_id == evaluation_id)
@@ -171,7 +164,7 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
 
             if evaluation:
                 evaluation.status = EvaluationStatus.FAILED
-                evaluation.error_message = str(e)
+                evaluation.error_message = str(error)
                 evaluation.current_message = "Failed to parse answer key"
                 db.commit()
 
@@ -179,11 +172,15 @@ def process_answer_key_task(self, evaluation_id: str, pdf_base64: str, filename:
             ProgressTracker.set_evaluation_progress(
                 evaluation_id=evaluation_id,
                 percentage=0.0,
-                message=f"Failed to parse answer key: {str(e)}",
+                message=f"Failed to parse answer key: {str(error)}",
                 status="failed",
             )
 
-            raise Exception(f"Failed to process answer key: {str(e)}")
+            # Retry logic
+            if self.request.retries >= self.max_retries:
+                raise error
+            else:
+                self.retry(exc=error)
 
 
 def extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str:
@@ -216,7 +213,12 @@ def extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str:
         raise Exception(f"Failed to extract text from PDF: {str(e)}")
 
 
-@celery_app.task(name="process_student_answer", bind=True)
+@celery_app.task(
+    name="process_student_answer",
+    bind=True,
+    max_retries=3,
+    default_retry_delay=30,
+)
 def process_student_answer_task(self, student_response_id: int, evaluation_id: str, pdf_base64: str, filename: str):
     """
     Background task to process student answer sheet.
@@ -297,21 +299,25 @@ def process_student_answer_task(self, student_response_id: int, evaluation_id: s
                 "total_questions": len(answer_key_questions),
             }
 
-        except Exception as e:
+        except Exception as error:
             # Re-query student response in case of error
             student_response = db.execute(
                 select(StudentResponse).where(StudentResponse.id == student_response_id)
             ).scalar_one_or_none()
 
-            # Mark as failed by leaving it with incomplete data
-            print(f"Error in process_student_answer_task: {str(e)}")
-            import traceback
+            # Retry logic
+            if self.request.retries >= self.max_retries:
+                raise error
+            else:
+                self.retry(exc=error)
 
-            traceback.print_exc()
-            raise Exception(f"Failed to process student answer: {str(e)}")
 
-
-@celery_app.task(name="evaluate_student_responses", bind=True)
+@celery_app.task(
+    name="evaluate_student_responses",
+    bind=True,
+    max_retries=3,
+    default_retry_delay=30,
+)
 def evaluate_student_responses_task(self, student_response_id: int, evaluation_id: str):
     """
     Background task to evaluate student responses using AI.
@@ -497,7 +503,7 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
                 "percentage": percentage,
             }
 
-        except Exception as e:
+        except Exception as error:
             # Re-query student response in case of error
             student_response = db.execute(
                 select(StudentResponse).where(StudentResponse.id == student_response_id)
@@ -508,13 +514,12 @@ def evaluate_student_responses_task(self, student_response_id: int, evaluation_i
                 student_response_id=student_response_id,
                 evaluation_id=evaluation_id,
                 percentage=0.0,
-                message=f"Evaluation failed: {str(e)}",
+                message=f"Evaluation failed: {str(error)}",
                 status="failed",
             )
 
-            # Mark as failed by leaving it with incomplete data
-            print(f"Error in evaluate_student_responses_task: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
-            raise Exception(f"Failed to evaluate student responses: {str(e)}")
+            # Retry logic
+            if self.request.retries >= self.max_retries:
+                raise error
+            else:
+                self.retry(exc=error)

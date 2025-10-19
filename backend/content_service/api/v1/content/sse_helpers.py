@@ -57,6 +57,5 @@ async def create_progress_stream(
         if iteration >= max_iterations:
             yield f"data: {json.dumps({'type': 'timeout', 'message': 'Stream timeout'})}\n\n"
 
-    except Exception as e:
-        print(f"SSE stream error: {str(e)}")
-        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    except Exception:
+        yield f"data: {json.dumps({'type': 'error', 'message': 'An error occurred'})}\n\n"
