@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import {
   ArrowLeft, CheckCircle2, XCircle, AlertCircle,
-  MessageSquare, Send, X, Loader2, FileText, Award, Target, TrendingUp, AlertTriangle
+  MessageSquare, Send, X, Loader2, FileText, Award, Target, TrendingUp, AlertTriangle, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import { examApi, StudentDetailResponse } from '@/lib/api';
@@ -30,7 +30,7 @@ export default function StudentResultPage() {
   ]);
   const [newMessage, setNewMessage] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(true);  // Chat açık gelsin
+  const [isChatOpen, setIsChatOpen] = useState(true);
 
   // Load chat history from localStorage on mount
   useEffect(() => {
@@ -47,16 +47,16 @@ export default function StudentResultPage() {
         console.error('❌ Failed to parse saved chat:', e);
       }
     }
-  }, [studentId]);
+  }, [studentId.toString()]);
 
   // Save chat history to localStorage whenever it changes
   useEffect(() => {
-    if (chatMessages.length > 1) { // More than just the welcome message
+    if (chatMessages.length > 1) {
       const chatKey = `chat_history_${studentId}`;
       localStorage.setItem(chatKey, JSON.stringify(chatMessages));
       console.log('💾 Saved chat history to localStorage:', chatMessages.length, 'messages');
     }
-  }, [chatMessages, studentId]);
+  }, [chatMessages, studentId.toString()]);
 
   useEffect(() => {
     console.log('🔍 Student detail page mounted:', { examId, studentId, hasToken: !!token, hasHydrated: _hasHydrated });
@@ -74,43 +74,22 @@ export default function StudentResultPage() {
     if (isProcessing && token && _hasHydrated) {
       console.log('⏳ Student is processing, setting up silent auto-refresh...');
       const interval = setInterval(() => {
-        console.log('🔄 Silent auto-refresh...');
-        // Silent refresh - don't show loading state
-        examApi.getStudentDetail(token, studentId)
-          .then(data => setStudent(data))
-          .catch(err => console.error('Silent refresh error:', err));
-      }, 5000); // Refresh every 5 seconds
+        console.log('🔄 Silent refresh for processing student...');
+        fetchStudentDetail();
+      }, 5000);
 
-      return () => {
-        console.log('🛑 Clearing auto-refresh interval');
-        clearInterval(interval);
-      };
+      return () => clearInterval(interval);
     }
   }, [student, token, _hasHydrated]);
 
   const fetchStudentDetail = async () => {
-    console.log('📡 Fetching student detail for ID:', studentId);
-
-    // Wait for hydration before checking token
-    if (!_hasHydrated) {
-      return;
-    }
-
-    if (!token) {
-      console.error('❌ No token found, redirecting to login');
-      router.push('/login');
-      return;
-    }
-
     try {
-      console.log('🚀 Calling examApi.getStudentDetail...');
-      const data = await examApi.getStudentDetail(token, studentId);
-      console.log('✅ Student detail received:', data);
-      setStudent(data);
+      const response = await examApi.getStudentDetail(token!, studentId);
+      setStudent(response);
       setError(null);
     } catch (err: any) {
-      console.error('❌ Error fetching student detail:', err);
-      setError(err.message || 'Öğrenci detayları yüklenirken bir hata oluştu');
+      console.error('Error fetching student detail:', err);
+      setError(err.message || 'Bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -118,28 +97,27 @@ export default function StudentResultPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || chatLoading || !token) return;
+    if (!newMessage.trim() || chatLoading) return;
 
     const userMessage = newMessage.trim();
-
-    // Add user message immediately
-    setChatMessages((prev) => [...prev, { role: 'user', message: userMessage }]);
     setNewMessage('');
+
+    // Add user message
+    setChatMessages((prev) => [...prev, { role: 'user', message: userMessage }]);
     setChatLoading(true);
 
     try {
-      // Prepare chat history for API (convert to required format)
-      const historyForAPI = chatMessages.map(msg => ({
+      // Build chat history for API
+      const history = chatMessages.slice(1).map((msg) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
-        content: msg.message
+        content: msg.message,
       }));
 
-      // Call API
       const response = await examApi.chatAboutStudent(
-        token,
+        token!,
         studentId,
         userMessage,
-        historyForAPI
+        history
       );
 
       // Add AI response
@@ -152,7 +130,6 @@ export default function StudentResultPage() {
       ]);
     } catch (err: any) {
       console.error('Chat error:', err);
-      // Add error message
       setChatMessages((prev) => [
         ...prev,
         {
@@ -179,14 +156,14 @@ export default function StudentResultPage() {
 
   const getScoreColor = (percentage: number) => {
     if (percentage >= 80) return 'text-emerald-600';
-    if (percentage >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (percentage >= 60) return 'text-amber-600';
+    return 'text-rose-600';
   };
 
   const getScoreBg = (percentage: number) => {
     if (percentage >= 80) return 'bg-emerald-500';
-    if (percentage >= 60) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (percentage >= 60) return 'bg-amber-500';
+    return 'bg-rose-500';
   };
 
   const getScoreGrade = (percentage: number) => {
@@ -208,8 +185,14 @@ export default function StudentResultPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Sonuçlar yükleniyor...</p>
+            <div className="relative">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg">
+                <Loader2 className="w-8 h-8 text-white animate-spin" />
+              </div>
+              <div className="absolute inset-0 w-16 h-16 bg-blue-400 rounded-2xl mx-auto animate-ping opacity-20"></div>
+            </div>
+            <p className="text-lg font-medium text-gray-700">Sonuçlar yükleniyor...</p>
+            <p className="text-sm text-gray-500 mt-2">Lütfen bekleyin</p>
           </div>
         </div>
       </DashboardLayout>
@@ -219,26 +202,28 @@ export default function StudentResultPage() {
   if (error || !student) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen px-4">
           <div className="text-center max-w-md">
-            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Sonuçlar Yüklenemedi</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <div className="flex items-center justify-center gap-4">
+            <div className="w-20 h-20 bg-rose-100 rounded-3xl mx-auto mb-6 flex items-center justify-center">
+              <AlertCircle className="w-10 h-10 text-rose-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">Sonuçlar Yüklenemedi</h2>
+            <p className="text-gray-600 mb-8">{error}</p>
+            <div className="flex items-center justify-center gap-3">
               <button
                 onClick={() => {
                   setError(null);
                   setLoading(true);
                   fetchStudentDetail();
                 }}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/30 font-medium"
               >
                 <Loader2 className="w-5 h-5" />
                 Tekrar Dene
               </button>
               <Link
                 href={`/dashboard/exams/${examId}`}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Sınava Dön
@@ -268,131 +253,132 @@ export default function StudentResultPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Processing Banner */}
-        {isProcessing && (
-          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-xl p-6 mb-6 shadow-lg">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                <Loader2 className="w-6 h-6 text-white animate-spin" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-blue-900 text-lg mb-2 flex items-center gap-2">
-                  ⚡ AI Değerlendirme Devam Ediyor
-                  <span className="px-2 py-1 bg-blue-200 text-blue-700 text-xs rounded-full font-semibold">
-                    CANLI
-                  </span>
-                </h3>
-                <p className="text-blue-800 mb-3">
-                  <strong>{evaluatedCount}/{totalQuestions}</strong> soru değerlendirildi.
-                  Geriye <strong>{totalQuestions - evaluatedCount}</strong> soru kaldı.
-                </p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-                {/* Progress Bar */}
-                <div className="mb-3">
-                  <div className="flex items-center justify-between text-xs text-blue-700 mb-1">
-                    <span>İlerleme</span>
-                    <span className="font-bold">{Math.round((evaluatedCount / totalQuestions) * 100)}%</span>
-                  </div>
-                  <div className="w-full bg-blue-200 rounded-full h-2.5 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500"
-                      style={{ width: `${(evaluatedCount / totalQuestions) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Header */}
+        <div className="mb-8">
+          <Link
+            href={`/dashboard/exams/${examId}`}
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-6 group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">Sınava Dön</span>
+          </Link>
 
-        {/* Back Button */}
-        <Link
-          href={`/dashboard/exams/${examId}`}
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition mb-6"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Sınava Dön</span>
-        </Link>
-
-        {/* Student Header Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            {/* Student Info */}
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-white">
-                  {student.student_name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{student.student_name}</h1>
-                <p className="text-gray-600 mt-1">Detaylı Değerlendirme Sonuçları</p>
-              </div>
-            </div>
-
-            {/* Score Display */}
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-sm text-gray-600 mb-1">Toplam Puan</div>
-                <div className="text-3xl font-bold text-gray-900">
-                  {student.total_score.toFixed(1)}<span className="text-xl text-gray-500">/{student.max_score}</span>
-                </div>
-              </div>
-              <div className={`w-24 h-24 rounded-full ${getScoreBg(student.percentage)} flex items-center justify-center`}>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{student.percentage.toFixed(0)}%</div>
-                  <div className="text-sm text-white/90">{getScoreGrade(student.percentage)}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{totalQuestions}</div>
-              <div className="text-sm text-gray-600">Toplam Soru</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-emerald-600">{correctCount}</div>
-              <div className="text-sm text-gray-600">Doğru</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{totalQuestions - correctCount}</div>
-              <div className="text-sm text-gray-600">Yanlış</div>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{student.student_name}</h1>
+              <p className="text-gray-500">Sınav Sonuç Detayı</p>
             </div>
           </div>
         </div>
 
-        {/* Performance Summary */}
-        {student.summary && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-            <div className="flex items-start gap-3">
-              <Award className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-bold text-blue-900 mb-2">Performans Özeti</h3>
-                <p className="text-blue-800 leading-relaxed">{student.summary}</p>
+        {/* Processing Banner */}
+        {isProcessing && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6 mb-8">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/30">
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="font-bold text-blue-900 text-lg">AI Değerlendirme Devam Ediyor</h3>
+                  <span className="px-2.5 py-0.5 bg-blue-500 text-white text-xs rounded-full font-semibold animate-pulse">
+                    CANLI
+                  </span>
+                </div>
+                <p className="text-blue-800 mb-4">
+                  <span className="font-semibold">{evaluatedCount}/{totalQuestions}</span> soru değerlendirildi
+                </p>
+
+                <div className="mb-2">
+                  <div className="flex items-center justify-between text-xs text-blue-700 mb-1.5">
+                    <span className="font-medium">İlerleme</span>
+                    <span className="font-bold">{Math.round((evaluatedCount / totalQuestions) * 100)}%</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-700 ease-out"
+                      style={{ width: `${(evaluatedCount / totalQuestions) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                <p className="text-xs text-blue-600 mt-3">
+                  ⚡ Sayfa otomatik olarak güncelleniyor...
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Strengths and Weaknesses Grid */}
-        {((student.strengths && student.strengths.length > 0) || (student.weaknesses && student.weaknesses.length > 0)) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Score Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+            {/* Total Score */}
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-4">
+                <div className={`w-20 h-20 ${getScoreBg(student.percentage)} rounded-2xl flex items-center justify-center shadow-lg`}>
+                  <Award className="w-10 h-10 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Toplam Puan</p>
+                  <div className="flex items-baseline gap-3">
+                    <span className={`text-4xl font-bold ${getScoreColor(student.percentage)}`}>
+                      {student.total_score.toFixed(1)}
+                    </span>
+                    <span className="text-xl text-gray-400">/ {student.max_score}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Percentage */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Yüzde</p>
+                <p className={`text-3xl font-bold ${getScoreColor(student.percentage)}`}>
+                  %{student.percentage.toFixed(1)}
+                </p>
+              </div>
+            </div>
+
+            {/* Grade */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <Target className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Harf Notu</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {getScoreGrade(student.percentage)}
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Performance Analysis */}
+        {(student.strengths && student.strengths.length > 0) || (student.weaknesses && student.weaknesses.length > 0) ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
             {/* Strengths */}
             {student.strengths && student.strengths.length > 0 && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6">
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/30">
                     <TrendingUp className="w-5 h-5 text-white" />
                   </div>
                   <h3 className="font-bold text-emerald-900 text-lg">Güçlü Yönler</h3>
                 </div>
-                <ul className="space-y-2">
+                <ul className="space-y-2.5">
                   {student.strengths.map((strength, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
+                    <li key={idx} className="flex items-start gap-2.5">
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                       <span className="text-emerald-900 leading-relaxed">{strength}</span>
                     </li>
@@ -403,160 +389,111 @@ export default function StudentResultPage() {
 
             {/* Weaknesses */}
             {student.weaknesses && student.weaknesses.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+              <div className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-rose-500/30">
                     <AlertTriangle className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="font-bold text-red-900 text-lg">Zayıf Yönler</h3>
+                  <h3 className="font-bold text-rose-900 text-lg">Gelişim Alanları</h3>
                 </div>
-                <ul className="space-y-2">
+                <ul className="space-y-2.5">
                   {student.weaknesses.map((weakness, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-red-900 leading-relaxed">{weakness}</span>
+                    <li key={idx} className="flex items-start gap-2.5">
+                      <XCircle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-rose-900 leading-relaxed">{weakness}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
-          </div>
-        )}
 
-        {/* Topic Gaps */}
-        {student.topic_gaps && student.topic_gaps.length > 0 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6">
-            <div className="flex items-start gap-3">
-              <Target className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
-              <div className="flex-1">
-                <h3 className="font-bold text-amber-900 mb-3">Geliştirilmesi Gereken Konular</h3>
-                <div className="flex flex-wrap gap-2">
-                  {student.topic_gaps.map((topic, idx) => (
-                    <span
-                      key={idx}
-                      className="px-4 py-2 bg-white border border-amber-300 text-amber-900 text-sm font-medium rounded-lg"
-                    >
-                      {topic}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
-        )}
+        ) : null}
 
         {/* Questions */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <FileText className="w-6 h-6" />
-            Soru Bazlı Değerlendirme
-          </h2>
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Soru Bazlı Değerlendirme</h2>
+          </div>
 
           {student.questions.map((q) => {
             const isExtractingAnswer = q.student_answer === "[Cevap çıkarılıyor...]";
             const isPending = q.feedback === "Pending evaluation" || q.feedback === "Değerlendirme bekleniyor...";
             const percentage = isPending ? 0 : (q.score / q.max_score) * 100;
-            const isCorrect = !isPending && percentage >= 80;
-            const isPartial = !isPending && percentage >= 50 && percentage < 80;
+            const isCorrect = !isPending && percentage >= 70;
+            const isPartial = !isPending && percentage >= 50 && percentage < 70;
 
             return (
-              <div key={q.question_number} className={`bg-white rounded-xl shadow-sm border-2 overflow-hidden hover:shadow-md transition ${
-                isExtractingAnswer ? 'border-blue-300 opacity-80' : isPending ? 'border-gray-300 opacity-60' : 'border-gray-200'
-              }`}>
+              <div key={q.question_number} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
+
                 {/* Question Header */}
-                <div className={`px-6 py-4 flex items-center justify-between ${
-                  isExtractingAnswer ? 'bg-blue-50' :
-                  isPending ? 'bg-gray-50' :
-                  isCorrect ? 'bg-emerald-50' :
-                  isPartial ? 'bg-yellow-50' :
-                  'bg-red-50'
+                <div className={`px-6 py-4 flex items-center justify-between border-b ${
+                  isExtractingAnswer ? 'bg-blue-50 border-blue-200' :
+                  isPending ? 'bg-amber-50 border-amber-200' :
+                  isCorrect ? 'bg-emerald-50 border-emerald-200' :
+                  isPartial ? 'bg-amber-50 border-amber-200' :
+                  'bg-rose-50 border-rose-200'
                 }`}>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                      isExtractingAnswer ? 'bg-blue-200 text-blue-900' :
-                      isPending ? 'bg-gray-200 text-gray-600' :
-                      isCorrect ? 'bg-emerald-200 text-emerald-900' :
-                      isPartial ? 'bg-yellow-200 text-yellow-900' :
-                      'bg-red-200 text-red-900'
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm ${
+                      isExtractingAnswer ? 'bg-blue-500 text-white' :
+                      isPending ? 'bg-amber-500 text-white' :
+                      isCorrect ? 'bg-emerald-500 text-white' :
+                      isPartial ? 'bg-amber-500 text-white' :
+                      'bg-rose-500 text-white'
                     }`}>
                       {q.question_number}
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900">Soru {q.question_number}</h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        {isExtractingAnswer ? (
-                          <>
-                            <div className="px-2 py-1 bg-blue-100 border border-blue-300 rounded-md flex items-center gap-1.5">
-                              <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
-                              <span className="text-xs text-blue-700 font-semibold">PDF İşleniyor</span>
-                            </div>
-                          </>
-                        ) : isPending ? (
-                          <>
-                            <div className="px-2 py-1 bg-amber-100 border border-amber-300 rounded-md flex items-center gap-1.5">
-                              <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin" />
-                              <span className="text-xs text-amber-700 font-semibold">AI Puanlıyor</span>
-                            </div>
-                          </>
-                        ) : isCorrect ? (
-                          <>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                            <span className="text-sm text-emerald-700 font-medium">Doğru</span>
-                          </>
-                        ) : isPartial ? (
-                          <>
-                            <AlertCircle className="w-4 h-4 text-yellow-600" />
-                            <span className="text-sm text-yellow-700 font-medium">Kısmen Doğru</span>
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="w-4 h-4 text-red-600" />
-                            <span className="text-sm text-red-700 font-medium">Yanlış</span>
-                          </>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-gray-900">Soru {q.question_number}</span>
+                        {!isExtractingAnswer && !isPending && (
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                            isCorrect ? 'bg-emerald-100 text-emerald-700' :
+                            isPartial ? 'bg-amber-100 text-amber-700' :
+                            'bg-rose-100 text-rose-700'
+                          }`}>
+                            {isCorrect ? '✓ Doğru' : isPartial ? '◐ Kısmen' : '✗ Yanlış'}
+                          </span>
                         )}
                       </div>
+                      <p className="text-sm text-gray-600">Maksimum {q.max_score} puan</p>
                     </div>
                   </div>
-                  <div className={`text-right`}>
-                    {isExtractingAnswer ? (
-                      <div className="flex flex-col items-end">
-                        <div className="px-3 py-1.5 bg-blue-100 rounded-lg border border-blue-200 mb-1">
-                          <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
-                        </div>
-                        <div className="text-xs text-gray-500">/ {q.max_score}</div>
-                      </div>
-                    ) : isPending ? (
-                      <div className="flex flex-col items-end">
-                        <div className="px-3 py-1.5 bg-amber-100 rounded-lg border border-amber-200 mb-1">
-                          <Loader2 className="w-5 h-5 text-amber-600 animate-spin" />
-                        </div>
-                        <div className="text-xs text-gray-500">/ {q.max_score}</div>
+                  <div className="text-right">
+                    {isExtractingAnswer || isPending ? (
+                      <div className="px-4 py-2 bg-white/80 rounded-lg border border-gray-200">
+                        <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
                       </div>
                     ) : (
                       <>
                         <div className={`text-3xl font-bold ${
                           isCorrect ? 'text-emerald-600' :
-                          isPartial ? 'text-yellow-600' :
-                          'text-red-600'
+                          isPartial ? 'text-amber-600' :
+                          'text-rose-600'
                         }`}>
                           {q.score.toFixed(1)}
                         </div>
-                        <div className="text-sm text-gray-600">/ {q.max_score}</div>
+                        <div className="text-sm text-gray-500">/ {q.max_score}</div>
                       </>
                     )}
                   </div>
                 </div>
 
                 {/* Question Content */}
-                <div className="p-6 space-y-4">
-                  {/* Question Text (if available) */}
+                <div className="p-6 space-y-5">
+
+                  {/* Question Text */}
                   {q.question_text && (
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <FileText className="w-4 h-4 text-gray-600" />
+                        <FileText className="w-4 h-4 text-gray-500" />
                         <h4 className="text-sm font-semibold text-gray-700">Soru:</h4>
                       </div>
-                      <p className="text-gray-800 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <p className="text-gray-800 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-200">
                         {q.question_text}
                       </p>
                     </div>
@@ -568,7 +505,7 @@ export default function StudentResultPage() {
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       <h4 className="text-sm font-semibold text-emerald-700">Beklenen Cevap:</h4>
                     </div>
-                    <p className="text-gray-800 leading-relaxed bg-emerald-50/50 p-4 rounded-lg border border-emerald-100">
+                    <p className="text-gray-800 leading-relaxed bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
                       {q.expected_answer}
                     </p>
                   </div>
@@ -579,50 +516,37 @@ export default function StudentResultPage() {
                       <FileText className="w-4 h-4 text-blue-600" />
                       <h4 className="text-sm font-semibold text-blue-700">Öğrenci Cevabı:</h4>
                     </div>
-                    {q.student_answer === "[Cevap çıkarılıyor...]" ? (
-                      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-lg p-5 shadow-sm">
+                    {isExtractingAnswer ? (
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5">
                         <div className="flex items-start gap-4">
                           <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
                             <Loader2 className="w-5 h-5 text-white animate-spin" />
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-bold text-blue-900">📄 PDF İşleniyor</h4>
-                              <span className="px-2 py-0.5 bg-blue-200 text-blue-800 text-xs rounded-full font-semibold animate-pulse">
-                                ÇIKARILIYOR
-                              </span>
-                            </div>
-                            <p className="text-blue-800 text-sm mb-2">
-                              Öğrencinin PDF dosyası işleniyor ve cevaplar otomatik olarak çıkarılıyor.
+                            <h4 className="font-bold text-blue-900 mb-1">📄 PDF Okunuyor</h4>
+                            <p className="text-blue-800 text-sm">
+                              Öğrencinin bu soruya verdiği cevap PDF'den çıkarılıyor...
                             </p>
-                            <div className="flex items-center gap-2 text-blue-700 text-xs bg-white/60 rounded px-2 py-1">
-                              <div className="flex gap-1">
-                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                              </div>
-                              <span>PDF metni okunuyor ve parse ediliyor...</span>
-                            </div>
                           </div>
                         </div>
                       </div>
                     ) : q.student_answer === "[No answer provided]" || !q.student_answer ? (
-                      <div className="text-gray-500 italic bg-gray-100 p-4 rounded-lg border border-gray-300">
+                      <div className="text-gray-500 italic bg-gray-100 p-4 rounded-xl border border-gray-300">
                         Cevap bulunamadı veya boş bırakılmış
                       </div>
                     ) : (
-                      <p className="text-gray-800 leading-relaxed bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                      <p className="text-gray-800 leading-relaxed bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                         {q.student_answer}
                       </p>
                     )}
                   </div>
 
-                  {/* AI Feedback - Enhanced */}
+                  {/* AI Feedback */}
                   <div>
                     {isPending ? (
-                      <div className="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-300 rounded-xl p-5 shadow-md">
+                      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5">
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                          <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/30">
                             <Loader2 className="w-6 h-6 text-white animate-spin" />
                           </div>
                           <div className="flex-1">
@@ -632,33 +556,24 @@ export default function StudentResultPage() {
                                 İŞLENİYOR
                               </span>
                             </div>
-                            <p className="text-amber-800 text-sm mb-2">
+                            <p className="text-amber-800 text-sm">
                               Bu soru şu anda yapay zeka tarafından analiz ediliyor.
-                              Detaylı geri bildirim ve puan hesaplaması birazdan hazır olacak.
                             </p>
-                            <div className="flex items-center gap-2 text-amber-700 text-xs bg-white/60 rounded px-2 py-1">
-                              <div className="flex gap-1">
-                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                              </div>
-                              <span>Cevap analiz ediliyor ve puanlanıyor...</span>
-                            </div>
                           </div>
                         </div>
                       </div>
                     ) : (
                       <div className={`bg-gradient-to-br ${
-                        isCorrect ? 'from-emerald-50 via-green-50 to-teal-50 border-emerald-300' :
-                        isPartial ? 'from-yellow-50 via-amber-50 to-orange-50 border-yellow-300' :
-                        'from-red-50 via-rose-50 to-pink-50 border-red-300'
-                      } border-2 rounded-xl p-5 shadow-md hover:shadow-lg transition-all`}>
+                        isCorrect ? 'from-emerald-50 to-teal-50 border-emerald-200' :
+                        isPartial ? 'from-amber-50 to-orange-50 border-amber-200' :
+                        'from-rose-50 to-pink-50 border-rose-200'
+                      } border rounded-xl p-5`}>
                         <div className="flex items-start gap-4">
-                          {/* AI Icon with dynamic color */}
+                          {/* AI Icon */}
                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${
-                            isCorrect ? 'bg-gradient-to-br from-emerald-500 to-green-600' :
-                            isPartial ? 'bg-gradient-to-br from-yellow-500 to-amber-600' :
-                            'bg-gradient-to-br from-red-500 to-rose-600'
+                            isCorrect ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30' :
+                            isPartial ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/30' :
+                            'bg-gradient-to-br from-rose-500 to-pink-600 shadow-rose-500/30'
                           }`}>
                             <MessageSquare className="w-6 h-6 text-white" />
                           </div>
@@ -669,18 +584,11 @@ export default function StudentResultPage() {
                               <div className="flex items-center gap-2">
                                 <h4 className={`font-bold text-lg ${
                                   isCorrect ? 'text-emerald-900' :
-                                  isPartial ? 'text-yellow-900' :
-                                  'text-red-900'
+                                  isPartial ? 'text-amber-900' :
+                                  'text-rose-900'
                                 }`}>
                                   🤖 AI Geri Bildirimi
                                 </h4>
-                                <span className={`px-2.5 py-1 text-xs rounded-full font-semibold shadow-sm ${
-                                  isCorrect ? 'bg-emerald-200 text-emerald-800' :
-                                  isPartial ? 'bg-yellow-200 text-yellow-800' :
-                                  'bg-red-200 text-red-800'
-                                }`}>
-                                  {isCorrect ? '✓ Başarılı' : isPartial ? '◐ Kısmen' : '✗ Yetersiz'}
-                                </span>
                               </div>
 
                               {/* Confidence Score */}
@@ -689,8 +597,8 @@ export default function StudentResultPage() {
                                   <div className="text-xs font-semibold text-gray-600">Güven:</div>
                                   <div className={`text-sm font-bold ${
                                     q.confidence >= 0.8 ? 'text-emerald-600' :
-                                    q.confidence >= 0.6 ? 'text-yellow-600' :
-                                    'text-red-600'
+                                    q.confidence >= 0.6 ? 'text-amber-600' :
+                                    'text-rose-600'
                                   }`}>
                                     {(q.confidence * 100).toFixed(0)}%
                                   </div>
@@ -702,14 +610,14 @@ export default function StudentResultPage() {
                             <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg border border-white/50 shadow-sm">
                               <p className={`leading-relaxed whitespace-pre-wrap ${
                                 isCorrect ? 'text-emerald-900' :
-                                isPartial ? 'text-yellow-900' :
-                                'text-red-900'
+                                isPartial ? 'text-amber-900' :
+                                'text-rose-900'
                               }`}>
                                 {q.feedback}
                               </p>
                             </div>
 
-                            {/* Reasoning (if available) */}
+                            {/* Reasoning */}
                             {q.reasoning && (
                               <div className="mt-3 bg-white/60 backdrop-blur-sm p-3 rounded-lg border border-white/50">
                                 <div className="flex items-center gap-2 mb-1.5">
@@ -738,24 +646,28 @@ export default function StudentResultPage() {
       {/* Floating Chat Button */}
       <button
         onClick={() => setIsChatOpen(!isChatOpen)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-50"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all flex items-center justify-center z-50"
       >
         {isChatOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
       </button>
 
-      {/* Slide-in Chat Window */}
+      {/* Chat Window */}
       {isChatOpen && (
-        <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-white rounded-2xl shadow-2xl border-2 border-gray-200 flex flex-col z-50 animate-in slide-in-from-bottom">
+        <div className="fixed bottom-24 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col z-50 animate-in slide-in-from-bottom-5 duration-300">
+
           {/* Chat Header */}
           <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="font-bold text-gray-900">AI Asistan</h3>
-              <p className="text-sm text-gray-600">Bu öğrencinin performansı hakkında soru sorun</p>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <h3 className="font-bold text-gray-900">AI Asistan</h3>
+              </div>
+              <p className="text-sm text-gray-600">Performans hakkında soru sorun</p>
             </div>
             {chatMessages.length > 1 && (
               <button
                 onClick={clearChatHistory}
-                className="text-gray-500 hover:text-red-600 transition flex items-center gap-1 text-xs bg-white px-2 py-1 rounded-lg hover:bg-red-50 border border-gray-200"
+                className="text-gray-500 hover:text-rose-600 transition flex items-center gap-1 text-xs bg-white px-2 py-1 rounded-lg hover:bg-rose-50 border border-gray-200 ml-2"
                 title="Sohbet geçmişini temizle"
               >
                 <X className="w-3 h-3" />
@@ -765,26 +677,26 @@ export default function StudentResultPage() {
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
             {chatMessages.map((msg, idx) => (
               <div
                 key={idx}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] px-4 py-3 rounded-2xl ${
+                  className={`max-w-[85%] px-4 py-3 rounded-2xl shadow-sm ${
                     msg.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-none'
-                      : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-none'
+                      : 'bg-white text-gray-900 rounded-bl-none border border-gray-200'
                   }`}
                 >
-                  <p className="text-sm leading-relaxed">{msg.message}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
                 </div>
               </div>
             ))}
             {chatLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-none">
+                <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-none border border-gray-200 shadow-sm">
                   <Loader2 className="w-5 h-5 text-gray-600 animate-spin" />
                 </div>
               </div>
@@ -792,19 +704,20 @@ export default function StudentResultPage() {
           </div>
 
           {/* Chat Input */}
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 bg-white rounded-b-2xl">
             <div className="flex gap-2">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Bir soru sorun..."
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 transition-all"
+                disabled={chatLoading}
               />
               <button
                 type="submit"
                 disabled={!newMessage.trim() || chatLoading}
-                className="px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30"
               >
                 <Send className="w-5 h-5" />
               </button>
